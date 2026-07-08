@@ -1,0 +1,20 @@
+/** Inquiry form service dropdown — all 16 services + Other */
+export const inquiryServiceOptions = [
+  'Web Development',
+  'Software Development',
+  'Domain Hosting',
+  'Software Quality Assurance',
+  'Mobile App Development',
+  'IT Consultancy',
+  'Database Development',
+  'E-Commerce Website Development',
+  'Cloud Strategy',
+  'Artificial Intelligence Development Services',
+  'Data & Analytics',
+  'Business Process Services',
+  'Digital Marketing',
+  'Graphic Design',
+  'UI/UX Design Services',
+  'Game Development Services',
+  'Other',
+]

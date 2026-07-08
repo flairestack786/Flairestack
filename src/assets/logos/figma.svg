@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 50" role="img" aria-label="Figma">
+  <path fill="#ffffff" d="M30 50c-5.5 0-10-4.5-10-10V30h10v10c0 5.5 4.5 10 10 10s10-4.5 10-10V30h10v10c0 5.5-4.5 10-10 10z"/>
+  <path fill="#0ACF83" d="M50 30H30V10c0-5.5 4.5-10 10-10s10 4.5 10 10v10z"/>
+  <path fill="#A259FF" d="M70 10c5.5 0 10 4.5 10 10s-4.5 10-10 10H50V10h20z"/>
+  <path fill="#F24E1E" d="M50 30h20v10c0 5.5-4.5 10-10 10s-10-4.5-10-10V30z"/>
+  <path fill="#FF7262" d="M30 30H10c0-5.5 4.5-10 10-10s10 4.5 10 10v10z"/>
+  <path fill="#1ABCFE" d="M50 10H30V0h20c5.5 0 10 4.5 10 10s-4.5 10-10 10z"/>
+</svg>

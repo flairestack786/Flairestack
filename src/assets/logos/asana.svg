@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" role="img" aria-label="Asana">
+  <circle fill="#F06A6A" cx="25" cy="25" r="12"/>
+  <circle fill="#F06A6A" cx="25" cy="12" r="5" opacity=".8"/>
+  <circle fill="#F06A6A" cx="25" cy="38" r="5" opacity=".8"/>
+  <circle fill="#F06A6A" cx="12" cy="25" r="5" opacity=".8"/>
+  <circle fill="#F06A6A" cx="38" cy="25" r="5" opacity=".8"/>
+  <path fill="#ffffff" d="M58 16h8v18h14V16h8v22H58V16zm38 0h14c10 0 17 6 17 15v7h-8v-5c0-4-3-6-7-6h-9v14h-8V16zm14 18c4 0 7-2 7-5v-3c0-3-3-5-7-5h-6v13h6zm40-18h8l12 16V16h8v22h-8l-12-16v16h-8V16z"/>
+</svg>

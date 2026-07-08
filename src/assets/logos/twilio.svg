@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" role="img" aria-label="Twilio">
+  <path fill="#F22F46" d="M30 0C13.4 0 0 13.4 0 30s13.4 30 30 30 30-13.4 30-30S46.6 0 30 0zm0 10c11 0 20 9 20 20s-9 20-20 20-20-9-20-20 9-20 20-20z"/>
+  <circle fill="#F22F46" cx="30" cy="30" r="8"/>
+  <path fill="#ffffff" d="M68 20h8v20h16v6H68V20zm28 0h22c8.5 0 14 5 14 12.5S126.5 45 118 45h-14V20zm14 19c3.5 0 6-2 6-4.5S135.5 30 132 30h-6v9h6zM158 20h8v26h18v6h-26V20z"/>
+</svg>
