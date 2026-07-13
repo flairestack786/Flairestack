@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import SettingsImageField from './SettingsImageField'
 
 /**
@@ -49,7 +50,12 @@ export default function SeoSettings({
       <header className="admin-settings-section-header">
         <h2 className="admin-settings-section-title">SEO</h2>
         <p className="admin-settings-section-desc">
-          Default metadata used when pages do not define their own SEO values.
+          Quick defaults for meta tags. For full global SEO (templates, verification, analytics,
+          JSON-LD), use{' '}
+          <Link to="/admin/seo/global" className="admin-seo-inline-link">
+            Global SEO Settings
+          </Link>
+          .
         </p>
       </header>
 

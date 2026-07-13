@@ -19,6 +19,7 @@ import { technologiesRowA, technologiesRowB } from '../data/technologies'
 import { resolveLucideIcon } from './lucideIcons'
 import { getPublicUrl } from './media'
 import { supabase } from './supabase'
+import { PUBLIC_SEO_SELECT } from './publicSeo'
 
 const HOME_SLUG = 'home'
 
@@ -301,6 +302,13 @@ export const FALLBACK_PUBLIC_HOME = {
     route_path: '/',
     status: 'published',
   },
+  seo: {
+    metaTitle: 'FlaireStack | AI-First Software Development Studio',
+    metaDescription:
+      'FlaireStack is an AI-first software development studio delivering custom applications, cloud-native platforms, and intelligent automation.',
+    pageDescription: '',
+    row: null,
+  },
   sections: {
     hero: {
       title: 'Building intelligent',
@@ -391,7 +399,7 @@ export const FALLBACK_PUBLIC_HOME = {
  * @param {Record<string, unknown>[] | null | undefined} sectionRows
  * @returns {typeof FALLBACK_PUBLIC_HOME}
  */
-export function buildPublicHomePage(page, sectionRows) {
+export function buildPublicHomePage(page, sectionRows, seoRow = null) {
   const fallback = FALLBACK_PUBLIC_HOME
   const sectionMap = Object.fromEntries(
     (sectionRows ?? []).map((row) => [String(row.section_key), row])
@@ -435,6 +443,16 @@ export function buildPublicHomePage(page, sectionRows) {
       title: textOrFallback(page?.title, fallback.page.title),
       route_path: textOrFallback(page?.route_path, fallback.page.route_path),
       status: textOrFallback(page?.status, fallback.page.status),
+      excerpt: textOrFallback(page?.excerpt, seoRow?.page_description ?? ''),
+    },
+    seo: {
+      metaTitle: textOrFallback(seoRow?.meta_title, fallback.seo.metaTitle),
+      metaDescription: textOrFallback(seoRow?.meta_description, fallback.seo.metaDescription),
+      pageDescription: textOrFallback(
+        seoRow?.page_description,
+        page?.excerpt ?? fallback.seo.pageDescription
+      ),
+      row: seoRow ?? null,
     },
     sections: {
       hero: buildHeroSection(heroSection, fallback.sections.hero),
@@ -504,7 +522,7 @@ export function buildPublicHomePage(page, sectionRows) {
 
 /**
  * Load the published Home page and enabled sections for the public site.
- * @returns {Promise<{ page: Record<string, unknown>, sections: Record<string, unknown>[] } | null>}
+ * @returns {Promise<{ page: Record<string, unknown>, sections: Record<string, unknown>[], seo: Record<string, unknown> | null } | null>}
  */
 export async function fetchPublishedHomePage() {
   const { data: page, error } = await supabase
@@ -522,16 +540,26 @@ export async function fetchPublishedHomePage() {
     return null
   }
 
-  const { data: sections, error: sectionsError } = await supabase
-    .from('page_sections')
-    .select('*')
-    .eq('page_id', page.id)
-    .eq('is_enabled', true)
-    .order('sort_order', { ascending: true })
+  const [sectionsResult, seoResult] = await Promise.all([
+    supabase
+      .from('page_sections')
+      .select('*')
+      .eq('page_id', page.id)
+      .eq('is_enabled', true)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('seo_metadata')
+      .select(PUBLIC_SEO_SELECT)
+      .eq('page_id', page.id)
+      .maybeSingle(),
+  ])
 
-  if (sectionsError) {
-    throw sectionsError
+  if (sectionsResult.error) {
+    throw sectionsResult.error
+  }
+  if (seoResult.error) {
+    throw seoResult.error
   }
 
-  return { page, sections: sections ?? [] }
+  return { page, sections: sectionsResult.data ?? [], seo: seoResult.data ?? null }
 }

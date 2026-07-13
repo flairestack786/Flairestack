@@ -45,6 +45,7 @@ export const adminNavSections = [
       adminNavItems.find((item) => item.id === 'about'),
       adminNavItems.find((item) => item.id === 'testimonials'),
       adminNavItems.find((item) => item.id === 'media'),
+      adminNavItems.find((item) => item.id === 'seo'),
     ].filter(Boolean),
   },
   {
@@ -57,7 +58,6 @@ export const adminNavSections = [
     label: 'System',
     items: [
       adminNavItems.find((item) => item.id === 'users'),
-      adminNavItems.find((item) => item.id === 'seo'),
       adminNavItems.find((item) => item.id === 'settings'),
     ].filter(Boolean),
   },

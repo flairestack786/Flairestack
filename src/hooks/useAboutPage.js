@@ -18,6 +18,12 @@ let aboutPageCache = null
 /** @type {Promise<ReturnType<typeof buildPublicAboutPage>> | null} */
 let aboutPagePromise = null
 
+/** Drop cached public About page content (e.g. after CMS / SEO save). */
+export function clearAboutPageCache() {
+  aboutPageCache = null
+  aboutPagePromise = null
+}
+
 /**
  * @returns {Promise<ReturnType<typeof buildPublicAboutPage>>}
  */

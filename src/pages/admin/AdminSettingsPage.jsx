@@ -13,6 +13,7 @@ import { formsAreEqual, settingsToForm } from '../../components/admin/settings/s
 import { pathToPickerImage } from '../../components/admin/settings/settingsImage'
 import { useToast } from '../../components/common/ToastProvider'
 import { getSiteSettings, saveSiteSettings } from '../../lib/siteSettings'
+import { invalidatePublicSeoCaches } from '../../lib/invalidatePublicSeoCaches'
 
 /** @type {readonly string[]} */
 const IMAGE_FIELDS = ['logo_url', 'favicon_url', 'default_og_image']
@@ -97,6 +98,7 @@ export default function AdminSettingsPage() {
       const nextForm = settingsToForm(updated)
       setBaseline(nextForm)
       setForm(nextForm)
+      invalidatePublicSeoCaches()
       success('Settings saved successfully')
     } catch (err) {
       error(err?.message ?? 'Failed to save settings')

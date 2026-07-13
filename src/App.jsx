@@ -15,6 +15,8 @@ import AdminMediaPage from './pages/admin/AdminMediaPage'
 import AdminLeadsPage from './pages/admin/AdminLeadsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminSeoPage from './pages/admin/AdminSeoPage'
+import AdminSeoEditPage from './pages/admin/AdminSeoEditPage'
+import AdminSeoGlobalPage from './pages/admin/AdminSeoGlobalPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import AdminForbiddenPage from './pages/admin/AdminForbiddenPage'
 import Loader from './components/Loader'
@@ -118,6 +120,11 @@ export default function App() {
             <Route path="leads" element={withModule('leads', <AdminLeadsPage />)} />
             <Route path="users" element={withModule('users', <AdminUsersPage />)} />
             <Route path="seo" element={withModule('seo', <AdminSeoPage />)} />
+            <Route path="seo/global" element={withModule('seo', <AdminSeoGlobalPage />)} />
+            <Route
+              path="seo/:entityType/:entityId"
+              element={withModule('seo', <AdminSeoEditPage />)}
+            />
             <Route path="settings" element={withModule('settings', <AdminSettingsPage />)} />
           </Route>
           <Route path="/*" element={<PublicSite />} />

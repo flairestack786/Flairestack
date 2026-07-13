@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { AboutPageProvider, useAboutPage } from '../hooks/useAboutPage'
+import { usePageDocumentSeo } from '../hooks/usePageDocumentSeo'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import AboutHero from '../components/about/AboutHero'
@@ -11,18 +12,27 @@ import AboutTeam from '../components/about/AboutTeam'
 import AboutContact from '../components/about/AboutContact'
 
 function AboutPageContent() {
-  const { seo } = useAboutPage()
+  const { seo, page, loading } = useAboutPage()
+
+  usePageDocumentSeo({
+    seoRow: seo?.row,
+    pageTitle: page?.title || 'About',
+    routePath: page?.route_path || '/about',
+    entityType: 'page',
+    fallbackTitle: seo?.metaTitle,
+    fallbackDescription: seo?.metaDescription,
+    ready: !loading,
+  })
 
   useEffect(() => {
     window.scrollTo(0, 0)
-    document.title = seo.metaTitle
-    return () => {
-      document.title = 'FlaireStack'
-    }
-  }, [seo.metaTitle])
+  }, [])
 
   return (
     <main className="about-page">
+      {seo?.pageDescription ? (
+        <p className="sr-only">{seo.pageDescription}</p>
+      ) : null}
       <AboutHero />
       <AboutCompanyStory />
       <AboutMission />

@@ -26,6 +26,12 @@ let settingsCache = null
 /** @type {Promise<ReturnType<typeof buildPublicSiteSettings>> | null} */
 let settingsPromise = null
 
+/** Drop cached public site settings (e.g. after Global SEO / Settings save). */
+export function clearSiteSettingsCache() {
+  settingsCache = null
+  settingsPromise = null
+}
+
 const SOCIAL_ICONS = {
   facebook_url: SiFacebook,
   instagram_url: SiInstagram,

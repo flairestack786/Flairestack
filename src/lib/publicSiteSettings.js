@@ -70,6 +70,27 @@ export function buildPublicSiteSettings(row) {
     copyright_text,
     logo_path,
     logo_url,
+    website_name: String(row?.website_name ?? '').trim() || company_name,
+    default_meta_title: String(row?.default_meta_title ?? '').trim(),
+    default_meta_description: String(row?.default_meta_description ?? '').trim() || description,
+    default_og_image: String(row?.default_og_image ?? '').trim(),
+    default_twitter_image: String(row?.default_twitter_image ?? '').trim(),
+    canonical_base_url: String(row?.canonical_base_url ?? '').trim(),
+    default_robots: String(row?.default_robots ?? '').trim() || 'index,follow',
+    gsc_verification: String(row?.gsc_verification ?? '').trim(),
+    bing_verification: String(row?.bing_verification ?? '').trim(),
+    google_analytics_id: String(row?.google_analytics_id ?? '').trim(),
+    google_tag_manager_id: String(row?.google_tag_manager_id ?? '').trim(),
+    microsoft_clarity_id: String(row?.microsoft_clarity_id ?? '').trim(),
+    meta_pixel_id: String(row?.meta_pixel_id ?? '').trim(),
+    organization_jsonld:
+      row?.organization_jsonld && typeof row.organization_jsonld === 'object'
+        ? row.organization_jsonld
+        : {},
+    website_jsonld:
+      row?.website_jsonld && typeof row.website_jsonld === 'object' ? row.website_jsonld : {},
+    seo_templates:
+      row?.seo_templates && typeof row.seo_templates === 'object' ? row.seo_templates : {},
     socialLinks: SOCIAL_ICON_IMPORTS.map(({ key, label }) => ({
       key,
       label,

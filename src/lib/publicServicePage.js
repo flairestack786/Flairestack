@@ -3,6 +3,7 @@ import { FALLBACK_SERVICE_TESTIMONIALS } from './publicTestimonials'
 import { SERVICE_SECTION_KEYS } from './serviceDefaults'
 import { getPublicUrl } from './media'
 import { supabase } from './supabase'
+import { PUBLIC_SEO_SELECT } from './publicSeo'
 
 const DEFAULT_ANCHOR_NAV = [
   { id: 'challenges', label: 'Challenges', sectionKey: 'challenges' },
@@ -561,6 +562,8 @@ export function buildPublicServicePage(serviceRow, sectionRows, mediaRows, seoRo
   const seo = {
     metaTitle: service.seoTitle,
     metaDescription: service.seoDescription,
+    pageDescription: textOrFallback(seoRow?.page_description, ''),
+    row: seoRow ?? null,
   }
 
   return { service, page, seo }
@@ -602,7 +605,7 @@ export async function fetchPublishedService(slug) {
       .eq('service_id', service.id),
     supabase
       .from('seo_metadata')
-      .select('meta_title, meta_description, canonical_url, robots, og_title, og_description')
+      .select(PUBLIC_SEO_SELECT)
       .eq('entity_type', 'service')
       .eq('service_id', service.id)
       .maybeSingle(),

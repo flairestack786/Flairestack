@@ -52,11 +52,20 @@ const SEO_WRITABLE_FIELDS = [
   'robots',
   'og_title',
   'og_description',
+  'og_type',
+  'twitter_card',
   'twitter_title',
   'twitter_description',
   'status',
   'published_at',
 ]
+
+const SEO_REQUIRED_DEFAULTS = Object.freeze({
+  robots: 'index,follow',
+  og_type: 'website',
+  twitter_card: 'summary_large_image',
+  status: 'draft',
+})
 
 /** All image slots from service_media_slot enum. */
 export const SERVICE_MEDIA_SLOTS = [
@@ -118,18 +127,59 @@ function sanitizeServicePayload(service) {
 
 /**
  * @param {Record<string, unknown>} seo
+ * @param {{ isUpdate?: boolean }} [options]
  * @returns {Record<string, unknown>}
  */
-function sanitizeSeoPayload(seo) {
-  return Object.fromEntries(
-    SEO_WRITABLE_FIELDS.filter((key) => seo[key] !== undefined).map((key) => {
-      const value = seo[key]
-      if (key === 'published_at') {
-        return [key, value || null]
+function sanitizeSeoPayload(seo, options = {}) {
+  const isUpdate = Boolean(options.isUpdate)
+  /** @type {Record<string, unknown>} */
+  const payload = {}
+
+  for (const key of SEO_WRITABLE_FIELDS) {
+    if (seo[key] === undefined) continue
+    const value = seo[key]
+
+    if (key === 'published_at') {
+      payload[key] = value || null
+      continue
+    }
+
+    if (key in SEO_REQUIRED_DEFAULTS) {
+      const trimmed =
+        typeof value === 'string'
+          ? value.trim()
+          : value == null
+            ? ''
+            : String(value).trim()
+      if (trimmed) {
+        payload[key] = trimmed
+      } else if (!isUpdate) {
+        payload[key] = SEO_REQUIRED_DEFAULTS[key]
       }
-      return [key, value === '' || value == null ? null : value]
-    })
-  )
+      // Update + empty → omit so the existing NOT NULL DB value is preserved.
+      continue
+    }
+
+    payload[key] = value === '' || value == null ? null : value
+  }
+
+  if (!isUpdate) {
+    for (const [key, fallback] of Object.entries(SEO_REQUIRED_DEFAULTS)) {
+      if (payload[key] == null || payload[key] === '') {
+        payload[key] = fallback
+      }
+    }
+  }
+
+  for (const key of Object.keys(SEO_REQUIRED_DEFAULTS)) {
+    if (key in payload && (payload[key] == null || payload[key] === '')) {
+      throw new Error(
+        `SEO save blocked: "${key}" cannot be null or empty (would violate NOT NULL).`
+      )
+    }
+  }
+
+  return payload
 }
 
 /**
@@ -263,6 +313,9 @@ export async function createService(input) {
     service_id: service.id,
     meta_title: defaultSeo.meta_title,
     meta_description: defaultSeo.meta_description,
+    og_type: SEO_REQUIRED_DEFAULTS.og_type,
+    robots: SEO_REQUIRED_DEFAULTS.robots,
+    twitter_card: SEO_REQUIRED_DEFAULTS.twitter_card,
     status: 'draft',
   })
 
@@ -510,9 +563,10 @@ export async function saveServiceMedia(serviceId, slots) {
  * @returns {Promise<Record<string, unknown>>}
  */
 export async function saveServiceSeo(serviceId, seo) {
-  const payload = sanitizeSeoPayload(seo)
+  const isUpdate = Boolean(seo.id)
+  const payload = sanitizeSeoPayload(seo, { isUpdate })
 
-  if (seo.id) {
+  if (isUpdate) {
     const result = await supabase
       .from('seo_metadata')
       .update(payload)
@@ -530,13 +584,18 @@ export async function saveServiceSeo(serviceId, seo) {
     return result.data
   }
 
+  const insertPayload = {
+    entity_type: 'service',
+    service_id: serviceId,
+    og_type: SEO_REQUIRED_DEFAULTS.og_type,
+    robots: SEO_REQUIRED_DEFAULTS.robots,
+    twitter_card: SEO_REQUIRED_DEFAULTS.twitter_card,
+    ...payload,
+  }
+
   const result = await supabase
     .from('seo_metadata')
-    .insert({
-      entity_type: 'service',
-      service_id: serviceId,
-      ...payload,
-    })
+    .insert(insertPayload)
     .select()
     .single()
 

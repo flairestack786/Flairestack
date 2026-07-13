@@ -36,8 +36,8 @@ async function loadHomePage() {
     homePagePromise = fetchPublishedHomePage()
       .then((result) => {
         homePageCache = result
-          ? buildPublicHomePage(result.page, result.sections)
-          : buildPublicHomePage(null, [])
+          ? buildPublicHomePage(result.page, result.sections, result.seo)
+          : buildPublicHomePage(null, [], null)
         return homePageCache
       })
       .catch((error) => {
@@ -103,6 +103,7 @@ export function HomePageProvider({ children }) {
     () => ({
       page: pageData.page,
       sections: pageData.sections,
+      seo: pageData.seo,
       loading,
       error,
       refresh,
@@ -118,6 +119,7 @@ export function HomePageProvider({ children }) {
  * @returns {{
  *   page: ReturnType<typeof buildPublicHomePage>['page'],
  *   sections: ReturnType<typeof buildPublicHomePage>['sections'],
+ *   seo: ReturnType<typeof buildPublicHomePage>['seo'],
  *   loading: boolean,
  *   error: Error | null,
  *   refresh: () => Promise<void>,

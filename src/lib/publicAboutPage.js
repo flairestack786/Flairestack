@@ -3,6 +3,7 @@ import { founders, companyMission } from '../data/founders'
 import { resolveLucideIcon } from './lucideIcons'
 import { getPublicUrl } from './media'
 import { supabase } from './supabase'
+import { PUBLIC_SEO_SELECT } from './publicSeo'
 
 const ABOUT_SLUG = 'about'
 
@@ -175,6 +176,8 @@ export const FALLBACK_PUBLIC_ABOUT = {
     metaTitle: 'About Us | FlaireStack',
     metaDescription:
       'Meet the FlaireStack team — an AI-first software studio helping ambitious organizations design, build, and scale digital products with senior engineering, premium design, and transparent delivery.',
+    pageDescription: '',
+    row: null,
   },
   sections: {
     hero: {
@@ -308,6 +311,8 @@ export function buildPublicAboutPage(page, sectionRows, seoRow) {
     seo: {
       metaTitle: textOrFallback(seoRow?.meta_title, fallback.seo.metaTitle),
       metaDescription: textOrFallback(seoRow?.meta_description, fallback.seo.metaDescription),
+      pageDescription: textOrFallback(seoRow?.page_description, page?.excerpt ?? ''),
+      row: seoRow ?? null,
     },
     sections: {
       hero: {
@@ -404,7 +409,7 @@ export async function fetchPublishedAboutPage() {
 
   const { data: seo, error: seoError } = await supabase
     .from('seo_metadata')
-    .select('meta_title, meta_description')
+    .select(PUBLIC_SEO_SELECT)
     .eq('page_id', page.id)
     .maybeSingle()
 

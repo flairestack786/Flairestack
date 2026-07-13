@@ -37,8 +37,8 @@ import {
 import SaveBar from '../../components/admin/settings/SaveBar'
 import { pathToPickerImage } from '../../components/admin/settings/settingsImage'
 import { useToast } from '../../components/common/ToastProvider'
-import { clearPublicServiceCache } from '../../hooks/useServicePage'
 import { clearPublishedServicesCache } from '../../hooks/usePublishedServices'
+import { invalidatePublicSeoCaches } from '../../lib/invalidatePublicSeoCaches'
 import {
   getServiceWithContent,
   saveServiceMedia,
@@ -303,7 +303,10 @@ export default function AdminServiceEditPage() {
       setBaseline(baselineCopy)
       setForm(formCopy)
       setPublishStatus(formCopy.service.status === 'published' ? 'published' : 'draft')
-      clearPublicServiceCache(formCopy.service.slug)
+      invalidatePublicSeoCaches({
+        entityType: 'service',
+        slug: String(formCopy.service.slug || ''),
+      })
       clearPublishedServicesCache()
       success('Service saved successfully')
     } catch (err) {
@@ -366,7 +369,10 @@ export default function AdminServiceEditPage() {
           published_at: updated.published_at ?? null,
         },
       }))
-      clearPublicServiceCache(form.service.slug)
+      invalidatePublicSeoCaches({
+        entityType: 'service',
+        slug: String(form.service.slug || ''),
+      })
       clearPublishedServicesCache()
       success(nextStatus === 'published' ? 'Service published' : 'Service moved to draft')
     } catch (err) {

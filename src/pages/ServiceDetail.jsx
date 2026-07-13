@@ -5,38 +5,31 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import ServicePageLayout from '../components/service/ServicePageLayout'
 import { useServicePage } from '../hooks/useServicePage'
+import { usePageDocumentSeo } from '../hooks/usePageDocumentSeo'
 
 export default function ServiceDetail() {
   const { slug } = useParams()
   const normalizedSlug = String(slug ?? '').trim().toLowerCase()
   const { service, page, seo, loading } = useServicePage(normalizedSlug)
 
+  usePageDocumentSeo({
+    seoRow: seo?.row,
+    pageTitle: service?.title || 'Service',
+    routePath: `/services/${normalizedSlug}`,
+    entityType: 'service',
+    fallbackTitle: seo?.metaTitle,
+    fallbackDescription: seo?.metaDescription,
+    ready: !loading && Boolean(service && page),
+  })
+
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [normalizedSlug])
-
-  useEffect(() => {
-    if (!seo?.metaTitle) return
-    document.title = seo.metaTitle
-
-    let meta = document.querySelector('meta[name="description"]')
-    if (!meta) {
-      meta = document.createElement('meta')
-      meta.setAttribute('name', 'description')
-      document.head.appendChild(meta)
-    }
-    meta.setAttribute('content', seo.metaDescription ?? '')
-
-    return () => {
-      document.title = 'FlaireStack'
-    }
-  }, [seo?.metaTitle, seo?.metaDescription])
 
   if (!normalizedSlug) {
     return <Navigate to="/" replace />
   }
 
-  // Wait for CMS fetch before redirecting — CMS-only slugs have no static fallback.
   if (loading) {
     return (
       <>

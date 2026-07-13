@@ -40,6 +40,7 @@ export const CMS_ROLE_MODULES = Object.freeze({
     'services',
     'testimonials',
     'media',
+    'seo',
   ]),
   sales: Object.freeze(['dashboard', 'leads']),
 })
@@ -53,6 +54,7 @@ export const CMS_ADMIN_ACTIONS = Object.freeze({
   resendInvites: ['administrator'],
   passwordReset: ['administrator'],
   manageUsers: ['administrator'],
+  manageGlobalSeo: ['administrator'],
 })
 
 /**
@@ -85,7 +87,8 @@ export function canManageContent(role) {
     canAccessModule(role, 'about') ||
     canAccessModule(role, 'services') ||
     canAccessModule(role, 'testimonials') ||
-    canAccessModule(role, 'media')
+    canAccessModule(role, 'media') ||
+    canAccessModule(role, 'seo')
   )
 }
 
@@ -111,6 +114,14 @@ export function canAccessPath(role, pathname) {
 export function canPerformAdminAction(role, action) {
   const allowed = CMS_ADMIN_ACTIONS[action] ?? []
   return allowed.includes(normalizeCmsRole(role))
+}
+
+/**
+ * Global SEO defaults / templates — administrators only.
+ * @param {string | null | undefined} role
+ */
+export function canManageGlobalSeo(role) {
+  return canPerformAdminAction(role, 'manageGlobalSeo')
 }
 
 /**
