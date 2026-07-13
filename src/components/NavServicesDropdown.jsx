@@ -2,12 +2,13 @@ import React, { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { services } from '../data/services'
+import { usePublishedServices } from '../hooks/usePublishedServices'
 import { useNavActive } from '../hooks/useNavActive'
 
 export default function NavServicesDropdown() {
   const [open, setOpen] = useState(false)
   const closeTimer = useRef(null)
+  const { services } = usePublishedServices()
   const { isNavItemActive, isServiceActive } = useNavActive()
 
   const show = () => {

@@ -4,6 +4,7 @@ import { motion, LayoutGroup } from 'framer-motion'
 import { Menu } from 'lucide-react'
 import MobileMenu from './MobileMenu'
 import NavServicesDropdown from './NavServicesDropdown'
+import SiteLogo from './SiteLogo'
 import { useNavActive } from '../hooks/useNavActive'
 import { scrollToHomeSection, scrollToHomeTop } from '../utils/scrollToSection'
 
@@ -31,10 +32,7 @@ export default function Navbar() {
     <LayoutGroup id="nav-menu">
       <header className={`nav-glass fixed w-full z-50 top-0 left-0${open ? ' nav-glass--menu-open' : ''}`}>
       <nav className="max-w-[1400px] mx-auto px-6 md:px-10 lg:px-14 h-[72px] flex items-center">
-        <Link className="site-logo" to="/" onClick={handleHomeClick}>
-          <span className="site-logo-text">FlaireStack</span>
-          <span className="logo-accent" aria-hidden />
-        </Link>
+        <SiteLogo className="site-logo" to="/" onClick={handleHomeClick} />
 
         <div className="hidden lg:flex items-center gap-10 ml-auto mr-10">
           <Link

@@ -1,15 +1,8 @@
+import './loadEnv.mjs'
 import express from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
 import { verifyTurnstileToken } from './verifyTurnstile.js'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const root = join(__dirname, '..')
-
-dotenv.config({ path: join(root, '.env.local') })
-dotenv.config({ path: join(root, '.env') })
+import adminUsersRouter from './routes/adminUsers.mjs'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 3001
@@ -51,6 +44,8 @@ app.post('/api/turnstile/verify', async (req, res) => {
   }
 })
 
+app.use('/api/admin', adminUsersRouter)
+
 app.listen(PORT, () => {
-  console.log(`Turnstile API listening on http://localhost:${PORT}`)
+  console.log(`API server listening on http://localhost:${PORT}`)
 })

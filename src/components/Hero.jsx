@@ -1,23 +1,40 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Calendar } from 'lucide-react'
-import TrustedBy from './TrustedBy'
+import { useHomePage } from '../hooks/useHomePage'
 import heroJpg from '../assets/hero-4k.jpg'
 import heroWebp from '../assets/hero-4k.webp'
+import TrustedBy from './TrustedBy'
 
 export default function Hero() {
+  const { sections } = useHomePage()
+  const content = sections.hero
+
   return (
     <section className="hero">
       <picture className="hero-media" aria-hidden>
-        <source srcSet={heroWebp} type="image/webp" />
-        <img
-          src={heroJpg}
-          alt=""
-          className="hero-bg-img"
-          decoding="async"
-          fetchPriority="high"
-          sizes="100vw"
-        />
+        {content.useBundledBackground ? (
+          <>
+            <source srcSet={heroWebp} type="image/webp" />
+            <img
+              src={heroJpg}
+              alt=""
+              className="hero-bg-img"
+              decoding="async"
+              fetchPriority="high"
+              sizes="100vw"
+            />
+          </>
+        ) : (
+          <img
+            src={content.backgroundImageUrl}
+            alt=""
+            className="hero-bg-img"
+            decoding="async"
+            fetchPriority="high"
+            sizes="100vw"
+          />
+        )}
       </picture>
       <div className="absolute inset-0 hero-overlay" aria-hidden />
       <div className="absolute inset-0 hero-vignette" aria-hidden />
@@ -31,11 +48,11 @@ export default function Hero() {
             transition={{ duration: 0.45 }}
             className="hero-title text-white"
           >
-            Building intelligent
+            {content.title}
             <br />
-            <span className="text-accent">digital experiences</span>
+            <span className="text-accent">{content.titleAccent}</span>
             <br />
-            for the future.
+            {content.intro}
           </motion.h1>
           <div className="hero-rule" aria-hidden />
 
@@ -45,8 +62,7 @@ export default function Hero() {
             transition={{ duration: 0.45, delay: 0.08 }}
             className="hero-subtext"
           >
-            FlaireStack delivers elite software engineering, AI solutions, cloud systems, and modern
-            digital products designed to scale businesses globally.
+            {content.body}
           </motion.p>
 
           <motion.div
@@ -55,9 +71,9 @@ export default function Hero() {
             transition={{ duration: 0.45, delay: 0.16 }}
             className="hero-actions"
           >
-            <a href="#contact" className="hero-btn-secondary">
+            <a href={content.ctaUrl} className="hero-btn-secondary">
               <Calendar size={16} strokeWidth={1.75} />
-              Book Consultation
+              {content.ctaLabel}
             </a>
           </motion.div>
 

@@ -81,7 +81,10 @@
   position: relative;
   z-index: 1;
   max-width: 44rem;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: clamp(2.75rem, 6vw, 4.5rem);
+  text-align: center;
 }
 
 .sp-ind-eyebrow {
@@ -116,7 +119,7 @@
 }
 
 .sp-ind-intro {
-  margin: 1.375rem 0 0;
+  margin: 1.375rem auto 0;
   font-size: clamp(1rem, 1.85vw, 1.125rem);
   line-height: 1.78;
   color: rgba(255, 255, 255, 0.55);
@@ -126,7 +129,7 @@
 .sp-ind-header-rule {
   width: 72px;
   height: 3px;
-  margin-top: 2rem;
+  margin: 2rem auto 0;
   border-radius: 999px;
   background: linear-gradient(
     90deg,

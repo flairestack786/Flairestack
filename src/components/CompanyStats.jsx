@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { companyStats } from '../data/companyStats'
+import { useHomePage } from '../hooks/useHomePage'
+import { companyStats as FALLBACK_STATS } from '../data/companyStats'
 import { AnimatedCounter, fadeUp, staggerContainer } from './service/ServiceMotion'
 
 function GridDecor() {
@@ -12,7 +13,17 @@ function GridDecor() {
   )
 }
 
-export default function CompanyStats({ stats = companyStats, id }) {
+/**
+ * Global company metrics — always sourced from Admin → Home → Stats.
+ * @param {{ id?: string }} props
+ */
+export default function CompanyStats({ id }) {
+  const { sections } = useHomePage()
+  const stats =
+    Array.isArray(sections?.stats?.stats) && sections.stats.stats.length > 0
+      ? sections.stats.stats
+      : FALLBACK_STATS
+
   return (
     <section
       id={id}

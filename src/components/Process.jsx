@@ -1,9 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Search, Compass, Palette, Code2, FlaskConical, Rocket } from 'lucide-react'
-import { homeProcessSteps } from '../data/homeProcessSteps'
-
-const icons = [Search, Compass, Palette, Code2, FlaskConical, Rocket]
+import { useHomePage } from '../hooks/useHomePage'
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -13,18 +10,18 @@ const fadeUp = {
 }
 
 export default function Process() {
+  const { sections } = useHomePage()
+  const content = sections.process
+
   return (
     <section id="process" className="process-section" aria-labelledby="process-heading">
       <div className="process-inner">
         <header className="process-header">
-          <p className="process-eyebrow">How we deliver</p>
+          <p className="process-eyebrow">{content.eyebrow}</p>
           <h2 id="process-heading" className="process-title">
-            Our <span className="process-accent">Process</span>
+            {content.title} <span className="process-accent">{content.titleAccent}</span>
           </h2>
-          <p className="process-intro">
-            A proven six-step framework that keeps projects transparent, on schedule, and built for
-            long-term success — from first workshop to production scale.
-          </p>
+          <p className="process-intro">{content.intro}</p>
         </header>
 
         <div className="process-track" aria-hidden>
@@ -32,8 +29,8 @@ export default function Process() {
         </div>
 
         <ol className="process-grid">
-          {homeProcessSteps.map((item, i) => {
-            const Icon = icons[i]
+          {content.steps.map((item, i) => {
+            const Icon = content.icons[i] ?? content.icons[0]
             return (
               <motion.li
                 key={item.step}
@@ -49,7 +46,7 @@ export default function Process() {
                 </div>
                 <h3 className="process-card-title">{item.title}</h3>
                 <p className="process-card-text">{item.text}</p>
-                {i < homeProcessSteps.length - 1 && (
+                {i < content.steps.length - 1 && (
                   <span className="process-card-connector" aria-hidden />
                 )}
               </motion.li>

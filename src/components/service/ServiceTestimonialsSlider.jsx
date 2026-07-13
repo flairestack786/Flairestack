@@ -29,7 +29,7 @@ export default function ServiceTestimonialsSlider({ testimonials }) {
         }}
       >
         {testimonials.map((t) => (
-          <SwiperSlide key={t.author}>
+          <SwiperSlide key={t.id ?? t.author}>
             <blockquote className="sp-testimonial sp-card-premium sp-card-premium--light">
               <Quote size={24} className="sp-testimonial-quote-icon" aria-hidden />
               <p>&ldquo;{t.quote}&rdquo;</p>
@@ -38,10 +38,12 @@ export default function ServiceTestimonialsSlider({ testimonials }) {
                   <cite>{t.author}</cite>
                   <span>{t.role}</span>
                 </footer>
-                <div className="sp-testimonial-stat">
-                  <strong>{t.stat}</strong>
-                  <span>{t.statLabel}</span>
-                </div>
+                {(t.stat || t.statLabel) && (
+                  <div className="sp-testimonial-stat">
+                    <strong>{t.stat}</strong>
+                    <span>{t.statLabel}</span>
+                  </div>
+                )}
               </div>
             </blockquote>
           </SwiperSlide>

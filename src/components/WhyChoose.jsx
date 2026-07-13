@@ -1,65 +1,26 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Layers, Cpu, Rocket, Shield, Layout, Brain } from 'lucide-react'
-
-const reasons = [
-  {
-    title: 'Scalable architecture',
-    description:
-      'We design cloud-native systems, APIs, and data layers that grow from MVP to millions of users — without costly rewrites or downtime.',
-    Icon: Layers,
-  },
-  {
-    title: 'Modern technologies',
-    description:
-      'React, Next.js, Node, Python, AWS, and proven AI stacks — chosen for performance, maintainability, and long-term team velocity.',
-    Icon: Cpu,
-  },
-  {
-    title: 'Fast delivery',
-    description:
-      'Agile squads ship production-ready increments every sprint with clear milestones, demos, and transparent progress you can track.',
-    Icon: Rocket,
-  },
-  {
-    title: 'Security-first systems',
-    description:
-      'Encryption, access control, compliance-aware workflows, and secure SDLC practices built into every phase of development.',
-    Icon: Shield,
-  },
-  {
-    title: 'Premium UI/UX',
-    description:
-      'Research-driven interfaces and design systems that improve adoption, reduce friction, and strengthen brand trust across every touchpoint.',
-    Icon: Layout,
-  },
-  {
-    title: 'AI automation expertise',
-    description:
-      'LLM integrations, intelligent workflows, and automation that save time — deployed responsibly with evaluation, monitoring, and governance.',
-    Icon: Brain,
-  },
-]
+import { useHomePage } from '../hooks/useHomePage'
 
 export default function WhyChoose() {
+  const { sections } = useHomePage()
+  const content = sections['why-choose']
+
   return (
     <section id="why-choose" className="why-section" aria-labelledby="why-choose-heading">
       <div className="why-inner">
         <header className="why-header">
-          <p className="why-eyebrow">The FlaireStack difference</p>
+          <p className="why-eyebrow">{content.eyebrow}</p>
           <h2 id="why-choose-heading" className="why-title">
-            Why choose <span className="why-brand">FlaireStack</span>
+            {content.title} <span className="why-brand">{content.titleAccent}</span>
           </h2>
-          <p className="why-intro">
-            Partner with a software development team that combines senior engineering, premium design,
-            and AI-native thinking — so your product ships faster, scales reliably, and wins in the market.
-          </p>
+          <p className="why-intro">{content.intro}</p>
         </header>
 
         <div className="why-grid">
-          {reasons.map(({ title, description, Icon }, i) => (
+          {content.items.map(({ title, description, Icon }, i) => (
             <motion.article
-              key={title}
+              key={`${title}-${i}`}
               className="why-card"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}

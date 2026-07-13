@@ -1,19 +1,9 @@
 import React, { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, MapPin, Phone } from 'lucide-react'
-import { SiFacebook, SiInstagram, SiLinkedin } from 'react-icons/si'
-import { services } from '../data/services'
-import {
-  COMPANY_NAME,
-  COMPANY_TAGLINE,
-  COMPANY_DESCRIPTION,
-  PHONE_DISPLAY,
-  PHONE_TEL,
-  COMPANY_EMAIL,
-  COMPANY_EMAIL_MAILTO,
-  COMPANY_LOCATION,
-  COMPANY_LOCATION_SUB,
-} from '../config/contact'
+import SiteLogo from './SiteLogo'
+import { usePublishedServices } from '../hooks/usePublishedServices'
+import { useSiteSettings } from '../hooks/useSiteSettings'
 import { scrollToHomeSection, scrollToHomeTop } from '../utils/scrollToSection'
 
 const navLinks = [
@@ -21,12 +11,6 @@ const navLinks = [
   { label: 'About', type: 'page', to: '/about' },
   { label: 'Services', type: 'section', section: 'services' },
   { label: 'Contact', type: 'section', section: 'contact' },
-]
-
-const socialLinks = [
-  { href: 'https://facebook.com', label: 'Facebook', Icon: SiFacebook },
-  { href: 'https://instagram.com', label: 'Instagram', Icon: SiInstagram },
-  { href: 'https://linkedin.com', label: 'LinkedIn', Icon: SiLinkedin },
 ]
 
 const FOOTER_SERVICE_COUNT = 8
@@ -78,9 +62,22 @@ function FooterNavLink({ item }) {
 }
 
 export default function Footer() {
-  const year = new Date().getFullYear()
   const navigate = useNavigate()
-  const footerServices = useMemo(() => pickRandomServices(services), [])
+  const { settings } = useSiteSettings()
+  const { services } = usePublishedServices()
+  const footerServices = useMemo(() => pickRandomServices(services), [services])
+
+  const {
+    tagline,
+    description,
+    email,
+    emailMailto,
+    phone,
+    phoneTel,
+    addressLines,
+    copyright_text,
+    socialLinks,
+  } = settings
 
   return (
     <footer className="site-footer" role="contentinfo">
@@ -89,19 +86,16 @@ export default function Footer() {
       <div className="site-footer-inner">
         <div className="site-footer-grid">
           <div className="site-footer-col site-footer-col--brand">
-            <Link
+            <SiteLogo
               className="site-logo site-logo--footer"
               to="/"
               onClick={(e) => {
                 e.preventDefault()
                 scrollToHomeTop(navigate)
               }}
-            >
-              <span className="site-logo-text">FlaireStack</span>
-              <span className="logo-accent" aria-hidden />
-            </Link>
-            <p className="site-footer-tagline">{COMPANY_TAGLINE}</p>
-            <p className="site-footer-desc">{COMPANY_DESCRIPTION}</p>
+            />
+            <p className="site-footer-tagline">{tagline}</p>
+            <p className="site-footer-desc">{description}</p>
           </div>
 
           <nav className="site-footer-col" aria-label="Footer navigation">
@@ -132,19 +126,19 @@ export default function Footer() {
             <h2 className="site-footer-heading">Get in Touch</h2>
             <ul className="site-footer-contact">
               <li>
-                <a href={COMPANY_EMAIL_MAILTO} className="site-footer-contact-link">
+                <a href={emailMailto} className="site-footer-contact-link">
                   <span className="site-footer-contact-icon" aria-hidden>
                     <Mail size={16} strokeWidth={1.75} />
                   </span>
-                  <span>{COMPANY_EMAIL}</span>
+                  <span>{email}</span>
                 </a>
               </li>
               <li>
-                <a href={`tel:${PHONE_TEL}`} className="site-footer-contact-link">
+                <a href={phoneTel} className="site-footer-contact-link">
                   <span className="site-footer-contact-icon" aria-hidden>
                     <Phone size={16} strokeWidth={1.75} />
                   </span>
-                  <span>{PHONE_DISPLAY}</span>
+                  <span>{phone}</span>
                 </a>
               </li>
               <li>
@@ -153,8 +147,9 @@ export default function Footer() {
                     <MapPin size={16} strokeWidth={1.75} />
                   </span>
                   <span className="site-footer-location">
-                    <span>{COMPANY_LOCATION}</span>
-                    <span>{COMPANY_LOCATION_SUB}</span>
+                    {addressLines.map((line) => (
+                      <span key={line}>{line}</span>
+                    ))}
                   </span>
                 </span>
               </li>
@@ -165,29 +160,29 @@ export default function Footer() {
         <div className="site-footer-divider" aria-hidden />
 
         <div className="site-footer-bottom">
-          <p className="site-footer-copy">
-            © {year} {COMPANY_NAME}. All rights reserved.
-          </p>
+          <p className="site-footer-copy">{copyright_text}</p>
 
           <p className="site-footer-values">
             Engineering · Design · Delivery
           </p>
 
-          <ul className="site-footer-socials" aria-label="Social media">
-            {socialLinks.map(({ href, label, Icon }) => (
-              <li key={label}>
-                <a
-                  href={href}
-                  className="site-footer-social"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                >
-                  <Icon size={18} aria-hidden />
-                </a>
-              </li>
-            ))}
-          </ul>
+          {socialLinks.length > 0 && (
+            <ul className="site-footer-socials" aria-label="Social media">
+              {socialLinks.map(({ href, label, Icon }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    className="site-footer-social"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                  >
+                    <Icon size={18} aria-hidden />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </footer>

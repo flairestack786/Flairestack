@@ -72,7 +72,10 @@
   position: relative;
   z-index: 1;
   max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: clamp(3.25rem, 7vw, 5.5rem);
+  text-align: center;
 }
 
 .sp-fw-eyebrow {
@@ -107,7 +110,7 @@
 }
 
 .sp-fw-intro {
-  margin: 1.375rem 0 0;
+  margin: 1.375rem auto 0;
   font-size: clamp(1rem, 1.85vw, 1.125rem);
   line-height: 1.78;
   color: rgba(10, 15, 26, 0.58);
@@ -117,7 +120,7 @@
 .sp-fw-header-rule {
   width: 72px;
   height: 3px;
-  margin-top: 2rem;
+  margin: 2rem auto 0;
   border-radius: 999px;
   background: linear-gradient(
     90deg,

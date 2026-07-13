@@ -66,54 +66,155 @@ END;
 $$;
 
 -- -----------------------------------------------------------------------------
+-- Admin helper (used by site_settings RLS)
+-- -----------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT auth.uid() IS NOT NULL
+    AND COALESCE(
+      NULLIF(auth.jwt() -> 'app_metadata' ->> 'role', ''),
+      NULLIF(auth.jwt() -> 'user_metadata' ->> 'role', ''),
+      'admin'
+    ) = 'admin';
+$$;
+
+COMMENT ON FUNCTION public.is_admin() IS
+  'Returns true for authenticated CMS users. Set app_metadata.role to restrict non-admin writers.';
+
+-- -----------------------------------------------------------------------------
 -- site_settings
--- Singleton site-wide configuration (contact info, branding, social links).
+-- Global site configuration: branding, contact, social, SEO defaults, analytics.
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE public.site_settings (
-  id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_name        text NOT NULL,
-  company_tagline     text,
-  company_description text,
-  company_email       text NOT NULL,
-  phone_display       text NOT NULL,
-  phone_tel           text NOT NULL,
-  location_primary    text,
-  location_secondary  text,
-  copyright_template  text,
-  loader_brand_text   text,
-  social_links        jsonb NOT NULL DEFAULT '[]'::jsonb,
-  is_active           boolean NOT NULL DEFAULT true,
-  status              public.content_status NOT NULL DEFAULT 'draft',
-  published_at        timestamptz,
-  created_at          timestamptz NOT NULL DEFAULT now(),
-  updated_at          timestamptz NOT NULL DEFAULT now(),
-  updated_by          uuid REFERENCES auth.users (id) ON DELETE SET NULL,
+  id                       uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 
-  CONSTRAINT site_settings_social_links_is_array
-    CHECK (jsonb_typeof(social_links) = 'array'),
+  -- Branding
+  company_name             text NOT NULL,
+  tagline                  text,
+  logo_url                 text,
+  favicon_url              text,
 
-  CONSTRAINT site_settings_published_at_when_published
-    CHECK (
-      status <> 'published'
-      OR published_at IS NOT NULL
-    )
+  -- Contact
+  phone                    text,
+  email                    text,
+  address                  text,
+  google_maps_url          text,
+
+  -- Social
+  facebook_url             text,
+  instagram_url            text,
+  linkedin_url             text,
+  x_url                    text,
+  youtube_url              text,
+  github_url               text,
+
+  -- Operations
+  business_hours           text,
+  timezone                 text NOT NULL DEFAULT 'America/Chicago',
+  copyright_text           text,
+
+  -- Default SEO
+  default_meta_title       text,
+  default_meta_description text,
+  default_keywords         text,
+  default_og_image         text,
+
+  -- Analytics & tracking
+  google_analytics_id      text,
+  google_tag_manager_id    text,
+  meta_pixel_id            text,
+  microsoft_clarity_id     text,
+
+  created_at               timestamptz NOT NULL DEFAULT now(),
+  updated_at               timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT site_settings_email_format
+    CHECK (email IS NULL OR email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+
+  CONSTRAINT site_settings_timezone_not_blank
+    CHECK (btrim(timezone) <> '')
 );
 
 COMMENT ON TABLE public.site_settings IS
-  'Site-wide configuration singleton (contact, branding, social).';
+  'Global site configuration: branding, contact, social, SEO defaults, and analytics IDs.';
 
-CREATE UNIQUE INDEX site_settings_single_active_idx
-  ON public.site_settings (is_active)
-  WHERE is_active = true;
+COMMENT ON COLUMN public.site_settings.business_hours IS
+  'Human-readable business hours (e.g. Monday–Friday, 9:00 AM – 6:00 PM CT).';
 
-CREATE INDEX site_settings_status_idx
-  ON public.site_settings (status);
+COMMENT ON COLUMN public.site_settings.default_keywords IS
+  'Comma-separated default SEO keywords for pages without explicit keywords.';
 
 CREATE TRIGGER site_settings_set_updated_at
   BEFORE UPDATE ON public.site_settings
   FOR EACH ROW
   EXECUTE FUNCTION public.set_updated_at();
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY site_settings_public_read
+  ON public.site_settings
+  FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE POLICY site_settings_admin_insert
+  ON public.site_settings
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY site_settings_admin_update
+  ON public.site_settings
+  FOR UPDATE
+  TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+GRANT SELECT ON public.site_settings TO anon, authenticated;
+GRANT INSERT, UPDATE ON public.site_settings TO authenticated;
+
+INSERT INTO public.site_settings (
+  company_name,
+  tagline,
+  email,
+  phone,
+  address,
+  facebook_url,
+  instagram_url,
+  linkedin_url,
+  timezone,
+  copyright_text,
+  default_meta_title,
+  default_meta_description,
+  default_keywords,
+  business_hours
+)
+SELECT
+  'FlaireStack LLC',
+  'AI, cloud, and software — built for scale',
+  'info@flairestack.com',
+  '+1 (234) 567-890',
+  'Chicago, IL — Serving clients worldwide',
+  'https://facebook.com',
+  'https://instagram.com',
+  'https://linkedin.com',
+  'America/Chicago',
+  '© FlaireStack LLC. All rights reserved.',
+  'FlaireStack | AI-First Software Development Studio',
+  'FlaireStack is an AI-first software development studio delivering custom applications, cloud-native platforms, and intelligent automation with the latest technologies — from LLMs and modern frameworks to secure, scalable infrastructure.',
+  'software development, AI, cloud, web development, mobile apps, enterprise software, Chicago',
+  'Monday–Friday, 9:00 AM – 6:00 PM CT'
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM public.site_settings
+);
 
 -- -----------------------------------------------------------------------------
 -- media_assets

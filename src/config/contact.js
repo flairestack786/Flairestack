@@ -1,4 +1,4 @@
-/** Site-wide contact & company info — update in one place */
+/** Fallback site-wide contact & company info — used until CMS settings load. */
 export const COMPANY_NAME = 'FlaireStack LLC'
 export const COMPANY_TAGLINE = 'AI, cloud, and software — built for scale'
 export const COMPANY_DESCRIPTION =

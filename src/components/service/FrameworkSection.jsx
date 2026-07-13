@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
-import { PHONE_DISPLAY, PHONE_TEL } from '../../config/contact'
+import { useSiteSettings } from '../../hooks/useSiteSettings'
 import { fadeUp, staggerContainer } from './ServiceMotion'
 
 const itemReveal = {
@@ -32,6 +32,17 @@ const visualReveal = {
 }
 
 function FrameworkVisual({ src, alt }) {
+  if (!src) {
+    return (
+      <motion.div className="sp-fw-visual-wrap" variants={visualReveal} aria-hidden>
+        <div className="sp-fw-visual-glow" />
+        <div className="sp-fw-visual-shell">
+          <figure className="sp-fw-visual-frame" />
+        </div>
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div className="sp-fw-visual-wrap" variants={visualReveal}>
       <div className="sp-fw-visual-glow" aria-hidden />
@@ -53,6 +64,9 @@ function FrameworkVisual({ src, alt }) {
 }
 
 export default function FrameworkSection({ title, intro, items }) {
+  const { settings } = useSiteSettings()
+  const { phone, phoneTel } = settings
+
   return (
     <div className="sp-fw">
       <div className="sp-fw-atmosphere" aria-hidden>
@@ -114,16 +128,16 @@ export default function FrameworkSection({ title, intro, items }) {
                 </h3>
                 <p className="sp-fw-item-desc">{item.description}</p>
                 <a
-                  href={`tel:${PHONE_TEL}`}
+                  href={phoneTel}
                   className="sp-fw-cta"
-                  aria-label={`Book a call — ${PHONE_DISPLAY}`}
+                  aria-label={`Book a call — ${phone}`}
                 >
                   <span>Book a Call</span>
                   <ArrowUpRight size={17} aria-hidden className="sp-fw-cta-icon" />
                 </a>
               </motion.div>
 
-              <FrameworkVisual src={imageSrc} alt={imageAlt} />
+              <FrameworkVisual src={imageSrc || ''} alt={imageAlt || item.title} />
             </motion.li>
           )
         })}

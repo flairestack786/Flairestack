@@ -80,15 +80,40 @@
   padding-bottom: clamp(2.25rem, 4vw, 3.25rem);
 }
 
-.sp-band--marquee .sp-section-header {
-  max-width: 48rem;
+.sp-band--marquee .sp-section-header,
+.sp-band--marquee .sp-section-header--center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: min(42rem, 100%);
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
   text-align: center;
 }
 
+.sp-band--marquee .service-section-label {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sp-band--marquee .sp-section-title {
+  max-width: 22ch;
+  margin-left: auto;
+  margin-right: auto;
+  text-wrap: balance;
+}
+
+.sp-band--marquee .sp-section-intro {
+  max-width: 38rem;
+  margin-top: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+  text-wrap: pretty;
+}
+
 .sp-band--marquee .sp-marquee-wrap {
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   display: flex;
   justify-content: center;
   width: 100%;
@@ -1485,6 +1510,21 @@
 
 .sp-root .sp-process-step--premium:hover {
   border-color: rgba(var(--sp-accent-rgb), 0.34);
+}
+
+.sp-process-step-media {
+  margin: 0.65rem 0 0.85rem;
+  overflow: hidden;
+  border-radius: 0.65rem;
+  aspect-ratio: 16 / 10;
+  background: rgba(var(--sp-accent-rgb), 0.06);
+}
+
+.sp-process-step-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ── Section band glows follow identity ── */

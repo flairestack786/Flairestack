@@ -1,9 +1,13 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { adminNavItems } from '../../data/adminNav'
+import { getNavSectionsForRole } from '../../data/adminNav'
+import { useAuth } from '../../context/AuthContext'
 
 export default function AdminSidebar({ collapsed, onToggleCollapse, onNavigate }) {
+  const { canAccess, cmsRole } = useAuth()
+  const sections = getNavSectionsForRole(cmsRole, canAccess)
+
   return (
     <aside className="admin-sidebar" aria-label="Admin navigation">
       <div className="admin-sidebar-brand">
@@ -15,23 +19,40 @@ export default function AdminSidebar({ collapsed, onToggleCollapse, onNavigate }
       </div>
 
       <nav className="admin-sidebar-nav">
-        <ul className="admin-sidebar-list">
-          {adminNavItems.map(({ id, label, path, icon: Icon }) => (
-            <li key={id}>
-              <NavLink
-                to={path}
-                className={({ isActive }) =>
-                  `admin-sidebar-link${isActive ? ' admin-sidebar-link--active' : ''}`
-                }
-                title={collapsed ? label : undefined}
-                onClick={onNavigate}
-              >
-                <Icon size={20} strokeWidth={1.75} className="admin-sidebar-link-icon" aria-hidden />
-                <span className="admin-sidebar-link-label">{label}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+        {sections.map((section) => (
+          <div key={section.id} className="admin-sidebar-section">
+            {!collapsed && (
+              <p className="admin-sidebar-section-label" id={`admin-nav-${section.id}`}>
+                {section.label}
+              </p>
+            )}
+            <ul
+              className="admin-sidebar-list"
+              aria-labelledby={collapsed ? undefined : `admin-nav-${section.id}`}
+            >
+              {section.items.map(({ id, label, path, icon: Icon }) => (
+                <li key={id}>
+                  <NavLink
+                    to={path}
+                    className={({ isActive }) =>
+                      `admin-sidebar-link${isActive ? ' admin-sidebar-link--active' : ''}`
+                    }
+                    title={collapsed ? label : undefined}
+                    onClick={onNavigate}
+                  >
+                    <Icon
+                      size={20}
+                      strokeWidth={1.75}
+                      className="admin-sidebar-link-icon"
+                      aria-hidden
+                    />
+                    <span className="admin-sidebar-link-label">{label}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       <button

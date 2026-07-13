@@ -1,12 +1,27 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import { services } from '../data/services'
+import { useHomePage } from '../hooks/useHomePage'
+import { usePublishedServices } from '../hooks/usePublishedServices'
 import ServiceCard from './ServiceCard'
 import { FloatingOrb } from './service/ServiceMotion'
 import servicesStackImage from '../assets/logos/Flairestack_Service_Image.png'
 
 export default function Services() {
+  const { sections } = useHomePage()
+  const { services } = usePublishedServices()
+  const content = sections.services
+
+  const handleCtaClick = () => {
+    if (content.ctaUrl.startsWith('#')) {
+      const el = document.querySelector(content.ctaUrl)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+
+    window.location.assign(content.ctaUrl)
+  }
+
   return (
     <section id="services" className="services-section">
       <FloatingOrb className="services-orb services-orb--1" delay={0} />
@@ -31,11 +46,11 @@ export default function Services() {
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="services-eyebrow">Our services</p>
+            <p className="services-eyebrow">{content.eyebrow}</p>
             <h2 className="services-title">
-              <span className="services-title-muted">Redefining</span>{' '}
-              <span className="services-title-accent">digital impact</span>{' '}
-              <span className="services-title-muted">across the globe.</span>
+              <span className="services-title-muted">{content.title}</span>{' '}
+              <span className="services-title-accent">{content.titleAccent}</span>{' '}
+              <span className="services-title-muted">{content.intro}</span>
             </h2>
 
             <motion.figure
@@ -46,55 +61,37 @@ export default function Services() {
               transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
               <img
-                src={servicesStackImage}
-                alt="FlaireStack service platform: code, AI, cloud, and analytics connected"
+                src={content.useBundledVisual ? servicesStackImage : content.visualImageUrl}
+                alt={content.visualAlt}
                 loading="lazy"
               />
             </motion.figure>
 
-            <p className="services-subtitle">
-              From AI-native platforms to cloud infrastructure — we partner with ambitious teams
-              to design, build, and scale products that feel cinematic, resilient, and ready for
-              enterprise.
-            </p>
+            <p className="services-subtitle">{content.body}</p>
 
             <div className="services-panel">
               <div className="services-panel-accent" aria-hidden />
-              <p className="services-panel-label">Why FlaireStack</p>
+              <p className="services-panel-label">{content.panelLabel}</p>
 
               <div className="services-copy-stack">
-                <p className="services-detail">
-                  We embed expert product engineers, cloud architects, and AI specialists into your
-                  roadmap to reduce delivery risk, accelerate release velocity, and improve platform
-                  reliability at scale.
-                </p>
-                <p className="services-detail">
-                  Whether you are launching a new product, modernizing legacy systems, or scaling AI
-                  across operations, we work as an extension of your team — with transparent sprints,
-                  senior ownership, and delivery tied to business outcomes.
-                </p>
+                {content.details.map((detail) => (
+                  <p key={detail} className="services-detail">
+                    {detail}
+                  </p>
+                ))}
 
                 <div className="services-divider" aria-hidden />
 
                 <ul className="services-points" aria-label="Core service strengths">
-                  <li>Enterprise-grade architecture and governance</li>
-                  <li>Product-led UX with measurable conversion impact</li>
-                  <li>Continuous delivery with quality and security by design</li>
-                  <li>Cloud-native infrastructure, FinOps, and observability</li>
-                  <li>AI integration, automation, and intelligent workflows</li>
+                  {content.points.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
                 </ul>
               </div>
             </div>
 
-            <button
-              type="button"
-              className="services-cta"
-              onClick={() => {
-                const el = document.querySelector('#contact')
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }}
-            >
-              Get in touch
+            <button type="button" className="services-cta" onClick={handleCtaClick}>
+              {content.ctaLabel}
               <ArrowRight size={18} aria-hidden />
             </button>
           </motion.header>

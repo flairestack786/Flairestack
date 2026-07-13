@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import AdminSidebar from './AdminSidebar'
 import AdminTopNav from './AdminTopNav'
+import { ToastProvider } from '../common/ToastProvider'
 import { adminNavItems } from '../../data/adminNav'
 import '../../admin-dashboard.css'
 
@@ -11,7 +12,10 @@ export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const pageTitle = useMemo(() => {
-    const match = adminNavItems.find((item) => location.pathname === item.path)
+    const match = adminNavItems.find(
+      (item) =>
+        location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+    )
     return match?.label ?? 'Admin'
   }, [location.pathname])
 
@@ -33,15 +37,16 @@ export default function AdminLayout() {
   }, [mobileOpen])
 
   return (
-    <div
-      className={[
-        'admin-shell',
-        collapsed ? 'admin-shell--collapsed' : '',
-        mobileOpen ? 'admin-shell--mobile-open' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
+    <ToastProvider>
+      <div
+        className={[
+          'admin-shell',
+          collapsed ? 'admin-shell--collapsed' : '',
+          mobileOpen ? 'admin-shell--mobile-open' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
       {mobileOpen && (
         <button
           type="button"
@@ -63,6 +68,7 @@ export default function AdminLayout() {
           <Outlet />
         </div>
       </div>
-    </div>
+      </div>
+    </ToastProvider>
   )
 }

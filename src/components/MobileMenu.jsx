@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, ArrowRight } from 'lucide-react'
 import { useNavActive } from '../hooks/useNavActive'
 import { scrollToHomeSection, scrollToHomeTop } from '../utils/scrollToSection'
-import { services } from '../data/services'
+import SiteLogo from './SiteLogo'
+import { usePublishedServices } from '../hooks/usePublishedServices'
 
 const EASE = [0.22, 1, 0.36, 1]
 const OVERLAY_MS = 0.35
@@ -86,6 +87,7 @@ function useFocusTrap(containerRef, active, onClose) {
 export default function MobileMenu({ open, onClose }) {
   const navigate = useNavigate()
   const { isNavItemActive, isServiceActive } = useNavActive()
+  const { services } = usePublishedServices()
   const panelRef = useRef(null)
   const [servicesOpen, setServicesOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -138,10 +140,7 @@ export default function MobileMenu({ open, onClose }) {
         >
           <div ref={panelRef} className="mmenu-inner">
             <header className="mmenu-header">
-              <Link to="/" className="site-logo mmenu-logo" onClick={handleLogoClick}>
-                <span className="site-logo-text">FlaireStack</span>
-                <span className="logo-accent" aria-hidden />
-              </Link>
+              <SiteLogo className="site-logo mmenu-logo" to="/" onClick={handleLogoClick} />
 
               <motion.button
                 type="button"

@@ -318,6 +318,31 @@ a:visited {
   box-shadow: 0 0 12px rgba(255, 122, 0, 0.4);
 }
 
+.site-logo-image {
+  display: block;
+  height: 32px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.site-logo--footer .site-logo-image {
+  height: 36px;
+  max-width: 200px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Nav */
 .nav-link {
   font-size: 15px;

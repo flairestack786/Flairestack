@@ -4,6 +4,7 @@ import { ArrowRight, Loader2 } from 'lucide-react'
 import { Turnstile } from '@marsidev/react-turnstile'
 import emailjs from '@emailjs/browser'
 import { inquiryServiceOptions } from '../../data/inquiryServices'
+import { createPublicLead } from '../../lib/leads'
 import ServiceSelect from './ServiceSelect'
 
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID
@@ -130,6 +131,26 @@ export default function InquiryForm() {
         await verifyTurnstileWithServer(turnstileToken)
       }
 
+      try {
+        await createPublicLead({
+          full_name: values.fullName,
+          email: values.email,
+          company: values.company,
+          phone: values.phone,
+          service_interest: values.service,
+          message: values.message,
+          source: 'contact_form',
+          metadata: {
+            submitted_at: new Date().toISOString(),
+          },
+        })
+      } catch (leadErr) {
+        console.error('[InquiryForm] lead creation failed', leadErr)
+        throw new Error(
+          'Unable to save your inquiry right now. Please try again in a moment.'
+        )
+      }
+
       const templateParams = {
         name: values.fullName,
         email: values.email,
@@ -141,7 +162,7 @@ export default function InquiryForm() {
         turnstile_token: turnstileToken || '',
         submitted_at: new Date().toISOString(),
       }
-        // console.log(templateParams);
+
       const result = await emailjs.send(
         EMAILJS_SERVICE_ID,
         EMAILJS_TEMPLATE_ID,

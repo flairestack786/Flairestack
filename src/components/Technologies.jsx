@@ -1,5 +1,5 @@
 import React from 'react'
-import { technologiesRowA, technologiesRowB } from '../data/technologies'
+import { useHomePage } from '../hooks/useHomePage'
 
 /** Repeat until the strip is wide enough to fill large viewports, then duplicate for seamless loop */
 function buildMarqueeTrack(items) {
@@ -39,25 +39,25 @@ function TechMarqueeRow({ items, reverse = false, duration = '50s' }) {
 }
 
 export default function Technologies() {
+  const { sections } = useHomePage()
+  const content = sections.technologies
+
   return (
     <section id="technologies" className="tech-section" aria-labelledby="technologies-heading">
       <div className="tech-inner">
         <header className="tech-header">
-          <p className="tech-eyebrow">Tech stack</p>
+          <p className="tech-eyebrow">{content.eyebrow}</p>
           <h2 id="technologies-heading" className="tech-title">
-            Technologies we <span className="tech-accent">work with</span>
+            {content.title} <span className="tech-accent">{content.titleAccent}</span>
           </h2>
-          <p className="tech-intro">
-            Modern frameworks, clouds, databases, and AI platforms — integrated with the tools your
-            teams already use.
-          </p>
+          <p className="tech-intro">{content.intro}</p>
         </header>
 
         <div className="tech-marquee-stack" aria-label="Technologies and platforms">
           <div className="tech-marquee-fade tech-marquee-fade--left" aria-hidden />
           <div className="tech-marquee-fade tech-marquee-fade--right" aria-hidden />
-          <TechMarqueeRow items={technologiesRowA} duration="52s" />
-          <TechMarqueeRow items={technologiesRowB} reverse duration="58s" />
+          <TechMarqueeRow items={content.rowA} duration="52s" />
+          <TechMarqueeRow items={content.rowB} reverse duration="58s" />
         </div>
       </div>
     </section>
