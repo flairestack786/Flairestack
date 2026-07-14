@@ -5,7 +5,7 @@ import { useHomePage } from '../hooks/useHomePage'
 import { usePublishedServices } from '../hooks/usePublishedServices'
 import ServiceCard from './ServiceCard'
 import { FloatingOrb } from './service/ServiceMotion'
-import servicesStackImage from '../assets/logos/Flairestack_Service_Image.png'
+import servicesStackImage from '../assets/logos/FlaireStack_Service_Image.png'
 
 export default function Services() {
   const { sections } = useHomePage()
