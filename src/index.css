@@ -428,7 +428,11 @@ a:visited {
   top: calc(100% + 14px);
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
   width: min(560px, 88vw);
+  max-width: calc(100vw - 2rem);
+  max-height: min(80vh, 40rem);
   padding: 0.875rem;
   border-radius: 14px;
   background: rgba(10, 10, 12, 0.94);
@@ -439,6 +443,8 @@ a:visited {
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 24px 64px rgba(0, 0, 0, 0.5);
   z-index: 200;
+  /* Clip the scrolling list to the rounded corners. */
+  overflow: hidden;
 }
 
 .nav-dropdown-panel::before {
@@ -451,6 +457,7 @@ a:visited {
 }
 
 .nav-dropdown-label {
+  flex: 0 0 auto;
   margin: 0 0 0.5rem;
   padding: 0 0.5rem;
   font-size: 0.625rem;
@@ -463,10 +470,34 @@ a:visited {
 .nav-dropdown-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0.15rem 0 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.125rem;
+  /* Only the list scrolls when items exceed the viewport-bound panel. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.nav-dropdown-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.nav-dropdown-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav-dropdown-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+}
+
+.nav-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .nav-dropdown-link {
@@ -503,6 +534,40 @@ a:visited {
   background: var(--accent);
   vertical-align: middle;
   box-shadow: 0 0 8px rgba(255, 122, 0, 0.5);
+}
+
+/* Shorter laptops: tighten spacing so more links fit before scrolling. */
+@media (max-height: 820px) {
+  .nav-dropdown-panel {
+    padding: 0.7rem;
+    max-height: min(82vh, 34rem);
+  }
+
+  .nav-dropdown-label {
+    margin-bottom: 0.4rem;
+  }
+
+  .nav-dropdown-link {
+    padding: 0.45rem 0.6rem;
+  }
+}
+
+@media (max-height: 700px) {
+  .nav-dropdown-panel {
+    max-height: 84vh;
+  }
+
+  .nav-dropdown-link {
+    padding: 0.4rem 0.55rem;
+    font-size: 0.84rem;
+  }
+}
+
+/* Narrow viewports: single column so links never clip horizontally. */
+@media (max-width: 620px) {
+  .nav-dropdown-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .mobile-nav-link {
