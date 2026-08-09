@@ -62,6 +62,14 @@ export async function revokeUserInviteAuth(inviteId) {
 }
 
 /**
+ * Mark the caller's pending invitation as accepted (after password setup).
+ * Safe for password-reset sessions with no invite (server returns skipped).
+ */
+export async function acceptUserInvite() {
+  return adminFetch('/users/invites/accept', { method: 'POST' })
+}
+
+/**
  * @param {string} userId
  */
 export async function disableUserAuth(userId) {

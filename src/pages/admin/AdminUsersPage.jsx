@@ -39,8 +39,15 @@ const QUICK_FILTERS = [
   { id: 'sales', label: 'Sales' },
 ]
 
+const INVITE_STATUS_FILTERS = [
+  { id: 'pending', label: 'Pending' },
+  { id: 'all', label: 'All' },
+  { id: 'accepted', label: 'Accepted' },
+  { id: 'revoked', label: 'Revoked' },
+  { id: 'expired', label: 'Expired' },
+]
+
 const POLL_MS = 8000
-const ACCEPTED_HOLD_MS = 12000
 
 /**
  * @param {unknown} value
@@ -104,6 +111,7 @@ export default function AdminUsersPage() {
   const [revokingInviteId, setRevokingInviteId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [quickFilter, setQuickFilter] = useState('all')
+  const [inviteStatusFilter, setInviteStatusFilter] = useState('pending')
   const [selectedUser, setSelectedUser] = useState(/** @type {Record<string, unknown> | null} */ (null))
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
@@ -115,21 +123,19 @@ export default function AdminUsersPage() {
   const applySnapshot = useCallback(
     (snapshot, { announceAccepted = false } = {}) => {
       const nextUsers = snapshot.users
-      const nextInvites = snapshot.pendingInvites
+      const nextInvites = snapshot.invites ?? snapshot.pendingInvites
       const nextPendingIds = new Set(
         nextInvites.filter((invite) => invite.status === 'pending').map((invite) => String(invite.id))
       )
 
       if (announceAccepted) {
-        for (const invite of nextInvites) {
-          const id = String(invite.id)
-          if (
-            invite.status === 'accepted' &&
-            knownPendingIdsRef.current.has(id) &&
-            !toastedAcceptedRef.current.has(id)
-          ) {
-            toastedAcceptedRef.current.add(id)
-            success('Invitation accepted. User is now active.')
+        for (const id of knownPendingIdsRef.current) {
+          if (!nextPendingIds.has(id) && !toastedAcceptedRef.current.has(id)) {
+            const resolved = nextInvites.find((invite) => String(invite.id) === id)
+            if (!resolved || resolved.status === 'accepted') {
+              toastedAcceptedRef.current.add(id)
+              success('Invitation accepted. User is now active.')
+            }
           }
         }
       }
@@ -178,24 +184,6 @@ export default function AdminUsersPage() {
 
     return () => window.clearInterval(timer)
   }, [status, invites, loadUsers])
-
-  useEffect(() => {
-    const accepted = invites.filter((invite) => invite.status === 'accepted')
-    if (accepted.length === 0) return undefined
-
-    const timer = window.setTimeout(() => {
-      setInvites((current) => {
-        const next = current.filter((invite) => invite.status !== 'accepted')
-        setUsers((usersCurrent) => {
-          setSummary(summarizeTeam(usersCurrent, next))
-          return usersCurrent
-        })
-        return next
-      })
-    }, ACCEPTED_HOLD_MS)
-
-    return () => window.clearTimeout(timer)
-  }, [invites])
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -274,17 +262,6 @@ export default function AdminUsersPage() {
       knownPendingIdsRef.current.delete(inviteId)
       success('Invitation revoked.')
       setRevokeTarget(null)
-
-      window.setTimeout(() => {
-        setInvites((current) => {
-          const nextInvites = current.filter((invite) => String(invite.id) !== inviteId)
-          setUsers((usersCurrent) => {
-            setSummary(summarizeTeam(usersCurrent, nextInvites))
-            return usersCurrent
-          })
-          return nextInvites
-        })
-      }, 4000)
     } catch (err) {
       error(err?.message ?? 'Failed to revoke invite.')
     } finally {
@@ -312,6 +289,10 @@ export default function AdminUsersPage() {
 
   const hasActiveFilters = searchQuery.trim() !== '' || quickFilter !== 'all'
   const pendingCount = invites.filter((invite) => invite.status === 'pending').length
+  const filteredInvites = useMemo(() => {
+    if (inviteStatusFilter === 'all') return invites
+    return invites.filter((invite) => invite.status === inviteStatusFilter)
+  }, [invites, inviteStatusFilter])
 
   return (
     <div className="admin-page admin-services-page admin-users-page">
@@ -550,22 +531,41 @@ export default function AdminUsersPage() {
             )}
           </section>
 
-          <section className="admin-users-invites" aria-label="Pending invitations">
+          <section className="admin-users-invites" aria-label="Invitations">
             <header className="admin-users-invites-header">
               <div>
-                <h2 className="admin-dashboard-card-title">Pending invitations</h2>
+                <h2 className="admin-dashboard-card-title">Invitations</h2>
                 <p className="admin-dashboard-card-desc">
                   Track invitation delivery, acceptance, and revocation status.
                   {pendingCount > 0 ? ` ${pendingCount} awaiting acceptance.` : ''}
                 </p>
               </div>
+              <div className="admin-users-filter-chips" role="group" aria-label="Invitation status filters">
+                {INVITE_STATUS_FILTERS.map((filter) => (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    className={`admin-users-chip${inviteStatusFilter === filter.id ? ' is-active' : ''}`}
+                    aria-pressed={inviteStatusFilter === filter.id}
+                    onClick={() => setInviteStatusFilter(filter.id)}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
             </header>
 
             <div className="admin-services-table-wrap admin-users-table-wrap">
-              {invites.length === 0 ? (
+              {filteredInvites.length === 0 ? (
                 <div className="admin-page-placeholder admin-leads-empty admin-users-invites-empty">
                   <Mail size={28} strokeWidth={1.5} aria-hidden />
-                  <p>No pending invitations</p>
+                  <p>
+                    {inviteStatusFilter === 'pending'
+                      ? 'No pending invitations'
+                      : inviteStatusFilter === 'all'
+                        ? 'No invitations yet'
+                        : `No ${inviteStatusFilter} invitations`}
+                  </p>
                   <p className="admin-leads-empty-hint">
                     When you invite someone, their status and email timeline will appear here.
                   </p>
@@ -582,7 +582,7 @@ export default function AdminUsersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {invites.map((invite) => {
+                    {filteredInvites.map((invite) => {
                       const inviteId = String(invite.id)
                       const isPending = invite.status === 'pending'
                       const isResending = resendingInviteId === inviteId
@@ -629,6 +629,12 @@ export default function AdminUsersPage() {
                                 <dt>Expires</dt>
                                 <dd>{formatDate(invite.expires_at)}</dd>
                               </div>
+                              {invite.status === 'accepted' ? (
+                                <div>
+                                  <dt>Accepted</dt>
+                                  <dd>{formatDateTime(invite.accepted_at)}</dd>
+                                </div>
+                              ) : null}
                             </dl>
                           </td>
                           <td>

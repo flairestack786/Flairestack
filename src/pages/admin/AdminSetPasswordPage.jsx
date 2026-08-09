@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Eye, EyeOff, Lock } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { acceptUserInvite } from '../../lib/adminApi'
 import { supabase } from '../../lib/supabase'
 import '../../admin-auth.css'
 
@@ -58,6 +59,17 @@ export default function AdminSetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
+
+      // Mark matching pending invite accepted (password-reset with no invite returns skipped OK).
+      try {
+        await acceptUserInvite()
+      } catch (acceptErr) {
+        throw new Error(
+          acceptErr?.message
+            ? `Password saved, but invitation could not be completed: ${acceptErr.message}`
+            : 'Password saved, but invitation could not be completed. Please contact an administrator.'
+        )
+      }
 
       setSuccess(true)
       navigate('/admin/dashboard', { replace: true })

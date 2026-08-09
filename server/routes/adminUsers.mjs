@@ -1,6 +1,10 @@
 import { Router } from 'express'
-import { requireAdministrator } from '../middleware/requireAdministrator.mjs'
 import {
+  requireAdministrator,
+  requireAuthenticatedUser,
+} from '../middleware/requireAdministrator.mjs'
+import {
+  handleAcceptInvite,
   handleDisableUser,
   handleEnableUser,
   handleInviteUser,
@@ -26,6 +30,15 @@ router.post('/users/invite', requireAdministrator, async (req, res) => {
     await handleInviteUser({
       body: req.body ?? {},
       adminProfile: req.adminProfile,
+    })
+  )
+})
+
+router.post('/users/invites/accept', requireAuthenticatedUser, async (req, res) => {
+  return sendResult(
+    res,
+    await handleAcceptInvite({
+      authUser: req.authUser,
     })
   )
 })

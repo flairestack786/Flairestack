@@ -386,3 +386,151 @@ export async function handleResetPassword(ctx) {
     return { status: 500, body: { error: err?.message ?? 'Failed to send password reset.' } }
   }
 }
+
+/**
+ * Mark a pending invitation as accepted after the invitee completes password setup.
+ * Caller must be the authenticated invitee (Bearer JWT). Uses service role for the update
+ * because user_invites RLS is administrator-only.
+ *
+ * @param {{ authUser: { id: string, email?: string | null } }} ctx
+ * @returns {Promise<HandlerResult>}
+ */
+export async function handleAcceptInvite(ctx) {
+  try {
+    const admin = ensureAdminClient()
+    const email = normalizeEmail(ctx.authUser?.email)
+    const userId = ctx.authUser?.id
+
+    if (!userId || !email) {
+      return { status: 400, body: { error: 'Authenticated user email is required.' } }
+    }
+
+    const { data: pending, error: pendingError } = await admin
+      .from('user_invites')
+      .select('*')
+      .eq('email', email)
+      .eq('status', 'pending')
+      .maybeSingle()
+
+    if (pendingError) {
+      return { status: 500, body: { error: pendingError.message } }
+    }
+
+    if (!pending) {
+      const { data: alreadyAccepted, error: acceptedError } = await admin
+        .from('user_invites')
+        .select('*')
+        .eq('email', email)
+        .eq('status', 'accepted')
+        .order('accepted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (acceptedError) {
+        return { status: 500, body: { error: acceptedError.message } }
+      }
+
+      if (alreadyAccepted) {
+        if (
+          alreadyAccepted.accepted_user_id &&
+          String(alreadyAccepted.accepted_user_id) !== String(userId)
+        ) {
+          return { status: 403, body: { error: 'Invitation belongs to a different user.' } }
+        }
+
+        if (!alreadyAccepted.accepted_user_id) {
+          const { data: backfilled, error: backfillError } = await admin
+            .from('user_invites')
+            .update({ accepted_user_id: userId })
+            .eq('id', alreadyAccepted.id)
+            .select()
+            .single()
+
+          if (backfillError) {
+            return { status: 500, body: { error: backfillError.message } }
+          }
+
+          return { status: 200, body: { invite: backfilled, alreadyAccepted: true } }
+        }
+
+        return { status: 200, body: { invite: alreadyAccepted, alreadyAccepted: true } }
+      }
+
+      // Password-reset / no invite row — succeed without mutating.
+      return { status: 200, body: { invite: null, skipped: true } }
+    }
+
+    const meta =
+      pending.metadata && typeof pending.metadata === 'object' && !Array.isArray(pending.metadata)
+        ? /** @type {Record<string, unknown>} */ (pending.metadata)
+        : {}
+    const expectedAuthUserId = meta.auth_user_id ? String(meta.auth_user_id) : null
+    if (expectedAuthUserId && expectedAuthUserId !== String(userId)) {
+      return { status: 403, body: { error: 'Invitation does not match this account.' } }
+    }
+
+    if (pending.expires_at) {
+      const expiresAt = new Date(String(pending.expires_at)).getTime()
+      if (!Number.isNaN(expiresAt) && expiresAt < Date.now()) {
+        const { data: expiredRow, error: expireError } = await admin
+          .from('user_invites')
+          .update({ status: 'expired' })
+          .eq('id', pending.id)
+          .eq('status', 'pending')
+          .select()
+          .maybeSingle()
+
+        if (expireError) {
+          return { status: 500, body: { error: expireError.message } }
+        }
+
+        return {
+          status: 410,
+          body: { error: 'Invitation has expired.', invite: expiredRow },
+        }
+      }
+    }
+
+    const nowIso = new Date().toISOString()
+    const { data: updated, error: updateError } = await admin
+      .from('user_invites')
+      .update({
+        status: 'accepted',
+        accepted_at: nowIso,
+        accepted_user_id: userId,
+      })
+      .eq('id', pending.id)
+      .eq('status', 'pending')
+      .select()
+      .maybeSingle()
+
+    if (updateError) {
+      return { status: 500, body: { error: updateError.message } }
+    }
+
+    if (!updated) {
+      // Race: revoked/accepted between select and update.
+      const { data: current } = await admin
+        .from('user_invites')
+        .select('*')
+        .eq('id', pending.id)
+        .maybeSingle()
+
+      if (current?.status === 'accepted') {
+        return { status: 200, body: { invite: current, alreadyAccepted: true } }
+      }
+
+      return {
+        status: 409,
+        body: {
+          error: `Invitation is ${current?.status ?? 'no longer pending'}.`,
+          invite: current,
+        },
+      }
+    }
+
+    return { status: 200, body: { invite: updated } }
+  } catch (err) {
+    return { status: 500, body: { error: err?.message ?? 'Failed to accept invite.' } }
+  }
+}

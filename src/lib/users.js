@@ -289,34 +289,12 @@ export async function listUserInvites() {
 }
 
 /**
- * Invitations shown in the Users inbox: all pending, plus recently accepted/revoked/expired.
- * @param {number} [recentMs]
+ * Invitations shown in the Users inbox: pending only (history via invite status filters).
+ * @param {number} [_recentMs] Unused; kept for call-site compatibility.
  * @returns {Promise<Record<string, unknown>[]>}
  */
-export async function listInvitationInbox(recentMs = 15 * 60 * 1000) {
-  const { data, error } = await supabase
-    .from('user_invites')
-    .select(
-      'id, email, full_name, role, permissions, status, invited_by, invited_at, expires_at, accepted_at, accepted_user_id, metadata, created_at, updated_at'
-    )
-    .order('invited_at', { ascending: false })
-    .limit(100)
-
-  if (error) throw error
-
-  const cutoff = Date.now() - recentMs
-  return (data ?? []).filter((invite) => {
-    if (invite.status === 'pending') return true
-    if (invite.status === 'accepted') {
-      const stamp = invite.accepted_at || invite.updated_at
-      return stamp ? new Date(String(stamp)).getTime() >= cutoff : false
-    }
-    if (invite.status === 'revoked' || invite.status === 'expired') {
-      const stamp = invite.updated_at || invite.invited_at
-      return stamp ? new Date(String(stamp)).getTime() >= cutoff : false
-    }
-    return false
-  })
+export async function listInvitationInbox(_recentMs = 15 * 60 * 1000) {
+  return listPendingInvites()
 }
 
 /**
@@ -326,7 +304,7 @@ export async function listPendingInvites() {
   const { data, error } = await supabase
     .from('user_invites')
     .select(
-      'id, email, full_name, role, permissions, status, invited_by, invited_at, expires_at, metadata, created_at, updated_at'
+      'id, email, full_name, role, permissions, status, invited_by, invited_at, expires_at, accepted_at, accepted_user_id, metadata, created_at, updated_at'
     )
     .eq('status', 'pending')
     .order('invited_at', { ascending: false })
@@ -426,15 +404,18 @@ export function summarizeTeam(users, invites = []) {
 /**
  * @returns {Promise<{
  *   users: Record<string, unknown>[],
+ *   invites: Record<string, unknown>[],
  *   pendingInvites: Record<string, unknown>[],
  *   summary: ReturnType<typeof summarizeTeam>,
  * }>}
  */
 export async function fetchUsersSnapshot() {
-  const [users, pendingInvites] = await Promise.all([listUsers(), listInvitationInbox()])
+  const [users, invites] = await Promise.all([listUsers(), listUserInvites()])
+  const pendingInvites = invites.filter((invite) => invite.status === 'pending')
 
   return {
     users,
+    invites,
     pendingInvites,
     summary: summarizeTeam(users, pendingInvites),
   }
