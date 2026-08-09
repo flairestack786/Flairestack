@@ -88,7 +88,12 @@ export default function AdminLogin() {
             </label>
 
             <label className="admin-auth-field">
-              <span className="admin-auth-label">Password</span>
+              <span className="admin-auth-label-row">
+                <span className="admin-auth-label">Password</span>
+                <Link to="/admin/forgot-password" className="admin-auth-forgot">
+                  Forgot password?
+                </Link>
+              </span>
               <span className="admin-auth-input-wrap">
                 <Lock size={18} className="admin-auth-input-icon" aria-hidden />
                 <input

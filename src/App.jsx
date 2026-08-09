@@ -5,6 +5,8 @@ import AboutPage from './pages/AboutPage'
 import ServiceDetail from './pages/ServiceDetail'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminSetPasswordPage from './pages/admin/AdminSetPasswordPage'
+import AdminForgotPasswordPage from './pages/admin/AdminForgotPasswordPage'
+import AdminResetPasswordPage from './pages/admin/AdminResetPasswordPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import AdminHomePage from './pages/admin/AdminHomePage'
 import AdminServicesPage from './pages/admin/AdminServicesPage'
@@ -91,8 +93,18 @@ export default function App() {
               </GuestRoute>
             }
           />
-          {/* Invite / recovery password setup — requires session; must NOT use GuestRoute */}
+          <Route
+            path="/admin/forgot-password"
+            element={
+              <GuestRoute>
+                <AdminForgotPasswordPage />
+              </GuestRoute>
+            }
+          />
+          {/* Invite password setup — requires session; must NOT use GuestRoute */}
           <Route path="/admin/set-password" element={<AdminSetPasswordPage />} />
+          {/* Password recovery — requires recovery session; must NOT use GuestRoute */}
+          <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
           <Route
             path="/admin"
             element={

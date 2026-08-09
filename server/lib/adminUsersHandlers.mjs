@@ -385,7 +385,7 @@ export async function handleResetPassword(ctx) {
     if (error) return { status: 500, body: { error: error.message } }
     if (!profile?.email) return { status: 404, body: { error: 'User not found.' } }
 
-    const redirectTo = `${getSiteUrl()}/admin/set-password`
+    const redirectTo = `${getSiteUrl()}/admin/reset-password`
     const { error: resetError } = await admin.auth.resetPasswordForEmail(profile.email, {
       redirectTo,
     })
