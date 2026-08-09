@@ -27,6 +27,36 @@ body {
   --nav-text: #c8c8d0;
 }
 
+/* Brand scrollbar — dark track, FlaireStack orange thumb (Chrome/Edge/Safari + Firefox) */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) #0a0a0a;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--accent);
+  border-radius: 999px;
+  border: 2px solid #0a0a0a;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--accent) 82%, white);
+}
+
+::-webkit-scrollbar-corner {
+  background: #0a0a0a;
+}
+
 html,
 body,
 #root {
