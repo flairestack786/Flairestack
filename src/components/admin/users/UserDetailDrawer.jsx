@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Loader2, RefreshCw, Save, X } from 'lucide-react'
+import { Copy, Loader2, RefreshCw, Save, X } from 'lucide-react'
 import EditorField from '../home/EditorField'
 import AdminSelect from '../AdminSelect'
 import UserAvatar from './UserAvatar'
@@ -174,14 +174,33 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
     if (!userId) return
     setBusyAction('reset')
     try {
-      await requestPasswordReset(userId)
-      success('Password reset email sent.')
+      const result = await requestPasswordReset(userId)
+      const sentTo = String(result?.email || user?.email || '').trim()
+      success(
+        sentTo
+          ? `Password reset email sent to ${sentTo}.`
+          : 'Password reset email sent.'
+      )
     } catch (err) {
-      error(err?.message ?? 'Failed to send password reset.')
+      error(err?.message ?? 'Failed to send password reset email.')
     } finally {
       setBusyAction('')
     }
-  }, [userId, success, error])
+  }, [userId, user?.email, success, error])
+
+  const handleCopyEmail = useCallback(async () => {
+    const email = String(user?.email ?? '').trim()
+    if (!email) {
+      error('No email address available to copy.')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(email)
+      success('Email address copied.')
+    } catch {
+      error('Unable to copy email address.')
+    }
+  }, [user?.email, success, error])
 
   if (!isOpen || !user) return null
 
@@ -371,7 +390,7 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
             <header className="admin-leads-drawer-section-header">
               <h3>Quick actions</h3>
             </header>
-            <div className="admin-leads-drawer-section-actions">
+            <div className="admin-leads-drawer-section-actions admin-users-quick-actions">
               <button
                 type="button"
                 className="admin-services-create-btn"
@@ -396,7 +415,16 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
                 ) : (
                   <RefreshCw size={16} strokeWidth={1.75} />
                 )}
-                Send password reset
+                Send password reset email
+              </button>
+              <button
+                type="button"
+                className="admin-settings-retry"
+                disabled={isBusy || !String(user.email ?? '').trim()}
+                onClick={handleCopyEmail}
+              >
+                <Copy size={16} strokeWidth={1.75} />
+                Copy email address
               </button>
             </div>
           </section>
