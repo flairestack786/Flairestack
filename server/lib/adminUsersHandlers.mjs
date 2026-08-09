@@ -92,7 +92,7 @@ export async function handleInviteUser(ctx) {
       return { status: 409, body: { error: 'A pending invite already exists for this email.' } }
     }
 
-    const redirectTo = `${getSiteUrl()}/admin/login`
+    const redirectTo = `${getSiteUrl()}/admin/set-password`
 
     const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
       email,
@@ -175,7 +175,7 @@ export async function handleResendInvite(ctx) {
     if (error) return { status: 500, body: { error: error.message } }
     if (!invite) return { status: 404, body: { error: 'Pending invite not found.' } }
 
-    const redirectTo = `${getSiteUrl()}/admin/login`
+    const redirectTo = `${getSiteUrl()}/admin/set-password`
     const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(invite.email, {
       redirectTo,
       data: {
@@ -372,7 +372,7 @@ export async function handleResetPassword(ctx) {
     if (error) return { status: 500, body: { error: error.message } }
     if (!profile?.email) return { status: 404, body: { error: 'User not found.' } }
 
-    const redirectTo = `${getSiteUrl()}/admin/login`
+    const redirectTo = `${getSiteUrl()}/admin/set-password`
     const { error: resetError } = await admin.auth.resetPasswordForEmail(profile.email, {
       redirectTo,
     })
