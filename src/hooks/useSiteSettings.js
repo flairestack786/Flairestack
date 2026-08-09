@@ -19,6 +19,7 @@ import {
   buildPublicSiteSettings,
   FALLBACK_PUBLIC_SETTINGS,
 } from '../lib/publicSiteSettings'
+import { applyPublicFavicon } from '../lib/documentSeo'
 
 /** @type {ReturnType<typeof buildPublicSiteSettings> | null} */
 let settingsCache = null
@@ -115,6 +116,11 @@ export function SiteSettingsProvider({ children }) {
       cancelled = true
     }
   }, [])
+
+  // CMS branding favicon_url → document <link rel="icon"> (index.html stays as pre-JS fallback).
+  useEffect(() => {
+    return applyPublicFavicon(settings?.favicon_url)
+  }, [settings?.favicon_url])
 
   const refresh = useCallback(async () => {
     settingsCache = null

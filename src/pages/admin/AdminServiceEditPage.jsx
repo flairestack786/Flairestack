@@ -23,14 +23,12 @@ import TestimonialsEditor from '../../components/admin/services/TestimonialsEdit
 import {
   formToMediaPayloads,
   formToSectionPayloads,
-  formToSeoPayload,
   formToServicePayload,
   formsAreEqual,
   serviceDataToForm,
   updateMediaSlot,
   updateSectionConfig,
   updateSectionField,
-  updateSeoField,
   updateServiceField,
   updateConfigListItemField,
 } from '../../components/admin/services/servicePageForm'
@@ -43,7 +41,6 @@ import {
   getServiceWithContent,
   saveServiceMedia,
   saveServiceSections,
-  saveServiceSeo,
   setServiceStatus,
   updateService,
 } from '../../lib/servicePage'
@@ -170,13 +167,6 @@ export default function AdminServiceEditPage() {
     }))
   }, [])
 
-  const handleSeoFieldChange = useCallback((field, value) => {
-    setForm((current) => ({
-      ...current,
-      seo: updateSeoField(current.seo, field, value),
-    }))
-  }, [])
-
   const handleChooseImage = useCallback((slot) => {
     setPickerTarget({ type: 'media', slot })
     setPickerOpen(true)
@@ -282,7 +272,7 @@ export default function AdminServiceEditPage() {
       await updateService(serviceId, servicePayload)
       await saveServiceSections(formToSectionPayloads(form))
       await saveServiceMedia(serviceId, formToMediaPayloads(form))
-      await saveServiceSeo(serviceId, formToSeoPayload(form))
+      // SEO is edited only via /admin/seo/service/:id — do not overwrite seo_metadata here.
 
       const reloaded = await getServiceWithContent(serviceId)
       const nextForm = serviceDataToForm(
@@ -646,8 +636,7 @@ export default function AdminServiceEditPage() {
 
             {activeTab === 'seo' && (
               <SeoEditor
-                seo={form.seo}
-                onFieldChange={handleSeoFieldChange}
+                serviceId={String(serviceId ?? '')}
                 panelId={panelId}
                 labelledBy={labelledBy}
               />

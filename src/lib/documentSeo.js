@@ -117,6 +117,56 @@ export function applyDocumentSeo(seo) {
   }
 }
 
+const DEFAULT_PUBLIC_FAVICON = '/favicon.png?v=2'
+
+/**
+ * Apply CMS favicon_url to document.head, falling back to the static index.html icon.
+ * Keeps the existing <link rel="icon"> node when possible so the initial HTML favicon
+ * remains until settings resolve.
+ *
+ * @param {string | null | undefined} faviconUrl — absolute URL or storage-resolved public URL
+ * @returns {() => void} cleanup that restores the previous href
+ */
+export function applyPublicFavicon(faviconUrl) {
+  if (typeof document === 'undefined') return () => {}
+
+  const nextHref = String(faviconUrl ?? '').trim() || DEFAULT_PUBLIC_FAVICON
+  let link = document.head.querySelector('link[rel="icon"]')
+  let created = false
+
+  if (!link) {
+    link = document.createElement('link')
+    link.setAttribute('rel', 'icon')
+    document.head.appendChild(link)
+    created = true
+  }
+
+  const previousHref = link.getAttribute('href')
+  const previousType = link.getAttribute('type')
+
+  link.setAttribute('href', nextHref)
+  if (/\.svg(\?|$)/i.test(nextHref)) {
+    link.setAttribute('type', 'image/svg+xml')
+  } else if (/\.ico(\?|$)/i.test(nextHref)) {
+    link.setAttribute('type', 'image/x-icon')
+  } else if (/\.webp(\?|$)/i.test(nextHref)) {
+    link.setAttribute('type', 'image/webp')
+  } else {
+    link.setAttribute('type', 'image/png')
+  }
+
+  return () => {
+    if (created) {
+      link?.remove()
+      return
+    }
+    if (previousHref == null) link?.removeAttribute('href')
+    else link?.setAttribute('href', previousHref)
+    if (previousType == null) link?.removeAttribute('type')
+    else link?.setAttribute('type', previousType)
+  }
+}
+
 /**
  * @param {Record<string, string | null | undefined>} globals
  */

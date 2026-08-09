@@ -3,6 +3,8 @@ import { getPublicUrl } from './media'
 import { parseStructuredDataInput, stringifyStructuredData } from './seoAnalysis'
 
 /** @type {readonly string[]} */
+// Note: site_settings.seo_extensions exists in the DB as a future bag but is intentionally
+// unused by the CMS UI and public SEO pipeline. Do not expose it without a product need.
 export const GLOBAL_SEO_FIELDS = Object.freeze([
   'website_name',
   'company_name',

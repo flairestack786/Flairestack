@@ -448,7 +448,7 @@ export function buildPublicHomePage(page, sectionRows, seoRow = null) {
       title: textOrFallback(page?.title, fallback.page.title),
       route_path: textOrFallback(page?.route_path, fallback.page.route_path),
       status: textOrFallback(page?.status, fallback.page.status),
-      excerpt: textOrFallback(page?.excerpt, seoRow?.page_description ?? ''),
+      excerpt: textOrFallback(seoRow?.page_description, page?.excerpt ?? ''),
     },
     seo: {
       metaTitle: textOrFallback(seoRow?.meta_title, fallback.seo.metaTitle),

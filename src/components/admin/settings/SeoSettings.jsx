@@ -1,45 +1,17 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import SettingsImageField from './SettingsImageField'
+import { ArrowRight, Search } from 'lucide-react'
 
 /**
+ * Settings → SEO tab: redirect only. Global SEO is edited at /admin/seo/global.
+ * Settings is admin-only, so this link stays within Admin RBAC.
+ *
  * @param {{
- *   id: string,
- *   label: string,
- *   hint?: string,
- *   children: React.ReactNode,
- * }} props
- */
-function SettingsField({ id, label, hint, children }) {
-  return (
-    <div className="admin-settings-field">
-      <label htmlFor={id} className="admin-settings-label">
-        {label}
-      </label>
-      {children}
-      {hint && <p className="admin-settings-hint">{hint}</p>}
-    </div>
-  )
-}
-
-/**
- * @param {{
- *   values: Record<string, string>,
- *   onChange: (field: string, value: string) => void,
- *   onChooseImage: (field: string) => void,
- *   onRemoveImage: (field: string) => void,
  *   panelId: string,
  *   labelledBy: string,
  * }} props
  */
-export default function SeoSettings({
-  values,
-  onChange,
-  onChooseImage,
-  onRemoveImage,
-  panelId,
-  labelledBy,
-}) {
+export default function SeoSettings({ panelId, labelledBy }) {
   return (
     <section
       id={panelId}
@@ -50,58 +22,25 @@ export default function SeoSettings({
       <header className="admin-settings-section-header">
         <h2 className="admin-settings-section-title">SEO</h2>
         <p className="admin-settings-section-desc">
-          Quick defaults for meta tags. For full global SEO (templates, verification, analytics,
-          JSON-LD), use{' '}
-          <Link to="/admin/seo/global" className="admin-seo-inline-link">
-            Global SEO Settings
-          </Link>
-          .
+          Global SEO settings are managed in the SEO module.
         </p>
       </header>
 
-      <div className="admin-settings-fields">
-        <SettingsField id="default_meta_title" label="Default meta title">
-          <input
-            id="default_meta_title"
-            type="text"
-            className="admin-settings-input"
-            value={values.default_meta_title}
-            onChange={(e) => onChange('default_meta_title', e.target.value)}
-          />
-        </SettingsField>
-
-        <SettingsField id="default_meta_description" label="Default meta description">
-          <textarea
-            id="default_meta_description"
-            className="admin-settings-textarea admin-settings-field--full"
-            rows={4}
-            value={values.default_meta_description}
-            onChange={(e) => onChange('default_meta_description', e.target.value)}
-          />
-        </SettingsField>
-
-        <SettingsField
-          id="default_keywords"
-          label="Default keywords"
-          hint="Comma-separated keywords for fallback SEO."
-        >
-          <input
-            id="default_keywords"
-            type="text"
-            className="admin-settings-input"
-            value={values.default_keywords}
-            onChange={(e) => onChange('default_keywords', e.target.value)}
-          />
-        </SettingsField>
-
-        <SettingsImageField
-          label="Default OG image"
-          field="default_og_image"
-          path={values.default_og_image}
-          emptyLabel="No Open Graph image selected"
-          onChoose={onChooseImage}
-          onRemove={onRemoveImage}
-        />
+      <div className="admin-seo-module-redirect">
+        <span className="admin-seo-module-redirect-icon" aria-hidden>
+          <Search size={22} strokeWidth={1.75} />
+        </span>
+        <div className="admin-seo-module-redirect-copy">
+          <p className="admin-seo-module-redirect-title">Global SEO</p>
+          <p className="admin-seo-module-redirect-text">
+            Edit site-wide defaults, templates, robots, verification tags, social images, and
+            JSON-LD from the SEO module. This Settings tab no longer edits those fields.
+          </p>
+        </div>
+        <Link to="/admin/seo/global" className="admin-settings-retry admin-seo-module-redirect-cta">
+          Open Global SEO
+          <ArrowRight size={16} strokeWidth={1.75} aria-hidden />
+        </Link>
       </div>
     </section>
   )

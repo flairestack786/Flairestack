@@ -50,6 +50,20 @@ export function buildPublicSiteSettings(row) {
   const logo_path = String(row?.logo_url ?? '').trim()
   const logo_url = logo_path ? getPublicUrl(logo_path) : null
 
+  const favicon_path = String(row?.favicon_url ?? '').trim()
+  let favicon_url = null
+  if (favicon_path) {
+    if (/^https?:\/\//i.test(favicon_path)) {
+      favicon_url = favicon_path
+    } else {
+      try {
+        favicon_url = getPublicUrl(favicon_path)
+      } catch {
+        favicon_url = null
+      }
+    }
+  }
+
   const addressLines = address
     .split('\n')
     .map((line) => line.trim())
@@ -70,6 +84,8 @@ export function buildPublicSiteSettings(row) {
     copyright_text,
     logo_path,
     logo_url,
+    favicon_path,
+    favicon_url,
     website_name: String(row?.website_name ?? '').trim() || company_name,
     default_meta_title: String(row?.default_meta_title ?? '').trim(),
     default_meta_description: String(row?.default_meta_description ?? '').trim() || description,

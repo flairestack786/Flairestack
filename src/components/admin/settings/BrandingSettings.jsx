@@ -27,7 +27,8 @@ export default function BrandingSettings({
       <header className="admin-settings-section-header">
         <h2 className="admin-settings-section-title">Branding</h2>
         <p className="admin-settings-section-desc">
-          Logo and favicon assets for the public site and browser chrome.
+          Logo and favicon assets for the public site and browser chrome. The favicon
+          updates the public site icon after settings load (with a static fallback until then).
         </p>
       </header>
 

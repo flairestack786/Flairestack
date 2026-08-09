@@ -19,6 +19,7 @@ export const DEFAULT_SITE_SETTINGS = {
   default_meta_title: 'FlaireStack | AI-First Software Development Studio',
   default_meta_description:
     'FlaireStack is an AI-first software development studio delivering custom applications, cloud-native platforms, and intelligent automation with the latest technologies — from LLMs and modern frameworks to secure, scalable infrastructure.',
+  // Legacy seed only — not read by publicSeo/documentSeo and not exposed in CMS SEO UI.
   default_keywords:
     'software development, AI, cloud, web development, mobile apps, enterprise software, Chicago',
   business_hours: 'Monday–Friday, 9:00 AM – 6:00 PM CT',

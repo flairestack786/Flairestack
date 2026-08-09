@@ -16,7 +16,7 @@ import { getSiteSettings, saveSiteSettings } from '../../lib/siteSettings'
 import { invalidatePublicSeoCaches } from '../../lib/invalidatePublicSeoCaches'
 
 /** @type {readonly string[]} */
-const IMAGE_FIELDS = ['logo_url', 'favicon_url', 'default_og_image']
+const IMAGE_FIELDS = ['logo_url', 'favicon_url']
 
 export default function AdminSettingsPage() {
   const { success, error } = useToast()
@@ -119,7 +119,8 @@ export default function AdminSettingsPage() {
         <div>
           <h1 className="admin-page-title">Settings</h1>
           <p className="admin-page-desc">
-            Site-wide preferences, branding, contact details, SEO defaults, and integrations.
+            Site-wide preferences, branding, contact details, analytics, and integrations. Global
+            SEO is managed in the SEO module.
           </p>
         </div>
       </header>
@@ -181,14 +182,7 @@ export default function AdminSettingsPage() {
               />
             )}
             {activeTab === 'seo' && (
-              <SeoSettings
-                values={form}
-                onChange={handleChange}
-                onChooseImage={handleChooseImage}
-                onRemoveImage={handleRemoveImage}
-                panelId={panelId}
-                labelledBy={labelledBy}
-              />
+              <SeoSettings panelId={panelId} labelledBy={labelledBy} />
             )}
             {activeTab === 'analytics' && (
               <AnalyticsSettings

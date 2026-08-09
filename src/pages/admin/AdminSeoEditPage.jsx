@@ -462,7 +462,7 @@ export default function AdminSeoEditPage() {
                   id="seo-page-description"
                   label={
                     <FieldLabel>
-                      Page description / excerpt
+                      {normalizedType === 'page' ? 'Page excerpt' : 'Page description'}
                     </FieldLabel>
                   }
                 >
@@ -472,11 +472,17 @@ export default function AdminSeoEditPage() {
                     rows={5}
                     value={String(form.page_description ?? '')}
                     onChange={(event) => setField('page_description', event.target.value)}
-                    placeholder="Longer public excerpt — separate from meta description"
+                    placeholder={
+                      normalizedType === 'page'
+                        ? 'Public page excerpt (also used as a meta-description fallback)'
+                        : 'Optional description used as a meta-description fallback'
+                    }
                   />
                   <SeoCharCounter value={String(form.page_description ?? '')} field="page_description" />
                   <p className="admin-users-field-hint">
-                    Optional public excerpt and SEO fallback. Does not replace meta description.
+                    {normalizedType === 'page'
+                      ? 'Stored on SEO as page_description and mirrored to the page excerpt. Separate from meta description.'
+                      : 'Stored on this service SEO record only. Separate from meta description; used as a fallback when meta description is empty.'}
                   </p>
                 </EditorField>
 
@@ -708,7 +714,7 @@ export default function AdminSeoEditPage() {
 
               <SeoCollapsibleSection
                 title="JSON-LD structured data"
-                description="Schema.org markup for rich results. Future AI can write into extensions without schema changes."
+                description="Schema.org markup for rich results. Image paths and analysis metadata are stored in the SEO extensions bag automatically."
                 defaultOpen={false}
               >
                 <EditorField id="seo-jsonld" label="Structured data (JSON)">

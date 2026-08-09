@@ -28,6 +28,8 @@ export {
  */
 export function seoToForm(seo, entity = {}) {
   const structured = seo?.structured_data ?? {}
+  // extensions stores CMS-only bag: OG/Twitter image storage paths + analysis metadata.
+  // Public inheritance reads og_image_path / twitter_image_path from here (not media FKs alone).
   const extensions =
     seo?.extensions && typeof seo.extensions === 'object' && !Array.isArray(seo.extensions)
       ? /** @type {Record<string, unknown>} */ (seo.extensions)
@@ -428,6 +430,9 @@ export async function saveSeoEntity(entityType, entityId, form) {
   }
 
   if (entityType === 'page' && payload.page_description !== undefined) {
+    // Source of truth for SEO module: seo_metadata.page_description.
+    // Mirror onto pages.excerpt so page-content queries can show the same public excerpt
+    // without joining seo_metadata. Meta description remains a separate field.
     await supabase
       .from('pages')
       .update({ excerpt: payload.page_description })
