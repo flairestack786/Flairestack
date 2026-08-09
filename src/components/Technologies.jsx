@@ -28,7 +28,7 @@ function TechMarqueeRow({ items, reverse = false, duration = '50s' }) {
                 aria-label={i < labeledCount ? tech.name : undefined}
                 aria-hidden={i >= labeledCount}
               >
-                <Icon aria-hidden />
+                <Icon color={tech.color} aria-hidden />
               </span>
             )
           })}

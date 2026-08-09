@@ -80,9 +80,9 @@ const FALLBACK_CONTACT_TRUST = [
   },
 ]
 
-/** @type {Map<string, import('react').ComponentType<{ size?: number, strokeWidth?: number, 'aria-hidden'?: boolean }>>} */
+/** @type {Map<string, { Icon: import('react').ComponentType, color?: string }>} */
 const technologyIconLookup = new Map(
-  [...technologiesRowA, ...technologiesRowB].map(({ name, Icon }) => [name, Icon])
+  [...technologiesRowA, ...technologiesRowB].map(({ name, Icon, color }) => [name, { Icon, color }])
 )
 
 /**
@@ -114,13 +114,18 @@ function stringArrayOrFallback(value, fallback) {
 
 /**
  * @param {string[]} names
- * @returns {Array<{ name: string, Icon: import('react').ComponentType }>}
+ * @returns {Array<{ name: string, Icon: import('react').ComponentType, color?: string }>}
  */
 function mapTechnologyNames(names) {
-  return names.map((name) => ({
-    name,
-    Icon: technologyIconLookup.get(name) ?? technologiesRowA[0].Icon,
-  }))
+  const fallback = technologiesRowA[0]
+  return names.map((name) => {
+    const match = technologyIconLookup.get(name)
+    return {
+      name,
+      Icon: match?.Icon ?? fallback.Icon,
+      color: match?.color ?? fallback.color,
+    }
+  })
 }
 
 /**

@@ -3115,6 +3115,8 @@
 .tech-marquee-tile svg {
   width: 28px;
   height: 28px;
+  /* Brand colors come from each icon's color prop; do not inherit body white. */
+  fill: currentColor;
 }
 
 .tech-marquee-tile:hover {
