@@ -258,8 +258,11 @@ export async function handleDisableUser(ctx) {
 
     if (userId === ctx.adminProfile.id) {
       return {
-        status: 400,
-        body: { error: 'You cannot disable your own account while signed in.' },
+        status: 403,
+        body: {
+          error:
+            'You cannot disable or change the role of your own account while you are logged in.',
+        },
       }
     }
 
@@ -325,6 +328,16 @@ export async function handleUpdateUserRole(ctx) {
     const admin = ensureAdminClient()
     const userId = ctx.params.userId
     const role = normalizeInviteRole(/** @type {string} */ (ctx.body?.role))
+
+    if (userId === ctx.adminProfile.id) {
+      return {
+        status: 403,
+        body: {
+          error:
+            'You cannot disable or change the role of your own account while you are logged in.',
+        },
+      }
+    }
 
     if (role !== 'administrator') {
       await assertNotLastAdministrator(admin, userId)

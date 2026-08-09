@@ -24,6 +24,17 @@ export const CMS_USER_STATUS_OPTIONS = Object.freeze([
   'suspended',
 ])
 
+/**
+ * Statuses an admin may assign to an existing CMS user via Users management.
+ * Lifecycle values (invited / suspended) remain in the DB enum but are not manually assignable.
+ * @type {readonly ('active' | 'disabled')[]}
+ */
+export const CMS_USER_MANAGEABLE_STATUS_OPTIONS = Object.freeze(['active', 'disabled'])
+
+/** Shared validation copy for invalid manual status assignments. */
+export const INVALID_MANAGEABLE_STATUS_MESSAGE =
+  'Invalid user status. Existing CMS users can only be Active or Disabled.'
+
 /** @type {readonly CmsInviteStatus[]} */
 export const CMS_INVITE_STATUS_OPTIONS = Object.freeze([
   'pending',
@@ -40,6 +51,12 @@ export const CMS_INVITE_STATUS_HELP = Object.freeze({
   expired: 'Invitation expired and must be resent.',
 })
 
+/**
+ * Shared copy for self-account lockout protection in Users management.
+ */
+export const SELF_ACCOUNT_LOCKOUT_MESSAGE =
+  'You cannot disable or change the role of your own account while you are logged in.'
+
 const PROFILE_UPDATE_FIELDS = [
   'full_name',
   'avatar_path',
@@ -51,6 +68,7 @@ const PROFILE_UPDATE_FIELDS = [
 
 const ROLES = new Set(CMS_ROLE_OPTIONS)
 const STATUSES = new Set(CMS_USER_STATUS_OPTIONS)
+const MANAGEABLE_STATUSES = new Set(CMS_USER_MANAGEABLE_STATUS_OPTIONS)
 
 /**
  * @param {string} role
@@ -154,6 +172,9 @@ function pickFields(fields, allowed) {
       if (!STATUSES.has(/** @type {CmsUserStatus} */ (status))) {
         throw new Error(`Invalid status "${status}".`)
       }
+      if (!MANAGEABLE_STATUSES.has(/** @type {'active' | 'disabled'} */ (status))) {
+        throw new Error(INVALID_MANAGEABLE_STATUS_MESSAGE)
+      }
       payload[key] = status
       continue
     }
@@ -213,6 +234,15 @@ export async function updateUser(id, fields) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  if (user?.id && String(id) === String(user.id)) {
+    if (rest.status === 'disabled') {
+      throw new Error(SELF_ACCOUNT_LOCKOUT_MESSAGE)
+    }
+    if (role !== undefined) {
+      throw new Error(SELF_ACCOUNT_LOCKOUT_MESSAGE)
+    }
+  }
+
   if (user?.id) {
     rest.updated_by = user.id
   }
@@ -253,15 +283,25 @@ export async function updateUser(id, fields) {
  * @returns {Promise<Record<string, unknown>>}
  */
 export async function setUserStatus(id, status) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (status === 'disabled' && user?.id && String(id) === String(user.id)) {
+    throw new Error(SELF_ACCOUNT_LOCKOUT_MESSAGE)
+  }
+
+  if (status !== 'active' && status !== 'disabled') {
+    throw new Error(INVALID_MANAGEABLE_STATUS_MESSAGE)
+  }
+
   if (status === 'disabled') {
     const result = await disableUserAuth(id)
     return result.user
   }
-  if (status === 'active') {
-    const result = await enableUserAuth(id)
-    return result.user
-  }
-  return updateUser(id, { status })
+
+  const result = await enableUserAuth(id)
+  return result.user
 }
 
 /**
@@ -270,6 +310,14 @@ export async function setUserStatus(id, status) {
  * @returns {Promise<Record<string, unknown>>}
  */
 export async function setUserRole(id, role) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user?.id && String(id) === String(user.id)) {
+    throw new Error(SELF_ACCOUNT_LOCKOUT_MESSAGE)
+  }
+
   return updateUser(id, { role })
 }
 

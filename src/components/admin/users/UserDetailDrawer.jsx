@@ -1,18 +1,19 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Loader2, RefreshCw, Save, Shield, UserX, X } from 'lucide-react'
+import { Loader2, RefreshCw, Save, X } from 'lucide-react'
 import EditorField from '../home/EditorField'
 import AdminSelect from '../AdminSelect'
-import ConfirmationModal from '../ConfirmationModal'
 import UserAvatar from './UserAvatar'
 import { useToast } from '../../common/ToastProvider'
 import { useAuth } from '../../../context/AuthContext'
 import { LAST_ADMIN_GUARD_MESSAGE } from '../../../lib/cmsPermissions'
 import {
   CMS_ROLE_OPTIONS,
-  CMS_USER_STATUS_OPTIONS,
+  CMS_USER_MANAGEABLE_STATUS_OPTIONS,
   formatCmsRole,
   formatCmsUserStatus,
+  INVALID_MANAGEABLE_STATUS_MESSAGE,
   requestPasswordReset,
+  SELF_ACCOUNT_LOCKOUT_MESSAGE,
   setUserStatus,
   updateUser,
 } from '../../../lib/users'
@@ -64,9 +65,9 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
   const [baseline, setBaseline] = useState(() => userToForm(user))
   const [isSaving, setIsSaving] = useState(false)
   const [busyAction, setBusyAction] = useState('')
-  const [confirmDisable, setConfirmDisable] = useState(false)
 
   const userId = user ? String(user.id ?? '') : ''
+  const isSelf = Boolean(userId && authUser?.id && userId === authUser.id)
 
   useEffect(() => {
     if (!isOpen || !user) return
@@ -108,51 +109,66 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
 
   const handleSave = useCallback(async () => {
     if (!userId || !dirty) return
+
+    if (isSelf && (draft.role !== baseline.role || draft.status === 'disabled')) {
+      error(SELF_ACCOUNT_LOCKOUT_MESSAGE)
+      return
+    }
+
+    if (
+      !isSelf &&
+      draft.status !== baseline.status &&
+      draft.status !== 'active' &&
+      draft.status !== 'disabled'
+    ) {
+      error(INVALID_MANAGEABLE_STATUS_MESSAGE)
+      return
+    }
+
     setIsSaving(true)
     try {
-      const updated = await updateUser(userId, {
+      const statusChanged =
+        !isSelf &&
+        draft.status !== baseline.status &&
+        (draft.status === 'active' || draft.status === 'disabled')
+
+      /** @type {Record<string, unknown>} */
+      const payload = {
         full_name: draft.full_name,
         notes: draft.notes,
-        role: draft.role,
-        status: draft.status,
-      })
+      }
+      // Self-lockout: never send role/status mutations for the signed-in admin.
+      if (!isSelf) {
+        payload.role = draft.role
+      }
+
+      let updated = await updateUser(userId, payload)
+
+      // Status is applied only on Save, via enable/disable APIs (Auth ban sync).
+      if (statusChanged) {
+        updated = await setUserStatus(
+          userId,
+          /** @type {'active' | 'disabled'} */ (draft.status)
+        )
+      }
+
       setBaseline(userToForm(updated))
       setDraft(userToForm(updated))
       onUserUpdated?.(updated)
       success('User profile saved.')
     } catch (err) {
       const message = err?.message ?? 'Failed to save user.'
-      error(message.includes('last active Administrator') ? LAST_ADMIN_GUARD_MESSAGE : message)
+      if (message.includes('own account')) {
+        error(SELF_ACCOUNT_LOCKOUT_MESSAGE)
+      } else if (message.includes('Active or Disabled')) {
+        error(INVALID_MANAGEABLE_STATUS_MESSAGE)
+      } else {
+        error(message.includes('last active Administrator') ? LAST_ADMIN_GUARD_MESSAGE : message)
+      }
     } finally {
       setIsSaving(false)
     }
-  }, [userId, dirty, draft, onUserUpdated, success, error])
-
-  const handleStatusAction = useCallback(
-    async (nextStatus) => {
-      if (!userId) return
-      if (nextStatus === 'disabled' && userId === authUser?.id) {
-        error('You cannot disable your own account while signed in.')
-        return
-      }
-      setBusyAction(nextStatus)
-      try {
-        const updated = await setUserStatus(userId, nextStatus)
-        const form = userToForm(updated)
-        setDraft(form)
-        setBaseline(form)
-        onUserUpdated?.(updated)
-        success(`User marked as ${formatCmsUserStatus(nextStatus)}.`)
-        setConfirmDisable(false)
-      } catch (err) {
-        const message = err?.message ?? 'Failed to update status.'
-        error(message.includes('last active Administrator') ? LAST_ADMIN_GUARD_MESSAGE : message)
-      } finally {
-        setBusyAction('')
-      }
-    },
-    [userId, authUser?.id, onUserUpdated, success, error]
-  )
+  }, [userId, dirty, draft, baseline.role, baseline.status, isSelf, onUserUpdated, success, error])
 
   const handlePasswordReset = useCallback(async () => {
     if (!userId) return
@@ -174,10 +190,20 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
     label: formatCmsRole(value),
   }))
 
-  const statusOptions = CMS_USER_STATUS_OPTIONS.map((value) => ({
-    value,
-    label: formatCmsUserStatus(value),
-  }))
+  const isLifecycleStatus =
+    draft.status === 'invited' || draft.status === 'suspended'
+  const statusOptions = isLifecycleStatus
+    ? [
+        {
+          value: draft.status,
+          label: formatCmsUserStatus(draft.status),
+        },
+      ]
+    : CMS_USER_MANAGEABLE_STATUS_OPTIONS.map((value) => ({
+        value,
+        label: formatCmsUserStatus(value),
+      }))
+  const statusReadOnly = isBusy || isSelf || isLifecycleStatus
 
   return (
     <div className="admin-leads-drawer-root admin-users-drawer-root">
@@ -268,7 +294,7 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
                 id="user-role"
                 aria-label="Role"
                 value={draft.role}
-                disabled={isBusy}
+                disabled={isBusy || isSelf}
                 onChange={(value) => setDraft((current) => ({ ...current, role: value }))}
                 options={roleOptions}
               />
@@ -278,14 +304,19 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
                 id="user-status"
                 aria-label="Status"
                 value={draft.status}
-                disabled={isBusy}
+                disabled={statusReadOnly}
                 onChange={(value) => setDraft((current) => ({ ...current, status: value }))}
                 options={statusOptions}
               />
             </EditorField>
             <p className="admin-users-field-hint">
-              Administrator: full CMS access. Editor: content modules only. Sales: dashboard and
-              leads only.
+              {isSelf
+                ? 'You cannot disable or change the role of your own account.'
+                : isLifecycleStatus
+                  ? draft.status === 'invited'
+                    ? 'Invited is a lifecycle state until the user completes account setup. Manage pending invites from the Invitations section.'
+                    : 'Suspended is not manually assignable in the current workflow.'
+                  : 'Change status with this dropdown, then click Save changes. Options: Active or Disabled.'}
             </p>
           </section>
 
@@ -349,28 +380,6 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
                 )}
                 Save changes
               </button>
-              {draft.status !== 'active' && (
-                <button
-                  type="button"
-                  className="admin-settings-retry"
-                  disabled={isBusy}
-                  onClick={() => handleStatusAction('active')}
-                >
-                  <Shield size={16} strokeWidth={1.75} />
-                  Activate
-                </button>
-              )}
-              {draft.status !== 'disabled' && userId !== authUser?.id && (
-                <button
-                  type="button"
-                  className="admin-settings-retry"
-                  disabled={isBusy}
-                  onClick={() => setConfirmDisable(true)}
-                >
-                  <UserX size={16} strokeWidth={1.75} />
-                  Disable
-                </button>
-              )}
               <button
                 type="button"
                 className="admin-settings-retry"
@@ -388,19 +397,6 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
           </section>
         </div>
       </aside>
-
-      <ConfirmationModal
-        isOpen={confirmDisable}
-        title="Disable this user?"
-        message="They will lose CMS access immediately. You can re-enable the account later from this drawer."
-        itemName={String(user.full_name || user.email || 'User')}
-        confirmLabel="Disable user"
-        isLoading={busyAction === 'disabled'}
-        onConfirm={() => handleStatusAction('disabled')}
-        onCancel={() => {
-          if (busyAction !== 'disabled') setConfirmDisable(false)
-        }}
-      />
     </div>
   )
 }
