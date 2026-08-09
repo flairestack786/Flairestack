@@ -24,8 +24,10 @@ import {
   formatCmsUserStatus,
   getInviteLastEmailSentAt,
   resendInvite,
+  resolveCmsUserListStatus,
   revokeUserInvite,
   summarizeTeam,
+  userHasPendingInvite,
 } from '../../lib/users'
 import { useToast } from '../../components/common/ToastProvider'
 
@@ -189,22 +191,25 @@ export default function AdminUsersPage() {
     const query = searchQuery.trim().toLowerCase()
 
     return users.filter((user) => {
-      if (quickFilter === 'active' && user.status !== 'active') return false
-      if (quickFilter === 'pending' && user.status !== 'invited') return false
-      if (quickFilter === 'disabled' && user.status !== 'disabled') return false
+      const listStatus = resolveCmsUserListStatus(user, invites)
+      const isPendingInvite = userHasPendingInvite(user, invites)
+
+      if (quickFilter === 'active' && (listStatus !== 'active' || isPendingInvite)) return false
+      if (quickFilter === 'pending' && !isPendingInvite) return false
+      if (quickFilter === 'disabled' && listStatus !== 'disabled') return false
       if (quickFilter === 'administrators' && user.role !== 'administrator') return false
       if (quickFilter === 'editors' && user.role !== 'editor') return false
       if (quickFilter === 'sales' && user.role !== 'sales') return false
 
       if (!query) return true
 
-      const haystack = [user.email, user.full_name, user.role, user.status, user.notes]
+      const haystack = [user.email, user.full_name, user.role, listStatus, user.notes]
         .map((value) => String(value ?? '').toLowerCase())
         .join(' ')
 
       return haystack.includes(query)
     })
-  }, [users, searchQuery, quickFilter])
+  }, [users, invites, searchQuery, quickFilter])
 
   const handleOpenUser = useCallback((user) => {
     setSelectedUser(user)
@@ -509,9 +514,9 @@ export default function AdminUsersPage() {
                         </td>
                         <td>
                           <span
-                            className={`admin-users-badge admin-users-badge--status-${user.status}`}
+                            className={`admin-users-badge admin-users-badge--status-${resolveCmsUserListStatus(user, invites)}`}
                           >
-                            {formatCmsUserStatus(String(user.status ?? ''))}
+                            {formatCmsUserStatus(resolveCmsUserListStatus(user, invites))}
                           </span>
                         </td>
                         <td className="admin-users-date-cell">{formatDateTime(user.last_sign_in_at)}</td>
@@ -682,6 +687,9 @@ export default function AdminUsersPage() {
         isOpen={drawerOpen}
         onClose={handleCloseDrawer}
         onUserUpdated={handleUserUpdated}
+        hasPendingInvite={
+          selectedUser ? userHasPendingInvite(selectedUser, invites) : false
+        }
       />
 
       <InviteUserModal

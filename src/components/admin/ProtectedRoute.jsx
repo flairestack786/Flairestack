@@ -5,6 +5,7 @@ import AdminAuthLoading from './AdminAuthLoading'
 
 /**
  * Session gate for the admin shell. Module access is enforced by PermissionRoute.
+ * Invited (not yet accepted) users are sent to set-password; disabled users to forbidden.
  */
 export default function ProtectedRoute({ children }) {
   const { session, profile, isActiveCmsUser, loading, profileLoading } = useAuth()
@@ -16,6 +17,10 @@ export default function ProtectedRoute({ children }) {
 
   if (!session) {
     return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />
+  }
+
+  if (profile?.status === 'invited') {
+    return <Navigate to="/admin/set-password" replace />
   }
 
   if (profile && !isActiveCmsUser) {

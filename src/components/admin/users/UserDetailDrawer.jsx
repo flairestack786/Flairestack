@@ -53,9 +53,16 @@ function formatDateTime(value) {
  *   isOpen: boolean,
  *   onClose: () => void,
  *   onUserUpdated?: (user: Record<string, unknown>) => void,
+ *   hasPendingInvite?: boolean,
  * }} props
  */
-export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated }) {
+export default function UserDetailDrawer({
+  user,
+  isOpen,
+  onClose,
+  onUserUpdated,
+  hasPendingInvite = false,
+}) {
   const titleId = useId()
   const closeRef = useRef(/** @type {HTMLButtonElement | null} */ (null))
   const { success, error } = useToast()
@@ -210,12 +217,13 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
   }))
 
   const isLifecycleStatus =
-    draft.status === 'invited' || draft.status === 'suspended'
+    draft.status === 'invited' || draft.status === 'suspended' || hasPendingInvite
+  const displayStatus = hasPendingInvite ? 'invited' : draft.status
   const statusOptions = isLifecycleStatus
     ? [
         {
-          value: draft.status,
-          label: formatCmsUserStatus(draft.status),
+          value: hasPendingInvite ? 'invited' : draft.status,
+          label: formatCmsUserStatus(hasPendingInvite ? 'invited' : draft.status),
         },
       ]
     : CMS_USER_MANAGEABLE_STATUS_OPTIONS.map((value) => ({
@@ -269,8 +277,8 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
           <span className={`admin-users-badge admin-users-badge--role-${user.role}`}>
             {formatCmsRole(String(user.role ?? ''))}
           </span>
-          <span className={`admin-users-badge admin-users-badge--status-${user.status}`}>
-            {formatCmsUserStatus(String(user.status ?? ''))}
+          <span className={`admin-users-badge admin-users-badge--status-${displayStatus}`}>
+            {formatCmsUserStatus(String(displayStatus ?? ''))}
           </span>
         </div>
 
@@ -326,7 +334,7 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
                   isSelf
                     ? 'You cannot disable or change the role of your own account.'
                     : isLifecycleStatus
-                      ? draft.status === 'invited'
+                      ? hasPendingInvite || draft.status === 'invited'
                         ? 'Invited is a lifecycle state until the user completes account setup. Manage pending invites from the Invitations section.'
                         : 'Suspended is not manually assignable in the current workflow.'
                       : 'Change status with this dropdown, then click Save changes. Options: Active or Disabled.'
@@ -335,7 +343,7 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
                 <AdminSelect
                   id="user-status"
                   aria-label="Status"
-                  value={draft.status}
+                  value={hasPendingInvite ? 'invited' : draft.status}
                   disabled={statusReadOnly}
                   onChange={(value) => setDraft((current) => ({ ...current, status: value }))}
                   options={statusOptions}

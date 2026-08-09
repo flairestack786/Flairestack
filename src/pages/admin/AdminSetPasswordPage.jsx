@@ -16,7 +16,7 @@ const MIN_PASSWORD_LENGTH = 8
  */
 export default function AdminSetPasswordPage() {
   const navigate = useNavigate()
-  const { session, loading } = useAuth()
+  const { session, loading, refreshProfile } = useAuth()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -60,9 +60,10 @@ export default function AdminSetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
 
-      // Mark matching pending invite accepted (password-reset with no invite returns skipped OK).
+      // Mark matching pending invite accepted and activate profile (password-reset with no invite returns skipped OK).
       try {
         await acceptUserInvite()
+        await refreshProfile()
       } catch (acceptErr) {
         throw new Error(
           acceptErr?.message

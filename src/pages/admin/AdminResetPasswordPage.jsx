@@ -8,14 +8,17 @@ import '../../admin-auth.css'
 
 const MIN_PASSWORD_LENGTH = 8
 
+const INVALID_RECOVERY_MESSAGE =
+  'Your password reset session is invalid or has expired. Please request a new password reset link.'
+
 /**
  * Password recovery completion page.
- * Requires a valid Supabase recovery session from the email link.
+ * Requires a valid Supabase PASSWORD_RECOVERY session — not a normal CMS login session.
  * Must not be wrapped in GuestRoute.
  */
 export default function AdminResetPasswordPage() {
   const navigate = useNavigate()
-  const { session, loading, signOut } = useAuth()
+  const { session, loading, isPasswordRecovery, signOut, clearPasswordRecovery } = useAuth()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -30,7 +33,7 @@ export default function AdminResetPasswordPage() {
   useEffect(() => {
     if (loading) return undefined
 
-    if (session) {
+    if (session && isPasswordRecovery) {
       setRecoveryReady(true)
       return undefined
     }
@@ -40,7 +43,9 @@ export default function AdminResetPasswordPage() {
     }, 1200)
 
     return () => window.clearTimeout(timer)
-  }, [loading, session])
+  }, [loading, session, isPasswordRecovery])
+
+  const canUpdatePassword = Boolean(session && isPasswordRecovery)
 
   const validate = () => {
     /** @type {Record<string, string>} */
@@ -63,10 +68,8 @@ export default function AdminResetPasswordPage() {
     e.preventDefault()
     setFormError('')
 
-    if (!session) {
-      setFormError(
-        'This password reset link is invalid or has expired. Please request a new password reset link.'
-      )
+    if (!canUpdatePassword) {
+      setFormError(INVALID_RECOVERY_MESSAGE)
       return
     }
 
@@ -76,6 +79,8 @@ export default function AdminResetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
+
+      clearPasswordRecovery()
 
       try {
         await signOut()
@@ -90,9 +95,7 @@ export default function AdminResetPasswordPage() {
     } catch (err) {
       const message = String(err?.message ?? '')
       if (/session|expired|invalid/i.test(message)) {
-        setFormError(
-          'This password reset link is invalid or has expired. Please request a new password reset link.'
-        )
+        setFormError(INVALID_RECOVERY_MESSAGE)
       } else {
         setFormError('Unable to update your password. Please try again or request a new reset link.')
       }
@@ -151,7 +154,7 @@ export default function AdminResetPasswordPage() {
     )
   }
 
-  if (!session) {
+  if (!canUpdatePassword) {
     return (
       <div className="admin-auth-page">
         <div className="admin-auth-bg" aria-hidden>
@@ -176,12 +179,9 @@ export default function AdminResetPasswordPage() {
 
           <div className="admin-auth-card">
             <h1 className="admin-auth-title">Reset link expired</h1>
-            <p className="admin-auth-subtitle">
-              This password reset link is invalid or has expired. Please request a new password
-              reset link.
-            </p>
+            <p className="admin-auth-subtitle">{INVALID_RECOVERY_MESSAGE}</p>
             <div className="admin-auth-error" role="alert">
-              No valid recovery session found.
+              No valid password recovery session found.
             </div>
             <Link
               to="/admin/forgot-password"

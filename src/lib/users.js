@@ -89,6 +89,52 @@ export function formatCmsUserStatus(status) {
 }
 
 /**
+ * Pending onboarding is tracked primarily in user_invites (status = pending).
+ * profiles.status = invited mirrors that during onboarding but is not the filter source of truth.
+ * @param {Record<string, unknown> | null | undefined} user
+ * @param {Record<string, unknown>[]} invites
+ * @returns {boolean}
+ */
+export function userHasPendingInvite(user, invites = []) {
+  const email = String(user?.email ?? '')
+    .trim()
+    .toLowerCase()
+  if (email) {
+    const pendingByEmail = invites.some(
+      (invite) =>
+        String(invite?.status ?? '') === 'pending' &&
+        String(invite?.email ?? '')
+          .trim()
+          .toLowerCase() === email
+    )
+    if (pendingByEmail) return true
+  }
+
+  const authUserId = user?.id != null ? String(user.id) : ''
+  if (!authUserId) return false
+
+  return invites.some((invite) => {
+    if (String(invite?.status ?? '') !== 'pending') return false
+    const meta =
+      invite?.metadata && typeof invite.metadata === 'object' && !Array.isArray(invite.metadata)
+        ? /** @type {Record<string, unknown>} */ (invite.metadata)
+        : {}
+    return meta.auth_user_id != null && String(meta.auth_user_id) === authUserId
+  })
+}
+
+/**
+ * List/display status aligned with invitation lifecycle.
+ * @param {Record<string, unknown> | null | undefined} user
+ * @param {Record<string, unknown>[]} invites
+ * @returns {string}
+ */
+export function resolveCmsUserListStatus(user, invites = []) {
+  if (userHasPendingInvite(user, invites)) return 'invited'
+  return String(user?.status ?? '')
+}
+
+/**
  * @param {string} status
  * @returns {string}
  */
@@ -438,13 +484,24 @@ export function summarizeTeam(users, invites = []) {
 
   return {
     totalUsers: users.length,
-    activeUsers: users.filter((user) => user.status === 'active').length,
+    activeUsers: users.filter(
+      (user) => user.status === 'active' && !userHasPendingInvite(user, invites)
+    ).length,
     pendingInvites: pendingCount,
     administrators: users.filter(
-      (user) => user.role === 'administrator' && user.status === 'active'
+      (user) =>
+        user.role === 'administrator' &&
+        user.status === 'active' &&
+        !userHasPendingInvite(user, invites)
     ).length,
-    editors: users.filter((user) => user.role === 'editor' && user.status === 'active').length,
-    sales: users.filter((user) => user.role === 'sales' && user.status === 'active').length,
+    editors: users.filter(
+      (user) =>
+        user.role === 'editor' && user.status === 'active' && !userHasPendingInvite(user, invites)
+    ).length,
+    sales: users.filter(
+      (user) =>
+        user.role === 'sales' && user.status === 'active' && !userHasPendingInvite(user, invites)
+    ).length,
     disabledUsers: users.filter((user) => user.status === 'disabled').length,
   }
 }
@@ -465,6 +522,6 @@ export async function fetchUsersSnapshot() {
     users,
     invites,
     pendingInvites,
-    summary: summarizeTeam(users, pendingInvites),
+    summary: summarizeTeam(users, invites),
   }
 }

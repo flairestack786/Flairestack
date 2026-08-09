@@ -117,6 +117,9 @@ export async function handleInviteUser(ctx) {
           cms_role: role,
         },
       })
+
+      // Ensure CMS access is gated until password setup + acceptUserInvite.
+      await admin.from('profiles').update({ status: 'invited' }).eq('id', inviteData.user.id)
     }
 
     const nowIso = new Date().toISOString()
@@ -401,6 +404,21 @@ export async function handleResetPassword(ctx) {
 }
 
 /**
+ * Ensure the invitee's profile is Active after invitation acceptance.
+ * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ * @param {string} userId
+ */
+async function activateAcceptedInviteProfile(admin, userId) {
+  const { error } = await admin
+    .from('profiles')
+    .update({ status: 'active' })
+    .eq('id', userId)
+    .neq('status', 'disabled')
+
+  if (error) throw error
+}
+
+/**
  * Mark a pending invitation as accepted after the invitee completes password setup.
  * Caller must be the authenticated invitee (Bearer JWT). Uses service role for the update
  * because user_invites RLS is administrator-only.
@@ -463,9 +481,11 @@ export async function handleAcceptInvite(ctx) {
             return { status: 500, body: { error: backfillError.message } }
           }
 
+          await activateAcceptedInviteProfile(admin, userId)
           return { status: 200, body: { invite: backfilled, alreadyAccepted: true } }
         }
 
+        await activateAcceptedInviteProfile(admin, userId)
         return { status: 200, body: { invite: alreadyAccepted, alreadyAccepted: true } }
       }
 
@@ -530,6 +550,7 @@ export async function handleAcceptInvite(ctx) {
         .maybeSingle()
 
       if (current?.status === 'accepted') {
+        await activateAcceptedInviteProfile(admin, userId)
         return { status: 200, body: { invite: current, alreadyAccepted: true } }
       }
 
@@ -542,6 +563,7 @@ export async function handleAcceptInvite(ctx) {
       }
     }
 
+    await activateAcceptedInviteProfile(admin, userId)
     return { status: 200, body: { invite: updated } }
   } catch (err) {
     return { status: 500, body: { error: err?.message ?? 'Failed to accept invite.' } }

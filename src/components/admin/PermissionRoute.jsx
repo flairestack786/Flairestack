@@ -20,6 +20,10 @@ export default function PermissionRoute({ module, children }) {
     return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />
   }
 
+  if (profile?.status === 'invited') {
+    return <Navigate to="/admin/set-password" replace />
+  }
+
   if (profile && !isActiveCmsUser) {
     return <Navigate to="/admin/forbidden" replace />
   }
