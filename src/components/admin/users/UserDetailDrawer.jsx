@@ -289,35 +289,40 @@ export default function UserDetailDrawer({ user, isOpen, onClose, onUserUpdated 
             <header className="admin-leads-drawer-section-header">
               <h3>Access</h3>
             </header>
-            <EditorField id="user-role" label="Role">
-              <AdminSelect
-                id="user-role"
-                aria-label="Role"
-                value={draft.role}
-                disabled={isBusy || isSelf}
-                onChange={(value) => setDraft((current) => ({ ...current, role: value }))}
-                options={roleOptions}
-              />
-            </EditorField>
-            <EditorField id="user-status" label="Status">
-              <AdminSelect
+            <div className="admin-leads-drawer-fields">
+              <EditorField id="user-role" label="Role">
+                <AdminSelect
+                  id="user-role"
+                  aria-label="Role"
+                  value={draft.role}
+                  disabled={isBusy || isSelf}
+                  onChange={(value) => setDraft((current) => ({ ...current, role: value }))}
+                  options={roleOptions}
+                />
+              </EditorField>
+              <EditorField
                 id="user-status"
-                aria-label="Status"
-                value={draft.status}
-                disabled={statusReadOnly}
-                onChange={(value) => setDraft((current) => ({ ...current, status: value }))}
-                options={statusOptions}
-              />
-            </EditorField>
-            <p className="admin-users-field-hint">
-              {isSelf
-                ? 'You cannot disable or change the role of your own account.'
-                : isLifecycleStatus
-                  ? draft.status === 'invited'
-                    ? 'Invited is a lifecycle state until the user completes account setup. Manage pending invites from the Invitations section.'
-                    : 'Suspended is not manually assignable in the current workflow.'
-                  : 'Change status with this dropdown, then click Save changes. Options: Active or Disabled.'}
-            </p>
+                label="Status"
+                hint={
+                  isSelf
+                    ? 'You cannot disable or change the role of your own account.'
+                    : isLifecycleStatus
+                      ? draft.status === 'invited'
+                        ? 'Invited is a lifecycle state until the user completes account setup. Manage pending invites from the Invitations section.'
+                        : 'Suspended is not manually assignable in the current workflow.'
+                      : 'Change status with this dropdown, then click Save changes. Options: Active or Disabled.'
+                }
+              >
+                <AdminSelect
+                  id="user-status"
+                  aria-label="Status"
+                  value={draft.status}
+                  disabled={statusReadOnly}
+                  onChange={(value) => setDraft((current) => ({ ...current, status: value }))}
+                  options={statusOptions}
+                />
+              </EditorField>
+            </div>
           </section>
 
           <section className="admin-leads-drawer-section">
