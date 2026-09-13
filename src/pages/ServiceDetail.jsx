@@ -6,10 +6,11 @@ import Footer from '../components/Footer'
 import ServicePageLayout from '../components/service/ServicePageLayout'
 import { useServicePage } from '../hooks/useServicePage'
 import { usePageDocumentSeo } from '../hooks/usePageDocumentSeo'
+import { normalizeServiceSlug } from '../lib/serviceSlug'
 
 export default function ServiceDetail() {
   const { slug } = useParams()
-  const normalizedSlug = String(slug ?? '').trim().toLowerCase()
+  const normalizedSlug = normalizeServiceSlug(slug)
   const { service, page, seo, loading } = useServicePage(normalizedSlug)
 
   usePageDocumentSeo({

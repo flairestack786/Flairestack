@@ -38,6 +38,10 @@ export function ParallaxHeroImage({ src, alt }) {
   const scale = useTransform(scrollYProgress, [0, 1], [1.08, 1.18])
   const opacity = useTransform(scrollYProgress, [0, 0.85], [1, 0.35])
 
+  if (!src) {
+    return null
+  }
+
   return (
     <div ref={ref} className="service-detail-hero-parallax">
       <motion.img
@@ -69,6 +73,10 @@ export function CinematicImage({
   const y = useTransform(scrollYProgress, [0, 1], ['-6%', '6%'])
   const toneClass = tone === 'light' ? ' cinematic-media--light' : ''
 
+  if (!src) {
+    return null
+  }
+
   return (
     <motion.figure
       ref={ref}
@@ -98,6 +106,10 @@ export function CinematicImage({
 }
 
 export function RevealImage({ src, alt, variant = 'split' }) {
+  if (!src) {
+    return null
+  }
+
   const wrapClass =
     variant === 'tech'
       ? 'service-tech-visual service-reveal-media'
@@ -129,6 +141,11 @@ export function VisualBanner({ image }) {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
   const y = useTransform(scrollYProgress, [0, 1], ['-8%', '8%'])
+  const src = image?.src
+
+  if (!src) {
+    return null
+  }
 
   return (
     <motion.figure
@@ -140,8 +157,8 @@ export function VisualBanner({ image }) {
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.img
-        src={image.src}
-        alt={image.alt}
+        src={src}
+        alt={image?.alt ?? ''}
         loading="lazy"
         style={{ y }}
         className="service-visual-banner-img"

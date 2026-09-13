@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const isNodeTest = typeof process !== 'undefined' && Boolean(process.env.NODE_TEST_CONTEXT)
+
+const supabaseUrl =
+  import.meta.env?.VITE_SUPABASE_URL ||
+  (isNodeTest ? 'http://127.0.0.1:54321' : '')
+const supabaseAnonKey =
+  import.meta.env?.VITE_SUPABASE_ANON_KEY ||
+  (isNodeTest ? 'test-anon-key' : '')
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(

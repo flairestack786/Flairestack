@@ -65,7 +65,7 @@ function preloadSlide(src) {
 
 /** Shared slideshow state for hero background + frame (stays in sync). */
 export function useHeroSlideshow(images, intervalMs = 5500) {
-  const slides = images.filter((img) => img?.src)
+  const slides = (Array.isArray(images) ? images : []).filter((img) => img?.src)
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
 

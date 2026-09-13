@@ -1,4 +1,7 @@
-/** Mobile menu service links — labels mapped to dedicated service pages */
+/**
+ * Legacy label map. Live mobile nav uses `usePublishedServices` (CMS slugs).
+ * Do not add public `/services/:slug` links from this file.
+ */
 export const mobileNavServices = [
   { label: 'Web Development', slug: 'web-development' },
   { label: 'Shopify Development', slug: 'e-commerce-website-development' },

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getServiceBySlug } from '../data/services'
-import { fetchPublishedService, buildPublicServicePage } from '../lib/publicServicePage'
+import { fetchPublishedService, resolvePublicServicePage } from '../lib/publicServicePage'
+import { normalizeServiceSlug } from '../lib/serviceSlug'
 
 /** @type {Map<string, { service: object, page: object, seo: object }>} */
 const cache = new Map()
@@ -14,7 +14,7 @@ export function clearPublicServiceCache(slug) {
     cache.clear()
     return
   }
-  cache.delete(String(slug).trim().toLowerCase())
+  cache.delete(normalizeServiceSlug(slug))
 }
 
 /**
@@ -23,7 +23,7 @@ export function clearPublicServiceCache(slug) {
  * @param {string | undefined} slug
  */
 export function useServicePage(slug) {
-  const normalizedSlug = String(slug ?? '').trim().toLowerCase()
+  const normalizedSlug = normalizeServiceSlug(slug)
   const cached = normalizedSlug ? cache.get(normalizedSlug) : null
 
   const [page, setPage] = useState(() => cached?.page ?? null)
@@ -73,13 +73,7 @@ export function useServicePage(slug) {
           return
         }
 
-        const built = buildPublicServicePage(
-          raw.service,
-          raw.sections,
-          raw.media,
-          raw.seo,
-          getServiceBySlug(normalizedSlug)
-        )
+        const built = resolvePublicServicePage(raw, normalizedSlug)
         if (!built) {
           setPage(null)
           setService(null)

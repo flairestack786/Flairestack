@@ -44,6 +44,7 @@ import {
   setServiceStatus,
   updateService,
 } from '../../lib/servicePage'
+import { assertValidServiceSlug, publicServicePath } from '../../lib/serviceSlug'
 
 /**
  * @typedef {{
@@ -268,6 +269,7 @@ export default function AdminServiceEditPage() {
       const servicePayload = { ...formToServicePayload(form) }
       delete servicePayload.status
       delete servicePayload.published_at
+      servicePayload.slug = assertValidServiceSlug(servicePayload.slug)
 
       await updateService(serviceId, servicePayload)
       await saveServiceSections(formToSectionPayloads(form))
@@ -296,6 +298,7 @@ export default function AdminServiceEditPage() {
       invalidatePublicSeoCaches({
         entityType: 'service',
         slug: String(formCopy.service.slug || ''),
+        previousSlug: String(baseline.service.slug || ''),
       })
       clearPublishedServicesCache()
       success('Service saved successfully')
@@ -304,7 +307,7 @@ export default function AdminServiceEditPage() {
     } finally {
       setIsSaving(false)
     }
-  }, [form, publishStatus, serviceId, success, error])
+  }, [baseline.service.slug, form, publishStatus, serviceId, success, error])
 
   const handleToggleStatus = useCallback(async () => {
     if (!serviceId || isTogglingStatus) return
@@ -395,7 +398,7 @@ export default function AdminServiceEditPage() {
           <div>
             <h1 className="admin-page-title">{form.service.title || 'Edit service'}</h1>
             <p className="admin-page-desc">
-              /services/{form.service.slug || '…'}
+              {publicServicePath(form.service.slug) || '/services/…'}
               {isPublished ? (
                 <span className="admin-services-status admin-services-status--published">Published</span>
               ) : (
@@ -405,9 +408,9 @@ export default function AdminServiceEditPage() {
           </div>
 
           <div className="admin-service-edit-actions">
-            {form.service.slug && (
+            {publicServicePath(form.service.slug) && (
               <a
-                href={`/services/${form.service.slug}`}
+                href={publicServicePath(form.service.slug)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="admin-service-preview-link"

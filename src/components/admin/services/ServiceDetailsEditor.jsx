@@ -1,6 +1,7 @@
 import React from 'react'
 import EditorField from '../home/EditorField'
 import EditorSection from '../home/EditorSection'
+import { canonicalizeServiceSlug, SERVICE_SLUG_INPUT_PATTERN } from '../../../lib/serviceSlug'
 
 /**
  * @param {{
@@ -28,14 +29,32 @@ export default function ServiceDetailsEditor({ service, onFieldChange, panelId, 
         />
       </EditorField>
 
-      <EditorField id="service-slug" label="Slug" hint="URL path: /services/{slug}">
+      <EditorField
+        id="service-slug"
+        label="Slug"
+        hint="URL path: /services/{slug}. Lowercase letters, numbers, and hyphens."
+      >
         <input
           id="service-slug"
           type="text"
           className="admin-settings-input"
           value={service.slug}
+          pattern={SERVICE_SLUG_INPUT_PATTERN}
+          autoComplete="off"
+          spellCheck={false}
           onChange={(e) => onFieldChange('slug', e.target.value)}
+          onBlur={(e) => {
+            const next = canonicalizeServiceSlug(e.target.value)
+            if (next && next !== service.slug) {
+              onFieldChange('slug', next)
+            }
+          }}
         />
+        {String(service.slug ?? '').trim() && !canonicalizeServiceSlug(service.slug) ? (
+          <p className="admin-settings-hint admin-services-create-error" role="alert">
+            Enter a URL slug like web-development. Save is blocked until this is valid.
+          </p>
+        ) : null}
       </EditorField>
 
       <EditorField id="service-short-description" label="Short description">

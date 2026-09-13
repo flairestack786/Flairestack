@@ -1,8 +1,13 @@
 import { services as staticServices } from '../data/services'
+import { normalizeServiceSlug } from './serviceSlug'
+import { buildPublishedServicesList } from './serviceUrlFlow'
 import { supabase } from './supabase'
+
+export { buildPublishedServicesList } from './serviceUrlFlow'
 
 /**
  * @typedef {{
+ *   id: string,
  *   slug: string,
  *   title: string,
  *   shortDescription: string,
@@ -13,11 +18,13 @@ import { supabase } from './supabase'
  */
 
 /**
- * Static listing fallback when the CMS request fails or returns nothing.
+ * Offline/static catalog. Not used for live public links — those come from
+ * published `services.slug` rows so a CMS rename cannot keep old URLs around.
  * @type {PublicServiceListItem[]}
  */
 export const FALLBACK_PUBLISHED_SERVICES = staticServices.map((service, index) => ({
-  slug: service.slug,
+  id: '',
+  slug: normalizeServiceSlug(service.slug),
   title: service.title,
   shortDescription: service.shortDescription ?? '',
   description: service.description ?? '',
@@ -31,7 +38,8 @@ export const FALLBACK_PUBLISHED_SERVICES = staticServices.map((service, index) =
  */
 function mapServiceRow(row) {
   return {
-    slug: String(row.slug ?? '').trim(),
+    id: String(row.id ?? ''),
+    slug: normalizeServiceSlug(row.slug),
     title: String(row.title ?? '').trim(),
     shortDescription: String(row.short_description ?? '').trim(),
     description: String(row.description ?? '').trim(),
@@ -43,7 +51,7 @@ function mapServiceRow(row) {
 /**
  * Fetch all published services for public listings (nav, home grid, footer).
  * Sorted by sort_order ascending.
- * @returns {Promise<PublicServiceListItem[] | null>}
+ * @returns {Promise<PublicServiceListItem[]>}
  */
 export async function fetchPublishedServicesList() {
   const { data, error } = await supabase
@@ -56,20 +64,5 @@ export async function fetchPublishedServicesList() {
     throw error
   }
 
-  if (!Array.isArray(data) || data.length === 0) {
-    return null
-  }
-
-  return data.map(mapServiceRow).filter((service) => service.slug && service.title)
-}
-
-/**
- * @param {PublicServiceListItem[] | null} rows
- * @returns {PublicServiceListItem[]}
- */
-export function buildPublishedServicesList(rows) {
-  if (!Array.isArray(rows) || rows.length === 0) {
-    return FALLBACK_PUBLISHED_SERVICES
-  }
-  return rows
+  return buildPublishedServicesList(Array.isArray(data) ? data.map(mapServiceRow) : [])
 }

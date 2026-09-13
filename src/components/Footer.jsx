@@ -5,6 +5,7 @@ import SiteLogo from './SiteLogo'
 import { usePublishedServices } from '../hooks/usePublishedServices'
 import { useSiteSettings } from '../hooks/useSiteSettings'
 import { scrollToHomeSection, scrollToHomeTop } from '../utils/scrollToSection'
+import { publicServicePath } from '../lib/serviceSlug'
 
 const navLinks = [
   { label: 'Home', type: 'home' },
@@ -112,9 +113,9 @@ export default function Footer() {
           <nav className="site-footer-col site-footer-col--services" aria-label="Services">
             <h2 className="site-footer-heading">Services</h2>
             <ul className="site-footer-links site-footer-links--services">
-              {footerServices.map(({ slug, title }) => (
-                <li key={slug}>
-                  <Link to={`/services/${slug}`} className="site-footer-link">
+              {footerServices.map(({ id, slug, title }) => (
+                <li key={id || slug}>
+                  <Link to={publicServicePath(slug)} className="site-footer-link">
                     {title}
                   </Link>
                 </li>

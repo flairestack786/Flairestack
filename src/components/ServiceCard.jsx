@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
+import { publicServicePath } from '../lib/serviceSlug'
 
 export default function ServiceCard({ service, index = 0 }) {
   return (
@@ -12,7 +13,7 @@ export default function ServiceCard({ service, index = 0 }) {
       transition={{ duration: 0.5, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
       className="service-card group"
     >
-      <Link to={`/services/${service.slug}`} className="service-card-link">
+      <Link to={publicServicePath(service.slug)} className="service-card-link">
         <div className="service-card-inner service-card-inner--grid">
           <h3 className="service-card-title">{service.title}</h3>
           <p className="service-card-desc">{service.shortDescription}</p>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { useSiteSettings } from '../../hooks/useSiteSettings'
 import { fadeUp, staggerContainer } from './ServiceMotion'
+import { resolveOptionalMedia } from '../../lib/optionalMedia'
 
 const itemReveal = {
   hidden: { opacity: 0 },
@@ -97,9 +98,11 @@ export default function FrameworkSection({ title, intro, items }) {
       </motion.header>
 
       <ol className="sp-fw-showcase">
-        {items.map((item, i) => {
-          const imageSrc = typeof item.image === 'object' ? item.image.src : item.image
-          const imageAlt = typeof item.image === 'object' ? item.image.alt : item.title
+        {(items ?? []).map((item, i) => {
+          const { src: imageSrc, alt: imageAlt } = resolveOptionalMedia(
+            item?.image,
+            item?.title ?? ''
+          )
           const headingId = `framework-item-${i}`
           const isReverse = i % 2 === 1
 

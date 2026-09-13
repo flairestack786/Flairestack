@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePublishedServices } from '../hooks/usePublishedServices'
 import { useNavActive } from '../hooks/useNavActive'
+import { publicServicePath } from '../lib/serviceSlug'
 
 const VIEWPORT_MARGIN = 12
 const PANEL_GAP = 14
@@ -110,9 +111,9 @@ export default function NavServicesDropdown() {
             <p className="nav-dropdown-label">All Services</p>
             <ul className="nav-dropdown-list">
               {services.map((service) => (
-                <li key={service.slug} role="none">
+                <li key={service.id || service.slug} role="none">
                   <Link
-                    to={`/services/${service.slug}`}
+                    to={publicServicePath(service.slug)}
                     role="menuitem"
                     className={`nav-dropdown-link ${isServiceActive(service.slug) ? 'nav-dropdown-link--active' : ''}`}
                     onClick={() => setOpen(false)}

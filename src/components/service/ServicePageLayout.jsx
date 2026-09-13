@@ -118,7 +118,7 @@ function useScrollSpy(anchorNav) {
   const [activeId, setActiveId] = useState(null)
 
   useEffect(() => {
-    const els = anchorNav
+    const els = (anchorNav ?? [])
       .map((item) => document.getElementById(item.id))
       .filter(Boolean)
     if (!els.length) return undefined
@@ -238,7 +238,7 @@ export default function ServicePageLayout({ service, page }) {
           >
             <SectionHeader title={page.challenges.title} intro={page.challenges.intro} />
             <div className="sp-challenges-grid">
-              {page.challenges.items.map((item, i) => (
+              {(page.challenges.items ?? []).map((item, i) => (
                 <motion.article
                   key={item.title}
                   className="sp-challenge-card sp-card-premium glass"
@@ -278,7 +278,7 @@ export default function ServicePageLayout({ service, page }) {
           >
             <SectionHeader title={page.features.title} intro={page.features.intro} />
             <div className="sp-bento sp-bento--premium">
-              {page.features.items.map((item, i) => {
+              {(page.features.items ?? []).map((item, i) => {
                 const FIcon = featureIcons[i % featureIcons.length]
                 const isWide = i === 0 || i === 3
                 const indexLabel = String(i + 1).padStart(2, '0')
@@ -323,7 +323,7 @@ export default function ServicePageLayout({ service, page }) {
           >
             <SectionHeader light title={page.growth.title} intro={page.growth.intro} />
             <div className="sp-growth-grid">
-              {page.growth.items.map((item, i) => {
+              {(page.growth.items ?? []).map((item, i) => {
                 const GIcon = growthIcons[i % growthIcons.length]
                 return (
                   <motion.article
@@ -462,10 +462,10 @@ export default function ServicePageLayout({ service, page }) {
       {isOn('tech') && page.tech?.is_enabled !== false && (
         <Band tone="light" id="tech" className="sp-band--tech">
           <SectionHeader light title={page.tech.title} intro={page.tech.intro} />
-          {page.tech.items.length > 0 && (
+          {(page.tech.items ?? []).length > 0 && (
             <div className="sp-tech-showcase">
               <div className="sp-tech-grid" role="list">
-                {page.tech.items.map((tech, i) => (
+                {(page.tech.items ?? []).map((tech, i) => (
                   <div
                     key={tech}
                     className="sp-tech-card"
@@ -511,7 +511,7 @@ export default function ServicePageLayout({ service, page }) {
           >
             <SectionHeader title={page.postLaunch.title} intro={page.postLaunch.intro} centered />
             <div className="sp-postlaunch-grid">
-              {page.postLaunch.items.map((item, i) => (
+              {(page.postLaunch.items ?? []).map((item, i) => (
                 <motion.article
                   key={item.title}
                   className="sp-postlaunch-card sp-card-premium glass"

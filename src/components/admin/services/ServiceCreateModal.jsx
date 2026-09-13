@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { X } from 'lucide-react'
 import EditorField from '../home/EditorField'
+import { canonicalizeServiceSlug, SERVICE_SLUG_INPUT_PATTERN } from '../../../lib/serviceSlug'
 
 /**
  * @param {{
@@ -20,13 +21,7 @@ export default function ServiceCreateModal({ isOpen, onClose, onCreate }) {
   const handleTitleChange = useCallback((value) => {
     setTitle(value)
     if (!slug.trim()) {
-      setSlug(
-        value
-          .toLowerCase()
-          .trim()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '')
-      )
+      setSlug(canonicalizeServiceSlug(value))
     }
   }, [slug])
 
@@ -38,7 +33,7 @@ export default function ServiceCreateModal({ isOpen, onClose, onCreate }) {
 
       try {
         await onCreate({
-          slug: slug.trim().toLowerCase(),
+          slug: canonicalizeServiceSlug(slug),
           title: title.trim(),
           short_description: shortDescription.trim(),
           description: description.trim(),
@@ -105,7 +100,7 @@ export default function ServiceCreateModal({ isOpen, onClose, onCreate }) {
               className="admin-settings-input"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              pattern={SERVICE_SLUG_INPUT_PATTERN}
               required
             />
           </EditorField>

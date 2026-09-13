@@ -8,7 +8,6 @@ import React, {
 } from 'react'
 import {
   buildPublishedServicesList,
-  FALLBACK_PUBLISHED_SERVICES,
   fetchPublishedServicesList,
 } from '../lib/publicServicesList'
 
@@ -18,12 +17,29 @@ let servicesCache = null
 /** @type {Promise<import('../lib/publicServicesList').PublicServiceListItem[]> | null} */
 let servicesPromise = null
 
+let publishedServicesEpoch = 0
+
+/** @type {Set<(epoch: number) => void>} */
+const publishedServicesListeners = new Set()
+
 /**
- * Drop cached published services (e.g. after publish/unpublish/create/delete).
+ * Drop cached published services (e.g. after publish/unpublish/create/delete/rename).
+ * Mounted public providers refetch so nav/cards/footer pick up the new slug.
  */
 export function clearPublishedServicesCache() {
   servicesCache = null
   servicesPromise = null
+  publishedServicesEpoch += 1
+  publishedServicesListeners.forEach((listener) => listener(publishedServicesEpoch))
+}
+
+/**
+ * @param {(epoch: number) => void} listener
+ * @returns {() => void}
+ */
+function subscribePublishedServicesEpoch(listener) {
+  publishedServicesListeners.add(listener)
+  return () => publishedServicesListeners.delete(listener)
 }
 
 /**
@@ -53,14 +69,18 @@ const PublishedServicesContext = createContext(null)
 
 /**
  * Provides cached published services for public listings (nav, home, footer).
+ * Slugs always come from live CMS rows, never from the static catalog.
  * @param {{ children: React.ReactNode }} props
  */
 export function PublishedServicesProvider({ children }) {
+  const [epoch, setEpoch] = useState(publishedServicesEpoch)
   const [services, setServices] = useState(
-    () => servicesCache ?? FALLBACK_PUBLISHED_SERVICES
+    () => servicesCache ?? []
   )
   const [loading, setLoading] = useState(() => !servicesCache)
   const [error, setError] = useState(/** @type {Error | null} */ (null))
+
+  useEffect(() => subscribePublishedServicesEpoch(setEpoch), [])
 
   useEffect(() => {
     let cancelled = false
@@ -74,7 +94,7 @@ export function PublishedServicesProvider({ children }) {
       })
       .catch((err) => {
         if (cancelled) return
-        setServices(FALLBACK_PUBLISHED_SERVICES)
+        setServices([])
         setLoading(false)
         setError(err instanceof Error ? err : new Error(String(err)))
       })
@@ -82,7 +102,7 @@ export function PublishedServicesProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [epoch])
 
   const refresh = useCallback(async () => {
     clearPublishedServicesCache()
@@ -93,9 +113,9 @@ export function PublishedServicesProvider({ children }) {
       setError(null)
       return next
     } catch (err) {
-      setServices(FALLBACK_PUBLISHED_SERVICES)
+      setServices([])
       setError(err instanceof Error ? err : new Error(String(err)))
-      return FALLBACK_PUBLISHED_SERVICES
+      return []
     } finally {
       setLoading(false)
     }

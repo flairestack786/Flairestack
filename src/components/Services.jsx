@@ -98,7 +98,7 @@ export default function Services() {
 
           <div className="services-grid">
             {services.map((service, index) => (
-              <ServiceCard key={service.slug} service={service} index={index} />
+              <ServiceCard key={service.id || service.slug} service={service} index={index} />
             ))}
           </div>
         </div>

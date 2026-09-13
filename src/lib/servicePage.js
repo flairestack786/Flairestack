@@ -5,6 +5,7 @@ import {
   buildDefaultSeoForSlug,
   SERVICE_SECTION_KEYS,
 } from './serviceDefaults'
+import { assertValidServiceSlug } from './serviceSlug'
 
 /** Columns writable from the admin Service section editor. */
 const SECTION_WRITABLE_FIELDS = [
@@ -269,10 +270,10 @@ export async function getServiceWithContent(serviceId) {
  * @returns {Promise<Record<string, unknown>>}
  */
 export async function createService(input) {
-  const slug = input.slug.trim().toLowerCase()
+  const slug = assertValidServiceSlug(input.slug)
   const title = input.title.trim()
 
-  if (!slug || !title) {
+  if (!title) {
     throw new Error('Slug and title are required.')
   }
 
@@ -291,7 +292,7 @@ export async function createService(input) {
     .single()
 
   if (error) {
-    throw error
+    throwServiceMutationError(error)
   }
 
   const defaultSections = buildDefaultSectionsForSlug(slug)
@@ -327,6 +328,21 @@ export async function createService(input) {
 }
 
 /**
+ * @param {unknown} error
+ * @returns {never}
+ */
+function throwServiceMutationError(error) {
+  const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
+  if (code === '23505') {
+    throw new Error('That slug is already used by another service.')
+  }
+  if (code === '23514') {
+    throw new Error('Slug must be lowercase letters, numbers, and hyphens (e.g. web-development).')
+  }
+  throw error
+}
+
+/**
  * @param {string} label
  * @param {{ data: unknown, error: unknown, status?: number, statusText?: string, count?: number | null }} result
  * @param {Record<string, unknown>} [meta]
@@ -347,12 +363,27 @@ function logMutationResult(label, result, meta = {}) {
 }
 
 /**
+ * CMS save filter + payload. Always matches by service id — never by slug —
+ * so a rename cannot stale the update.
  * @param {string} serviceId
  * @param {Record<string, unknown>} fields
- * @returns {Promise<Record<string, unknown>>}
  */
-export async function updateService(serviceId, fields) {
+export function prepareServiceUpdate(serviceId, fields) {
   const payload = sanitizeServicePayload(fields)
+
+  if ('slug' in payload) {
+    payload.slug = assertValidServiceSlug(payload.slug)
+  }
+
+  return {
+    table: 'services',
+    match: { id: serviceId },
+    payload,
+  }
+}
+
+export async function updateService(serviceId, fields) {
+  const { payload } = prepareServiceUpdate(serviceId, fields)
 
   const result = await supabase
     .from('services')
@@ -364,7 +395,7 @@ export async function updateService(serviceId, fields) {
   logMutationResult('updateService', result, { serviceId, payloadKeys: Object.keys(payload) })
 
   if (result.error) {
-    throw result.error
+    throwServiceMutationError(result.error)
   }
 
   return result.data

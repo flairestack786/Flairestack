@@ -7,6 +7,7 @@ import { useNavActive } from '../hooks/useNavActive'
 import { scrollToHomeSection, scrollToHomeTop } from '../utils/scrollToSection'
 import SiteLogo from './SiteLogo'
 import { usePublishedServices } from '../hooks/usePublishedServices'
+import { publicServicePath } from '../lib/serviceSlug'
 
 const EASE = [0.22, 1, 0.36, 1]
 const OVERLAY_MS = 0.35
@@ -211,14 +212,14 @@ export default function MobileMenu({ open, onClose }) {
                           <ul className="mmenu-services-list">
                             {services.map((service, i) => (
                               <motion.li
-                                key={service.slug}
+                                key={service.id || service.slug}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ delay: Math.min(i * 0.025, 0.3), duration: 0.28, ease: EASE }}
                               >
                                 <Link
-                                  to={`/services/${service.slug}`}
+                                  to={publicServicePath(service.slug)}
                                   className={`mmenu-service-link ${isServiceActive(service.slug) ? 'mmenu-service-link--active' : ''}`}
                                   onClick={handleServiceClick}
                                 >

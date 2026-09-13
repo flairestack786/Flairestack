@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { publicServicePath } from '../lib/serviceSlug'
 
 const HOME_SECTIONS = ['services', 'contact']
 
@@ -53,7 +54,7 @@ export function useNavActive() {
     return activeId === id
   }
 
-  const isServiceActive = (slug) => location.pathname === `/services/${slug}`
+  const isServiceActive = (slug) => location.pathname === publicServicePath(slug)
 
   return { isActive, activeId, isNavItemActive, isServiceActive, location }
 }

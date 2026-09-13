@@ -2,6 +2,8 @@ import { getServiceBySlug } from '../data/services'
 import { FALLBACK_SERVICE_TESTIMONIALS } from './publicTestimonials'
 import { SERVICE_SECTION_KEYS } from './serviceDefaults'
 import { getPublicUrl } from './media'
+import { normalizeServiceSlug } from './serviceSlug'
+import { buildPublishedServiceLookup } from './serviceUrlFlow'
 import { supabase } from './supabase'
 import { PUBLIC_SEO_SELECT } from './publicSeo'
 
@@ -300,6 +302,29 @@ export function buildFallbackPublicService(slug) {
 }
 
 /**
+ * Same lookup the public route uses after a hard refresh: empty cache,
+ * fetch by the URL slug, merge CMS row with optional static fallback.
+ * @param {{ service?: Record<string, unknown> | null, sections?: Record<string, unknown>[], media?: Record<string, unknown>[], seo?: Record<string, unknown> | null } | null} raw
+ * @param {string} urlSlug
+ */
+export function resolvePublicServicePage(raw, urlSlug) {
+  if (!raw?.service) {
+    return null
+  }
+
+  const normalizedSlug = normalizeServiceSlug(urlSlug)
+  return buildPublicServicePage(
+    raw.service,
+    raw.sections ?? [],
+    raw.media ?? [],
+    raw.seo ?? null,
+    getServiceBySlug(normalizedSlug)
+  )
+}
+
+export { buildPublishedServiceLookup } from './serviceUrlFlow'
+
+/**
  * @param {Record<string, unknown> | null} serviceRow
  * @param {Record<string, unknown>[]} sectionRows
  * @param {Record<string, unknown>[]} mediaRows
@@ -574,16 +599,16 @@ export function buildPublicServicePage(serviceRow, sectionRows, mediaRows, seoRo
  * @returns {Promise<{ service: Record<string, unknown>, sections: Record<string, unknown>[], media: Record<string, unknown>[], seo: Record<string, unknown> | null } | null>}
  */
 export async function fetchPublishedService(slug) {
-  const normalizedSlug = String(slug ?? '').trim().toLowerCase()
-  if (!normalizedSlug) {
+  const lookup = buildPublishedServiceLookup(slug)
+  if (!lookup.filters.slug) {
     return null
   }
 
   const { data: service, error } = await supabase
-    .from('services')
-    .select('*')
-    .eq('slug', normalizedSlug)
-    .eq('status', 'published')
+    .from(lookup.table)
+    .select(lookup.select)
+    .eq('slug', lookup.filters.slug)
+    .eq('status', lookup.filters.status)
     .maybeSingle()
 
   if (error) {

@@ -87,7 +87,7 @@ export default function IndustriesSection({ title, intro, items }) {
         viewport={{ once: true, margin: '-50px' }}
         variants={staggerContainer}
       >
-        {items.map((ind, i) => {
+        {(items ?? []).map((ind, i) => {
           const Icon = INDUSTRY_ICONS[ind.title] ?? Building2
           const spanClass = CARD_SPANS[i] ?? ''
 
