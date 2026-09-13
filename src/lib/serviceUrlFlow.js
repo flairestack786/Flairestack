@@ -1,24 +1,11 @@
+import { SERVICE_CATALOG_ASSET_KEYS } from './serviceCatalogAssets.js'
 import { assertValidServiceSlug, normalizeServiceSlug } from './serviceSlug.js'
 
-/** Static catalog slugs from `src/data/services.js` — not a runtime import (Node tests). */
-export const STATIC_SERVICE_SLUGS = [
-  'web-development',
-  'software-development',
-  'domain-hosting',
-  'software-quality-assurance',
-  'mobile-app-development',
-  'it-consultancy',
-  'database-development',
-  'e-commerce-website-development',
-  'cloud-strategy',
-  'ai-development',
-  'data-analytics',
-  'business-process-services',
-  'digital-marketing',
-  'graphic-design',
-  'ui-ux-design',
-  'game-development',
-]
+/**
+ * Immutable bundled-asset keys (original catalog folders).
+ * Not live public slugs — a CMS rename must not change these.
+ */
+export const STATIC_SERVICE_SLUGS = SERVICE_CATALOG_ASSET_KEYS
 
 /**
  * Live public links are CMS published rows only. An empty result means

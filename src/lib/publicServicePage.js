@@ -1,4 +1,5 @@
-import { getServiceBySlug } from '../data/services'
+import { getServiceByAssetKey, getServiceBySlug } from '../data/services'
+import { resolveLegacyAssetKey } from './serviceCatalogAssets'
 import { FALLBACK_SERVICE_TESTIMONIALS } from './publicTestimonials'
 import { SERVICE_SECTION_KEYS } from './serviceDefaults'
 import { getPublicUrl } from './media'
@@ -313,12 +314,19 @@ export function resolvePublicServicePage(raw, urlSlug) {
   }
 
   const normalizedSlug = normalizeServiceSlug(urlSlug)
+  const urlMatchesRow = normalizeServiceSlug(raw.service.slug) === normalizedSlug
+  if (!urlMatchesRow) {
+    return null
+  }
+
+  // Catalog extras are keyed by immutable legacy_asset_key / original pack —
+  // never by the editable public URL slug. CMS service_media (service_id) wins.
   return buildPublicServicePage(
     raw.service,
     raw.sections ?? [],
     raw.media ?? [],
     raw.seo ?? null,
-    getServiceBySlug(normalizedSlug)
+    getServiceByAssetKey(resolveLegacyAssetKey(raw.service))
   )
 }
 
@@ -329,7 +337,7 @@ export { buildPublishedServiceLookup } from './serviceUrlFlow'
  * @param {Record<string, unknown>[]} sectionRows
  * @param {Record<string, unknown>[]} mediaRows
  * @param {Record<string, unknown> | null} seoRow
- * @param {ReturnType<typeof getServiceBySlug>} fallbackService
+ * @param {ReturnType<typeof getServiceByAssetKey>} fallbackService
  * @returns {{ service: Record<string, unknown>, page: Record<string, unknown>, seo: { metaTitle: string, metaDescription: string } } | null}
  */
 export function buildPublicServicePage(serviceRow, sectionRows, mediaRows, seoRow, fallbackService) {

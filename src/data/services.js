@@ -440,6 +440,15 @@ export function getServiceBySlug(slug) {
   return services.find((s) => s.slug === slug)
 }
 
+/**
+ * Bundled extras are keyed by the immutable catalog asset folder, not the
+ * editable public `services.slug`.
+ * @param {string | null | undefined} assetKey
+ */
+export function getServiceByAssetKey(assetKey) {
+  return getServiceBySlug(assetKey)
+}
+
 export function getRelatedServices(slugs) {
   return slugs.map((s) => getServiceBySlug(s)).filter(Boolean)
 }

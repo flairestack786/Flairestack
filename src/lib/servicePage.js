@@ -1,4 +1,5 @@
 import { ensureMediaAssetForPath } from './mediaAssets'
+import { stampLegacyAssetKey } from './serviceCatalogAssets'
 import { supabase } from './supabase'
 import {
   buildDefaultSectionsForSlug,
@@ -277,6 +278,8 @@ export async function createService(input) {
     throw new Error('Slug and title are required.')
   }
 
+  const legacyAssetKey = stampLegacyAssetKey(null, { slug, title })
+
   const { data: service, error } = await supabase
     .from('services')
     .insert({
@@ -287,6 +290,7 @@ export async function createService(input) {
       icon_name: input.icon_name?.trim() || null,
       sort_order: input.sort_order ?? 0,
       status: 'draft',
+      ...(legacyAssetKey ? { legacy_asset_key: legacyAssetKey } : {}),
     })
     .select()
     .single()
@@ -384,6 +388,23 @@ export function prepareServiceUpdate(serviceId, fields) {
 
 export async function updateService(serviceId, fields) {
   const { payload } = prepareServiceUpdate(serviceId, fields)
+  delete payload.legacy_asset_key
+
+  const existingResult = await supabase
+    .from('services')
+    .select('legacy_asset_key, slug, title')
+    .eq('id', serviceId)
+    .maybeSingle()
+
+  if (!existingResult.error && existingResult.data) {
+    const currentKey = String(existingResult.data.legacy_asset_key ?? '').trim()
+    if (!currentKey) {
+      const nextKey = stampLegacyAssetKey(existingResult.data, payload)
+      if (nextKey) {
+        payload.legacy_asset_key = nextKey
+      }
+    }
+  }
 
   const result = await supabase
     .from('services')
