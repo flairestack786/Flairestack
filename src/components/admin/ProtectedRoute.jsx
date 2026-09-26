@@ -8,7 +8,8 @@ import AdminAuthLoading from './AdminAuthLoading'
  * Invited (not yet accepted) users are sent to set-password; disabled users to forbidden.
  */
 export default function ProtectedRoute({ children }) {
-  const { session, profile, isActiveCmsUser, loading, profileLoading } = useAuth()
+  const { session, profile, isActiveCmsUser, isPasswordRecovery, loading, profileLoading } =
+    useAuth()
   const location = useLocation()
 
   if (loading || profileLoading) {
@@ -17,6 +18,10 @@ export default function ProtectedRoute({ children }) {
 
   if (!session) {
     return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />
+  }
+
+  if (isPasswordRecovery) {
+    return <Navigate to="/admin/reset-password" replace />
   }
 
   if (profile?.status === 'invited') {

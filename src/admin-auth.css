@@ -319,6 +319,19 @@
   transition: color 0.2s ease;
 }
 
+button.admin-auth-back {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+button.admin-auth-back:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .admin-auth-back:hover {
   color: var(--accent, #ff7a00);
 }

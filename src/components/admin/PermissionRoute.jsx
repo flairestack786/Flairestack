@@ -9,7 +9,8 @@ import AdminAuthLoading from './AdminAuthLoading'
  * @param {{ module: string, children: React.ReactNode }} props
  */
 export default function PermissionRoute({ module, children }) {
-  const { session, profile, cmsRole, isActiveCmsUser, loading, profileLoading } = useAuth()
+  const { session, profile, cmsRole, isActiveCmsUser, isPasswordRecovery, loading, profileLoading } =
+    useAuth()
   const location = useLocation()
 
   if (loading || profileLoading) {
@@ -18,6 +19,10 @@ export default function PermissionRoute({ module, children }) {
 
   if (!session) {
     return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />
+  }
+
+  if (isPasswordRecovery) {
+    return <Navigate to="/admin/reset-password" replace />
   }
 
   if (profile?.status === 'invited') {
