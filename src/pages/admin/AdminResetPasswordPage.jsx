@@ -28,6 +28,28 @@ export default function AdminResetPasswordPage() {
   const [success, setSuccess] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [recoveryReady, setRecoveryReady] = useState(false)
+  const [returningToLogin, setReturningToLogin] = useState(false)
+
+  const handleBackToLogin = async (e) => {
+    e.preventDefault()
+    if (returningToLogin) return
+    setReturningToLogin(true)
+    try {
+      await signOut()
+    } catch {
+      // Clear recovery first, then force a local Auth logout so GuestRoute
+      // cannot treat a leftover JWT as a normal CMS login.
+      clearPasswordRecovery()
+      try {
+        await supabase.auth.signOut()
+      } catch {
+        // Ignore — navigation still targets the login screen.
+      }
+    } finally {
+      navigate('/admin/login', { replace: true })
+      setReturningToLogin(false)
+    }
+  }
 
   // Wait briefly for detectSessionInUrl / PASSWORD_RECOVERY to establish session.
   useEffect(() => {
@@ -194,9 +216,14 @@ export default function AdminResetPasswordPage() {
           </div>
 
           <p className="admin-auth-footer">
-            <Link to="/admin/login" className="admin-auth-back">
-              ← Back to login
-            </Link>
+            <button
+              type="button"
+              className="admin-auth-back"
+              onClick={handleBackToLogin}
+              disabled={returningToLogin}
+            >
+              {returningToLogin ? 'Signing out…' : '← Back to login'}
+            </button>
           </p>
         </motion.div>
       </div>
@@ -254,7 +281,7 @@ export default function AdminResetPasswordPage() {
                   }}
                   placeholder="••••••••"
                   className="admin-auth-input admin-auth-input--password"
-                  disabled={submitting}
+                  disabled={submitting || returningToLogin}
                   required
                   minLength={MIN_PASSWORD_LENGTH}
                 />
@@ -263,7 +290,7 @@ export default function AdminResetPasswordPage() {
                   className="admin-auth-toggle-pw"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  disabled={submitting}
+                  disabled={submitting || returningToLogin}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -290,7 +317,7 @@ export default function AdminResetPasswordPage() {
                   }}
                   placeholder="••••••••"
                   className="admin-auth-input admin-auth-input--password"
-                  disabled={submitting}
+                  disabled={submitting || returningToLogin}
                   required
                   minLength={MIN_PASSWORD_LENGTH}
                 />
@@ -299,7 +326,7 @@ export default function AdminResetPasswordPage() {
                   className="admin-auth-toggle-pw"
                   onClick={() => setShowConfirm((v) => !v)}
                   aria-label={showConfirm ? 'Hide confirmation' : 'Show confirmation'}
-                  disabled={submitting}
+                  disabled={submitting || returningToLogin}
                 >
                   {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -311,7 +338,11 @@ export default function AdminResetPasswordPage() {
               )}
             </label>
 
-            <button type="submit" className="admin-auth-submit" disabled={submitting}>
+            <button
+              type="submit"
+              className="admin-auth-submit"
+              disabled={submitting || returningToLogin}
+            >
               {submitting ? 'Updating…' : 'Update password'}
               {!submitting && <ArrowRight size={18} aria-hidden />}
             </button>
@@ -319,9 +350,14 @@ export default function AdminResetPasswordPage() {
         </div>
 
         <p className="admin-auth-footer">
-          <Link to="/admin/login" className="admin-auth-back">
-            ← Back to login
-          </Link>
+          <button
+            type="button"
+            className="admin-auth-back"
+            onClick={handleBackToLogin}
+            disabled={returningToLogin}
+          >
+            {returningToLogin ? 'Signing out…' : '← Back to login'}
+          </button>
         </p>
       </motion.div>
     </div>

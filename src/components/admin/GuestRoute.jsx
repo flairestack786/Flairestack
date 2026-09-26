@@ -18,11 +18,14 @@ function AdminAuthLoading() {
  * Invitees who have not finished onboarding go to set-password instead.
  */
 export default function GuestRoute({ children }) {
-  const { session, profile, loading, profileLoading } = useAuth()
+  const { session, profile, isPasswordRecovery, loading, profileLoading } = useAuth()
 
   if (loading || (session && profileLoading)) return <AdminAuthLoading />
 
   if (session) {
+    if (isPasswordRecovery) {
+      return <Navigate to="/admin/reset-password" replace />
+    }
     if (profile?.status === 'invited') {
       return <Navigate to="/admin/set-password" replace />
     }
