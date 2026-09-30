@@ -137,7 +137,18 @@
 .admin-auth-form {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 1.125rem;
+  width: 100%;
+}
+
+.admin-auth-form .admin-auth-submit {
+  margin-top: 0;
+}
+
+/* Status screens (expired reset, etc.): keep CTA stack flush to card width */
+.admin-auth-form--status {
+  margin-top: 0;
 }
 
 .admin-auth-field {
@@ -269,12 +280,14 @@
 }
 
 .admin-auth-submit {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   margin-top: 0.25rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.875rem 1.25rem;
   border: none;
   border-radius: 10px;
@@ -284,6 +297,7 @@
   color: #0a0a0a;
   background: var(--accent, #ff7a00);
   cursor: pointer;
+  text-align: center;
   box-shadow:
     0 0 28px rgba(255, 122, 0, 0.28),
     0 4px 16px rgba(255, 122, 0, 0.18);
@@ -291,6 +305,12 @@
     background 0.22s ease,
     transform 0.22s ease,
     box-shadow 0.22s ease;
+}
+
+a.admin-auth-submit {
+  display: flex;
+  width: 100%;
+  text-decoration: none;
 }
 
 .admin-auth-submit:hover:not(:disabled) {
@@ -308,11 +328,18 @@
 }
 
 .admin-auth-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   margin: 1.5rem 0 0;
   text-align: center;
 }
 
 .admin-auth-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.45);
   text-decoration: none;
@@ -323,8 +350,10 @@ button.admin-auth-back {
   background: none;
   border: none;
   padding: 0;
+  margin: 0;
   cursor: pointer;
   font: inherit;
+  line-height: inherit;
 }
 
 button.admin-auth-back:disabled {

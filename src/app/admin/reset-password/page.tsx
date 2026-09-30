@@ -168,10 +168,16 @@ export default function AdminResetPasswordPage() {
               Your password has been successfully updated. You can now sign in with your new
               password.
             </p>
-            <Link href="/admin/login" className="admin-auth-submit" style={{ textDecoration: 'none' }}>
-              Return to login
-              <ArrowRight size={18} aria-hidden />
-            </Link>
+            <div className="admin-auth-form">
+              <Link
+                href="/admin/login"
+                className="admin-auth-submit"
+                style={{ textDecoration: 'none' }}
+              >
+                Return to login
+                <ArrowRight size={18} aria-hidden />
+              </Link>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -204,20 +210,22 @@ export default function AdminResetPasswordPage() {
           <div className="admin-auth-card">
             <h1 className="admin-auth-title">Reset link expired</h1>
             <p className="admin-auth-subtitle">{INVALID_RECOVERY_MESSAGE}</p>
-            <div className="admin-auth-error" role="alert">
-              No valid password recovery session found.
+            <div className="admin-auth-form admin-auth-form--status">
+              <div className="admin-auth-error" role="alert">
+                No valid password recovery session found.
+              </div>
+              <Link
+                href="/admin/forgot-password"
+                className="admin-auth-submit"
+                style={{ textDecoration: 'none' }}
+              >
+                Request a new reset link
+                <ArrowRight size={18} aria-hidden />
+              </Link>
             </div>
-            <Link
-              href="/admin/forgot-password"
-              className="admin-auth-submit"
-              style={{ textDecoration: 'none' }}
-            >
-              Request a new reset link
-              <ArrowRight size={18} aria-hidden />
-            </Link>
           </div>
 
-          <p className="admin-auth-footer">
+          <div className="admin-auth-footer">
             <button
               type="button"
               className="admin-auth-back"
@@ -226,7 +234,7 @@ export default function AdminResetPasswordPage() {
             >
               {returningToLogin ? 'Signing out…' : '← Back to login'}
             </button>
-          </p>
+          </div>
         </motion.div>
       </div>
     )
@@ -351,7 +359,7 @@ export default function AdminResetPasswordPage() {
           </form>
         </div>
 
-        <p className="admin-auth-footer">
+        <div className="admin-auth-footer">
           <button
             type="button"
             className="admin-auth-back"
@@ -360,7 +368,7 @@ export default function AdminResetPasswordPage() {
           >
             {returningToLogin ? 'Signing out…' : '← Back to login'}
           </button>
-        </p>
+        </div>
       </motion.div>
     </div>
   )
