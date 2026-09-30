@@ -59,7 +59,7 @@ export default function TrustedBy({ variant = 'brand', align = 'start' }) {
               >
                 <img
                   className="trusted-logo-img"
-                  src={logo.src}
+                  src={typeof logo.src === 'string' ? logo.src : logo.src.src}
                   alt={i < uniqueLogos.length ? logo.name : ''}
                   width={Math.round(logo.height * 3.2)}
                   height={logo.height}
