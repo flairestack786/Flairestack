@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import NextServicePageView from '@/components/next/public/services/NextServicePageView'
+import PublicCanonicalTags from '@/components/next/public/PublicCanonicalTags'
 import PublicJsonLd from '@/components/next/public/PublicJsonLd'
 import {
-  buildPublicPageMetadata,
+  buildPublicPageMetadataWithCanonical,
   resolvePublicJsonLd,
 } from '@/lib/next/buildPublicPageMetadata'
 import {
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!built) notFound()
 
-  return buildPublicPageMetadata({
+  return buildPublicPageMetadataWithCanonical({
     seoRow: (built.seo?.row as Record<string, unknown> | null) ?? null,
     settings,
     pageTitle: String(built.service.title || 'Service'),
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     entityType: 'service',
     fallbackTitle: String(built.seo?.metaTitle || built.service.seoTitle || ''),
     fallbackDescription: String(built.seo?.metaDescription || built.service.seoDescription || ''),
-  })
+  }).metadata
 }
 
 /**
@@ -67,6 +68,16 @@ export default async function PublicServiceDetailPage({ params }: PageProps) {
     notFound()
   }
 
+  const { canonical } = buildPublicPageMetadataWithCanonical({
+    seoRow: (built.seo?.row as Record<string, unknown> | null) ?? null,
+    settings,
+    pageTitle: String(built.service.title || 'Service'),
+    routePath: `/services/${slug}`,
+    entityType: 'service',
+    fallbackTitle: String(built.seo?.metaTitle || built.service.seoTitle || ''),
+    fallbackDescription: String(built.seo?.metaDescription || built.service.seoDescription || ''),
+  })
+
   const jsonLd = resolvePublicJsonLd(
     (built.seo?.row as Record<string, unknown> | null) ?? null,
     settings
@@ -74,6 +85,7 @@ export default async function PublicServiceDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <PublicCanonicalTags canonical={canonical} />
       <PublicJsonLd data={jsonLd} />
       <NextServicePageView
         service={built.service as Record<string, unknown>}

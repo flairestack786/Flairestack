@@ -3,7 +3,9 @@ import type { Metadata } from 'next'
 import '@/index.css'
 import PublicAnalytics from '@/components/next/public/PublicAnalytics'
 import PublicChrome from '@/components/next/public/PublicChrome'
+import PublicJsonLd from '@/components/next/public/PublicJsonLd'
 import { PublicSiteProvider } from '@/components/next/public/PublicSiteProvider'
+import { buildSiteWideJsonLd } from '@/lib/next/buildSiteWideJsonLd'
 import { buildGlobalPublicMetadata } from '@/lib/next/publicMetadata'
 import {
   getPublishedNavServices,
@@ -30,6 +32,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
 
   return (
     <PublicSiteProvider settings={settings} services={services}>
+      <PublicJsonLd data={buildSiteWideJsonLd(settings)} />
       <PublicAnalytics settings={settings} />
       <PublicChrome>{children}</PublicChrome>
     </PublicSiteProvider>

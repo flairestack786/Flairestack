@@ -1,12 +1,17 @@
 import type { Metadata } from 'next'
 import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
 import type { PublicSiteSettings } from '@/lib/next/buildPublicSiteSettings'
+import {
+  buildAbsoluteCanonical,
+  resolvePublicSiteOrigin,
+} from '@/lib/next/publicSiteUrl'
 
 const DEFAULT_FAVICON = '/favicon.png?v=2'
 
 /**
  * Global Metadata API values from `site_settings` (defaults only).
- * Page-specific generateMetadata in later phases can override.
+ * Page-specific generateMetadata overrides title/description per route.
+ * Canonical / og:url for pages are injected via PublicCanonicalTags.
  */
 export function buildGlobalPublicMetadata(settings: PublicSiteSettings): Metadata {
   const siteName = settings.website_name || settings.company_name
@@ -21,13 +26,14 @@ export function buildGlobalPublicMetadata(settings: PublicSiteSettings): Metadat
   const twitterImage = twitterImagePath ? getPublicMediaUrl(twitterImagePath) : ogImage
 
   const favicon = settings.favicon_url || DEFAULT_FAVICON
-  const canonicalBase = settings.canonical_base_url.replace(/\/$/, '')
+  const origin = resolvePublicSiteOrigin(settings)
 
-  const robotsRaw = settings.default_robots.toLowerCase()
+  const robotsRaw = (settings.default_robots || 'index,follow').toLowerCase()
   const index = !robotsRaw.includes('noindex')
   const follow = !robotsRaw.includes('nofollow')
 
   const metadata: Metadata = {
+    metadataBase: new URL(origin),
     title: {
       default: title,
       template: `%s | ${siteName}`,
@@ -47,7 +53,6 @@ export function buildGlobalPublicMetadata(settings: PublicSiteSettings): Metadat
       title,
       description,
       ...(ogImage ? { images: [{ url: ogImage }] } : {}),
-      ...(canonicalBase ? { url: canonicalBase } : {}),
     },
     twitter: {
       card: 'summary_large_image',
@@ -55,18 +60,6 @@ export function buildGlobalPublicMetadata(settings: PublicSiteSettings): Metadat
       description,
       ...(twitterImage ? { images: [twitterImage] } : {}),
     },
-    ...(canonicalBase
-      ? {
-          metadataBase: (() => {
-            try {
-              return new URL(canonicalBase)
-            } catch {
-              return undefined
-            }
-          })(),
-          alternates: { canonical: '/' },
-        }
-      : {}),
     verification: {
       ...(settings.gsc_verification
         ? { google: settings.gsc_verification }
@@ -78,4 +71,9 @@ export function buildGlobalPublicMetadata(settings: PublicSiteSettings): Metadat
   }
 
   return metadata
+}
+
+/** Home absolute canonical for layout-level fallback tags when needed. */
+export function getGlobalHomeCanonical(settings: PublicSiteSettings): string {
+  return buildAbsoluteCanonical(resolvePublicSiteOrigin(settings), '/')
 }

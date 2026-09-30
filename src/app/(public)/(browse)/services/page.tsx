@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import ServicesListingView from '@/components/next/public/services/ServicesListingView'
+import PublicCanonicalTags from '@/components/next/public/PublicCanonicalTags'
 import PublicJsonLd from '@/components/next/public/PublicJsonLd'
 import {
-  buildPublicPageMetadata,
+  buildPublicPageMetadataWithCanonical,
   resolvePublicJsonLd,
 } from '@/lib/next/buildPublicPageMetadata'
 import { getPublishedServicesList } from '@/lib/next/publicServiceServer'
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
     settings.default_meta_description ||
     'Explore FlaireStack enterprise software, design, and digital growth services.'
 
-  return buildPublicPageMetadata({
+  return buildPublicPageMetadataWithCanonical({
     seoRow: {
       meta_title: title,
       meta_description: description,
@@ -28,7 +29,7 @@ export async function generateMetadata(): Promise<Metadata> {
     entityType: 'page',
     fallbackTitle: title,
     fallbackDescription: description,
-  })
+  }).metadata
 }
 
 /**
@@ -40,10 +41,20 @@ export default async function PublicServicesPage() {
     getPublishedServicesList(),
     getPublicSiteSettings(),
   ])
+
+  const { canonical } = buildPublicPageMetadataWithCanonical({
+    seoRow: null,
+    settings,
+    pageTitle: 'Services',
+    routePath: '/services',
+    entityType: 'page',
+  })
+
   const jsonLd = resolvePublicJsonLd(null, settings)
 
   return (
     <>
+      <PublicCanonicalTags canonical={canonical} />
       <PublicJsonLd data={jsonLd} />
       <ServicesListingView services={services} />
     </>

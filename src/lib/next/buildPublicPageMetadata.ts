@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
 import type { PublicSiteSettings } from '@/lib/next/buildPublicSiteSettings'
+import {
+  resolvePublicCanonicalUrl,
+  resolvePublicSiteOrigin,
+} from '@/lib/next/publicSiteUrl'
 import { seoToForm } from '@/lib/seoCore'
 import { resolveInheritedSeo } from '@/lib/seoInheritance'
 
@@ -8,8 +12,15 @@ function asString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : value == null ? '' : String(value).trim()
 }
 
+export type PublicPageMetadataResult = {
+  metadata: Metadata
+  /** Absolute canonical URL (always set), including home trailing slash. */
+  canonical: string
+}
+
 /**
- * Build Next Metadata from a CMS seo_metadata row + site settings (same inheritance as Vite).
+ * Build Next Metadata from a CMS seo_metadata row + site settings,
+ * with a guaranteed absolute canonical (returned separately for exact head tags).
  */
 export function buildPublicPageMetadata(options: {
   seoRow: Record<string, unknown> | null | undefined
@@ -20,6 +31,22 @@ export function buildPublicPageMetadata(options: {
   fallbackTitle?: string
   fallbackDescription?: string
 }): Metadata {
+  return buildPublicPageMetadataWithCanonical(options).metadata
+}
+
+/**
+ * Same as buildPublicPageMetadata, also returning the exact canonical string
+ * for `<link rel="canonical">` / `og:url` injection (trailing slash preserved).
+ */
+export function buildPublicPageMetadataWithCanonical(options: {
+  seoRow: Record<string, unknown> | null | undefined
+  settings: PublicSiteSettings
+  pageTitle: string
+  routePath: string
+  entityType?: 'page' | 'service'
+  fallbackTitle?: string
+  fallbackDescription?: string
+}): PublicPageMetadataResult {
   const {
     seoRow,
     settings,
@@ -30,12 +57,14 @@ export function buildPublicPageMetadata(options: {
     fallbackDescription = '',
   } = options
 
+  const origin = resolvePublicSiteOrigin(settings)
+
   const globals = {
     default_meta_title: settings.default_meta_title,
     default_meta_description: settings.default_meta_description,
     default_og_image: settings.default_og_image,
     default_twitter_image: settings.default_twitter_image,
-    canonical_base_url: settings.canonical_base_url,
+    canonical_base_url: settings.canonical_base_url || origin,
     default_robots: settings.default_robots,
     website_name: settings.website_name,
     company_name: settings.company_name,
@@ -72,7 +101,12 @@ export function buildPublicPageMetadata(options: {
   const ogImage = ogImagePath ? getPublicMediaUrl(ogImagePath) : null
   const twitterImage = twitterImagePath ? getPublicMediaUrl(twitterImagePath) : ogImage
 
-  const canonical = asString(resolved.canonical_url)
+  const canonical = resolvePublicCanonicalUrl({
+    settings,
+    routePath,
+    cmsCanonicalUrl: asString(resolved.canonical_url),
+  })
+
   const robotsRaw = (asString(resolved.robots) || settings.default_robots || 'index,follow').toLowerCase()
   const index = !robotsRaw.includes('noindex')
   const follow = !robotsRaw.includes('nofollow')
@@ -85,45 +119,40 @@ export function buildPublicPageMetadata(options: {
   const twitterCard = asString(resolved.twitter_card) || 'summary_large_image'
 
   return {
-    title: { absolute: title },
-    description,
-    robots: { index, follow },
-    ...(canonical ? { alternates: { canonical } } : {}),
-    openGraph: {
-      type: ogType as 'website' | 'article',
-      siteName: settings.website_name,
-      title: ogTitle,
-      description: ogDescription,
-      ...(canonical ? { url: canonical } : {}),
-      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
-    },
-    twitter: {
-      card: twitterCard as 'summary_large_image' | 'summary',
-      title: twitterTitle,
-      description: twitterDescription,
-      ...(twitterImage ? { images: [twitterImage] } : {}),
+    canonical,
+    metadata: {
+      metadataBase: new URL(origin),
+      title: { absolute: title },
+      description,
+      robots: { index, follow },
+      // Canonical / og:url are emitted via PublicCanonicalTags to preserve
+      // the home trailing slash that Next's Metadata serializer strips.
+      openGraph: {
+        type: ogType as 'website' | 'article',
+        siteName: settings.website_name,
+        title: ogTitle,
+        description: ogDescription,
+        ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+      },
+      twitter: {
+        card: twitterCard as 'summary_large_image' | 'summary',
+        title: twitterTitle,
+        description: twitterDescription,
+        ...(twitterImage ? { images: [twitterImage] } : {}),
+      },
     },
   }
 }
 
 /**
- * Resolve public JSON-LD (Vite `buildPublicDocumentSeo` parity).
- * Prefer page/service `seo_metadata.structured_data`; otherwise use CMS
- * Organization + Website JSON-LD from site_settings. Does not invent values.
+ * Page-specific JSON-LD only (`seo_metadata.structured_data`).
+ * Site-wide Organization/WebSite JSON-LD lives in the public layout.
  */
 export function resolvePublicJsonLd(
   seoRow: Record<string, unknown> | null | undefined,
-  settings?: Pick<PublicSiteSettings, 'organization_jsonld' | 'website_jsonld'> | null
+  _settings?: Pick<PublicSiteSettings, 'organization_jsonld' | 'website_jsonld'> | null
 ): unknown | null {
-  const pageData = getSeoStructuredData(seoRow)
-  if (pageData) return pageData
-
-  const parts: Record<string, unknown>[] = []
-  if (settings?.organization_jsonld) parts.push(settings.organization_jsonld)
-  if (settings?.website_jsonld) parts.push(settings.website_jsonld)
-  if (parts.length === 0) return null
-  if (parts.length === 1) return parts[0]
-  return parts
+  return getSeoStructuredData(seoRow)
 }
 
 /**
