@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { formatLeadStatus } from '../../../lib/leads'
+import { formatLeadStatus } from '../../../lib/leadsFormat'
 import { getLeadStatusChartColor } from './chartColors'
 
 /**

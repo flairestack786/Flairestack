@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { AlertCircle, Loader2, Search } from 'lucide-react'
 import SeoOverview from '../../components/admin/seo/SeoOverview'
+import { useAuth } from '../../context/AuthContext'
 import { fetchSeoDashboard } from '../../lib/seo'
 
 export default function AdminSeoPage() {
+  const { cmsRole } = useAuth()
   const [status, setStatus] = useState(/** @type {'loading' | 'ready' | 'error'} */ ('loading'))
   const [loadError, setLoadError] = useState('')
   const [entities, setEntities] = useState(/** @type {Record<string, unknown>[]} */ ([]))
@@ -71,6 +73,7 @@ export default function AdminSeoPage() {
           entities={entities}
           onRefresh={() => load({ soft: true })}
           isRefreshing={refreshing}
+          cmsRole={cmsRole}
         />
       )}
     </div>

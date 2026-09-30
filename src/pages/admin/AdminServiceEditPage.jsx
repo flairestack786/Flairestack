@@ -34,6 +34,7 @@ import {
 } from '../../components/admin/services/servicePageForm'
 import SaveBar from '../../components/admin/settings/SaveBar'
 import { pathToPickerImage } from '../../components/admin/settings/settingsImage'
+import { useMediaPublicUrl } from '../../components/admin/MediaUrlContext'
 import { useToast } from '../../components/common/ToastProvider'
 import { clearPublishedServicesCache } from '../../hooks/usePublishedServices'
 import { invalidatePublicSeoCaches } from '../../lib/invalidatePublicSeoCaches'
@@ -75,6 +76,7 @@ export default function AdminServiceEditPage() {
   const { serviceId } = useParams()
   const navigate = useNavigate()
   const { success, error } = useToast()
+  const getPublicUrl = useMediaPublicUrl()
   const [activeTab, setActiveTab] = useState('hero')
   const [status, setStatus] = useState('loading')
   const [loadError, setLoadError] = useState('')
@@ -95,7 +97,7 @@ export default function AdminServiceEditPage() {
     if (pickerTarget.type === 'media') {
       const entry = form.media[pickerTarget.slot] ?? {}
       const path = typeof entry.storage_path === 'string' ? entry.storage_path : ''
-      return pathToPickerImage(path)
+      return pathToPickerImage(path, getPublicUrl)
     }
 
     if (pickerTarget.type === 'config') {
@@ -103,7 +105,7 @@ export default function AdminServiceEditPage() {
       const config = section?.config && typeof section.config === 'object' ? section.config : {}
       const path =
         typeof config[pickerTarget.configKey] === 'string' ? config[pickerTarget.configKey] : ''
-      return pathToPickerImage(path)
+      return pathToPickerImage(path, getPublicUrl)
     }
 
     if (pickerTarget.type === 'configList') {
@@ -115,11 +117,11 @@ export default function AdminServiceEditPage() {
         item && typeof item === 'object' && typeof item[pickerTarget.field] === 'string'
           ? item[pickerTarget.field]
           : ''
-      return pathToPickerImage(path)
+      return pathToPickerImage(path, getPublicUrl)
     }
 
     return null
-  }, [pickerTarget, form])
+  }, [pickerTarget, form, getPublicUrl])
 
   const loadService = useCallback(async () => {
     if (!serviceId) return

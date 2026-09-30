@@ -1,5 +1,6 @@
 import React from 'react'
 import { ImageIcon, ImagePlus, Trash2 } from 'lucide-react'
+import { useMediaPublicUrl } from '../MediaUrlContext'
 import { pathToPickerImage } from './settingsImage'
 
 /**
@@ -21,7 +22,8 @@ export default function SettingsImageField({
   onChoose,
   onRemove,
 }) {
-  const image = pathToPickerImage(path)
+  const getPublicUrl = useMediaPublicUrl()
+  const image = pathToPickerImage(path, getPublicUrl)
 
   return (
     <div className="admin-settings-field">

@@ -1,23 +1,30 @@
 import React from 'react'
-import { getUserInitials } from '../../../lib/users'
-import { getPublicUrl } from '../../../lib/media'
+import { getUserInitials } from '../../../lib/usersFormat'
 
 /**
  * Compact user avatar with initials fallback.
+ * Pass `resolveAvatarUrl` when avatar images should resolve (Vite: getPublicUrl).
  * @param {{
  *   fullName?: string | null,
  *   email?: string | null,
  *   avatarPath?: string | null,
  *   size?: 'sm' | 'md',
+ *   resolveAvatarUrl?: (path: string) => string,
  * }} props
  */
-export default function UserAvatar({ fullName, email, avatarPath, size = 'sm' }) {
+export default function UserAvatar({
+  fullName,
+  email,
+  avatarPath,
+  size = 'sm',
+  resolveAvatarUrl,
+}) {
   const initials = getUserInitials(fullName, email)
   let imageUrl = ''
 
-  if (avatarPath) {
+  if (avatarPath && typeof resolveAvatarUrl === 'function') {
     try {
-      imageUrl = getPublicUrl(String(avatarPath))
+      imageUrl = resolveAvatarUrl(String(avatarPath))
     } catch {
       imageUrl = ''
     }

@@ -18,6 +18,7 @@ import {
 } from '../../components/admin/home/homePageForm'
 import SaveBar from '../../components/admin/settings/SaveBar'
 import { pathToPickerImage } from '../../components/admin/settings/settingsImage'
+import { useMediaPublicUrl } from '../../components/admin/MediaUrlContext'
 import { useToast } from '../../components/common/ToastProvider'
 import { clearHomePageCache } from '../../hooks/useHomePage'
 import { getHomePageWithSections, saveHomeSections } from '../../lib/homePage'
@@ -28,6 +29,7 @@ import { getHomePageWithSections, saveHomeSections } from '../../lib/homePage'
 
 export default function AdminHomePage() {
   const { success, error } = useToast()
+  const getPublicUrl = useMediaPublicUrl()
   const [activeTab, setActiveTab] = useState('hero')
   const [status, setStatus] = useState('loading')
   const [loadError, setLoadError] = useState('')
@@ -44,8 +46,8 @@ export default function AdminHomePage() {
     const section = form.sections[pickerTarget.sectionKey]
     const config = section?.config ?? {}
     const path = config[pickerTarget.configKey]
-    return pathToPickerImage(typeof path === 'string' ? path : '')
-  }, [pickerTarget, form])
+    return pathToPickerImage(typeof path === 'string' ? path : '', getPublicUrl)
+  }, [pickerTarget, form, getPublicUrl])
 
   const loadHomePage = useCallback(async () => {
     setStatus('loading')

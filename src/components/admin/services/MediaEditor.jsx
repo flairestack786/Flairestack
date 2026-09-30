@@ -1,5 +1,5 @@
 import React from 'react'
-import { SERVICE_MEDIA_SLOTS } from '../../../lib/servicePage'
+import { SERVICE_MEDIA_SLOTS } from '../../../lib/serviceMediaSlots'
 import SettingsImageField from '../settings/SettingsImageField'
 import EditorField from '../home/EditorField'
 import EditorSection from '../home/EditorSection'

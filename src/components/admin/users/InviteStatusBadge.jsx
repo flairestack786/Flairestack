@@ -1,5 +1,5 @@
 import React from 'react'
-import { formatCmsInviteStatus, getInviteStatusHelp } from '../../../lib/users'
+import { formatCmsInviteStatus, getInviteStatusHelp } from '../../../lib/usersFormat'
 
 /**
  * Color-coded invitation status badge with helper tooltip.

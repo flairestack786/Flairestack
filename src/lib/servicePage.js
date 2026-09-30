@@ -7,6 +7,9 @@ import {
   SERVICE_SECTION_KEYS,
 } from './serviceDefaults'
 import { assertValidServiceSlug } from './serviceSlug'
+import { SERVICE_MEDIA_SLOTS } from './serviceMediaSlots'
+
+export { SERVICE_MEDIA_SLOTS }
 
 /** Columns writable from the admin Service section editor. */
 const SECTION_WRITABLE_FIELDS = [
@@ -68,26 +71,6 @@ const SEO_REQUIRED_DEFAULTS = Object.freeze({
   twitter_card: 'summary_large_image',
   status: 'draft',
 })
-
-/** All image slots from service_media_slot enum. */
-export const SERVICE_MEDIA_SLOTS = [
-  { slot: 'hero', label: 'Hero — primary' },
-  { slot: 'overview', label: 'Hero — overview' },
-  { slot: 'banner', label: 'Hero — banner' },
-  { slot: 'features', label: 'Capabilities' },
-  { slot: 'tech', label: 'Tech stack' },
-  { slot: 'process', label: 'Process' },
-  { slot: 'benefits', label: 'Benefits' },
-  { slot: 'cta', label: 'CTA' },
-  { slot: 'framework1', label: 'Framework row 1' },
-  { slot: 'framework2', label: 'Framework row 2' },
-  { slot: 'framework3', label: 'Framework row 3' },
-  { slot: 'framework4', label: 'Framework row 4' },
-  { slot: 'framework5', label: 'Framework row 5' },
-  { slot: 'client_benefits', label: 'Testimonials background' },
-  { slot: 'implementation_approach', label: 'Implementation approach' },
-  { slot: 'business_outcomes', label: 'Final CTA background' },
-]
 
 /**
  * @param {Record<string, unknown>} section

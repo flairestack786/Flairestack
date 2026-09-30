@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link as RouterLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
@@ -25,8 +25,7 @@ import {
   staggerContainer,
 } from './ServiceMotion'
 import ServiceTestimonialsSlider from './ServiceTestimonialsSlider'
-import CompanyStats from '../CompanyStats'
-import { usePublishedTestimonials } from '../../hooks/useTestimonials'
+import CompanyStatsView from '../CompanyStatsView'
 import {
   useHeroSlideshow,
   ServiceHeroBgCarousel,
@@ -36,9 +35,27 @@ import './framework-section.css'
 import IndustriesSection from './IndustriesSection'
 import './industries-section.css'
 import techIcons from '../../data/techIcons.json'
+import { serviceTestimonials as FALLBACK_SERVICE_TESTIMONIALS_DATA } from '../../data/serviceTestimonials'
 
 const growthIcons = [Sparkles, Heart, BarChart3, TrendingUp, Users, Settings]
 const featureIcons = [Layers, Target, Zap, Rocket, Shield, BarChart3]
+
+const FALLBACK_TESTIMONIALS = FALLBACK_SERVICE_TESTIMONIALS_DATA.map((item, index) => ({
+  id: `service-fallback-${index}`,
+  quote: item.quote,
+  author: item.author,
+  role: item.role,
+  initials: item.author
+    ?.split(/\s+/)
+    .filter(Boolean)
+    .map((part, i, arr) => (arr.length === 1 ? part.slice(0, 2) : part[0]))
+    .join('')
+    .toUpperCase() || '?',
+  photoUrl: null,
+  stat: item.stat,
+  statLabel: item.statLabel,
+}))
+
 
 function FaqItem({ item, open, onToggle, light }) {
   return (
@@ -139,24 +156,32 @@ function useScrollSpy(anchorNav) {
   return activeId
 }
 
-export default function ServicePageLayout({ service, page }) {
+export default function ServicePageLayout({
+  service,
+  page,
+  LinkComponent = RouterLink,
+  testimonials,
+  companyStats,
+  servicesIndexHref = '/#services',
+  contactHref = '/#contact',
+  phone,
+  phoneTel,
+}) {
+  const Link = LinkComponent
   const [openFaq, setOpenFaq] = useState(0)
   const heroSlideshow = useHeroSlideshow(page.heroImages)
   const activeSection = useScrollSpy(page.anchorNav)
-  const { serviceTestimonials } = usePublishedTestimonials()
   const sectionEnabled = page.sectionEnabled ?? {}
   const isOn = (key) => sectionEnabled[key] !== false
 
   const testimonialsBackground =
     page.testimonials?.background ?? page.testimonialsBackground ?? null
   const testimonialItems =
-    serviceTestimonials.length > 0
-      ? serviceTestimonials
-      : Array.isArray(page.testimonials?.items)
+    Array.isArray(testimonials) && testimonials.length > 0
+      ? testimonials
+      : Array.isArray(page.testimonials?.items) && page.testimonials.items.length > 0
         ? page.testimonials.items
-        : Array.isArray(page.testimonials)
-          ? page.testimonials
-          : []
+        : FALLBACK_TESTIMONIALS
 
   return (
     <div className="sp-root" data-service={service.slug}>
@@ -180,7 +205,7 @@ export default function ServicePageLayout({ service, page }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Link to="/#services" className="service-back-link">
+              <Link to={servicesIndexHref} href={servicesIndexHref} className="service-back-link">
                 <ArrowLeft size={16} aria-hidden />
                 All Services
               </Link>
@@ -191,7 +216,7 @@ export default function ServicePageLayout({ service, page }) {
               <h1 className="sp-hero-title">{page.heroHeadline}</h1>
               <p className="sp-hero-lead">{page.heroSubheadline}</p>
               <div className="sp-hero-actions">
-                <Link to="/#contact" className="primary-cta sp-hero-cta">
+                <Link to={contactHref} href={contactHref} className="primary-cta sp-hero-cta">
                   {page.heroCta}
                   <span className="cta-arrow" aria-hidden>
                     →
@@ -225,7 +250,7 @@ export default function ServicePageLayout({ service, page }) {
         </nav>
       )}
 
-      <CompanyStats />
+      <CompanyStatsView stats={companyStats} />
 
       {/* ── Challenges (dark) ── */}
       {isOn('challenges') && page.challenges?.is_enabled !== false && (
@@ -263,6 +288,8 @@ export default function ServicePageLayout({ service, page }) {
             title={page.framework.title}
             intro={page.framework.intro}
             items={page.framework.items}
+            phone={phone}
+            phoneTel={phoneTel}
           />
         </Band>
       )}
@@ -578,7 +605,7 @@ export default function ServicePageLayout({ service, page }) {
               <h2>{page.finalCta.title}</h2>
               <p>{page.finalCta.subtitle}</p>
             </div>
-            <Link to="/#contact" className="primary-cta">
+            <Link to={contactHref} href={contactHref} className="primary-cta">
               {page.finalCta.button}
               <span className="cta-arrow" aria-hidden>
                 →

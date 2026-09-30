@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
-import { useSiteSettings } from '../../hooks/useSiteSettings'
+import { PHONE_DISPLAY, PHONE_TEL } from '../../config/contact'
 import { fadeUp, staggerContainer } from './ServiceMotion'
 import { resolveOptionalMedia } from '../../lib/optionalMedia'
 
@@ -64,9 +64,24 @@ function FrameworkVisual({ src, alt }) {
   )
 }
 
-export default function FrameworkSection({ title, intro, items }) {
-  const { settings } = useSiteSettings()
-  const { phone, phoneTel } = settings
+function defaultTelHref(phone) {
+  const digits = String(phone ?? '').replace(/\D/g, '')
+  if (!digits) return `tel:${PHONE_TEL}`
+  return `tel:+${digits}`
+}
+
+/**
+ * @param {{
+ *   title?: string,
+ *   intro?: string,
+ *   items?: Array<{ title: string, description: string, image?: { src?: string, alt?: string } }>,
+ *   phone?: string,
+ *   phoneTel?: string,
+ * }} props
+ */
+export default function FrameworkSection({ title, intro, items, phone, phoneTel }) {
+  const displayPhone = String(phone ?? '').trim() || PHONE_DISPLAY
+  const telHref = String(phoneTel ?? '').trim() || defaultTelHref(displayPhone)
 
   return (
     <div className="sp-fw">
@@ -131,9 +146,9 @@ export default function FrameworkSection({ title, intro, items }) {
                 </h3>
                 <p className="sp-fw-item-desc">{item.description}</p>
                 <a
-                  href={phoneTel}
+                  href={telHref}
                   className="sp-fw-cta"
-                  aria-label={`Book a call — ${phone}`}
+                  aria-label={`Book a call — ${displayPhone}`}
                 >
                   <span>Book a Call</span>
                   <ArrowUpRight size={17} aria-hidden className="sp-fw-cta-icon" />

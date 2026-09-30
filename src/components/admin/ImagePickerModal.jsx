@@ -1,13 +1,30 @@
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Check, ImageIcon, Search, X } from 'lucide-react'
 import MediaGrid from './MediaGrid'
+import { buildRenamedStoragePath, getPathExtension } from '../../lib/mediaFormat'
 
 /**
  * @typedef {{ path: string, publicUrl: string, filename: string }} PickerImage
  */
 
 /**
+ * Lazy Vite media client — avoids pulling `lib/supabase` into the Next SSR graph.
+ * @returns {Promise<Record<string, unknown>>}
+ */
+function loadViteMediaApi() {
+  return import('../../lib/media').then((media) => ({
+    listFiles: media.listFiles,
+    deleteFile: media.deleteFile,
+    renameFile: media.renameFile,
+    getPublicUrl: media.getPublicUrl,
+    buildRenamedStoragePath: media.buildRenamedStoragePath,
+    getPathExtension: media.getPathExtension,
+  }))
+}
+
+/**
  * Reusable image picker modal for CMS editors.
+ * Defaults to the Vite media client (lazy); Next callers should pass `api={nextMediaApi}`.
  * @param {{
  *   isOpen: boolean,
  *   selectedImage?: PickerImage | null,
@@ -15,6 +32,7 @@ import MediaGrid from './MediaGrid'
  *   onClose: () => void,
  *   title?: string,
  *   className?: string,
+ *   api?: Record<string, unknown>,
  * }} props
  */
 export default function ImagePickerModal({
@@ -24,12 +42,48 @@ export default function ImagePickerModal({
   onClose,
   title = 'Select image',
   className = '',
+  api: apiProp,
 }) {
   const titleId = useId()
   const descriptionId = useId()
   const closeRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [pendingSelection, setPendingSelection] = useState(/** @type {PickerImage | null} */ (null))
+  const [viteApi, setViteApi] = useState(/** @type {Record<string, unknown> | null} */ (null))
+  const [viteApiError, setViteApiError] = useState('')
+
+  useEffect(() => {
+    if (apiProp || viteApi || viteApiError) return undefined
+    let cancelled = false
+
+    loadViteMediaApi()
+      .then((api) => {
+        if (!cancelled) setViteApi(api)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setViteApiError(err?.message ?? 'Failed to load media library.')
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [apiProp, viteApi, viteApiError])
+
+  const api = useMemo(
+    () =>
+      apiProp ??
+      viteApi ?? {
+        listFiles: async () => [],
+        deleteFile: async () => {},
+        renameFile: async () => {},
+        getPublicUrl: (path) => path,
+        buildRenamedStoragePath,
+        getPathExtension,
+      },
+    [apiProp, viteApi]
+  )
 
   useEffect(() => {
     if (!isOpen) return
@@ -89,6 +143,7 @@ export default function ImagePickerModal({
 
   const rootClassName = ['admin-image-picker-modal', className].filter(Boolean).join(' ')
   const canConfirm = Boolean(pendingSelection)
+  const apiReady = Boolean(apiProp || viteApi)
 
   return (
     <div className={rootClassName} onClick={handleBackdropClick}>
@@ -171,14 +226,25 @@ export default function ImagePickerModal({
         </div>
 
         <div className="admin-image-picker-modal-body">
-          <MediaGrid
-            className="admin-media-grid--picker"
-            searchQuery={searchQuery}
-            selectable
-            selectedPath={pendingSelection?.path ?? null}
-            onItemSelect={handleItemSelect}
-            emptyHint="Upload images in the Media Library first."
-          />
+          {viteApiError && !apiProp ? (
+            <p className="admin-settings-state admin-settings-state--error" role="alert">
+              {viteApiError}
+            </p>
+          ) : apiReady ? (
+            <MediaGrid
+              className="admin-media-grid--picker"
+              searchQuery={searchQuery}
+              selectable
+              selectedPath={pendingSelection?.path ?? null}
+              onItemSelect={handleItemSelect}
+              emptyHint="Upload images in the Media Library first."
+              api={api}
+            />
+          ) : (
+            <p className="admin-settings-state" role="status">
+              Loading media library…
+            </p>
+          )}
         </div>
 
         <footer className="admin-image-picker-modal-footer">

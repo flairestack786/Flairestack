@@ -17,20 +17,36 @@ import ChartCard from '../dashboard/ChartCard'
 import SeoScoreBadge from './SeoScoreBadge'
 import { getSeoScoreBand } from '../../../lib/seoAnalysis'
 import { canManageGlobalSeo } from '../../../lib/cmsPermissions'
-import { useAuth } from '../../../context/AuthContext'
 
 /**
  * SEO health dashboard + page manager list.
+ * Pass `cmsRole` from the host (Vite AuthContext or Next auth).
+ * Optional `LinkComponent` (href-based) for Next; omit to keep react-router Link.
  * @param {{
  *   health: Record<string, unknown>,
  *   entities: Record<string, unknown>[],
  *   onRefresh: () => void,
  *   isRefreshing?: boolean,
+ *   cmsRole?: string | null,
+ *   LinkComponent?: React.ComponentType<{ href: string, className?: string, children?: React.ReactNode }>,
  * }} props
  */
-export default function SeoOverview({ health, entities, onRefresh, isRefreshing = false }) {
-  const { cmsRole } = useAuth()
-  const showGlobal = canManageGlobalSeo(cmsRole)
+export default function SeoOverview({
+  health,
+  entities,
+  onRefresh,
+  isRefreshing = false,
+  cmsRole = null,
+  LinkComponent,
+}) {
+  const showGlobal = Boolean(cmsRole) && canManageGlobalSeo(cmsRole)
+  const NavLink = LinkComponent
+    ? ({ to, className, children }) => (
+        <LinkComponent href={to} className={className}>
+          {children}
+        </LinkComponent>
+      )
+    : Link
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')
 
@@ -96,10 +112,10 @@ export default function SeoOverview({ health, entities, onRefresh, isRefreshing 
     <div className="admin-seo-overview">
       <div className="admin-seo-overview-toolbar">
         {showGlobal && (
-          <Link to="/admin/seo/global" className="admin-settings-retry">
+          <NavLink to="/admin/seo/global" className="admin-settings-retry">
             <Globe size={16} strokeWidth={1.75} />
             Global SEO Settings
-          </Link>
+          </NavLink>
         )}
         <button
           type="button"
@@ -348,12 +364,12 @@ export default function SeoOverview({ health, entities, onRefresh, isRefreshing 
                         </span>
                       </td>
                       <td>
-                        <Link
+                        <NavLink
                           className="admin-users-action-btn"
                           to={`/admin/seo/${entity.entity_type}/${entity.entity_id}`}
                         >
                           Edit SEO
-                        </Link>
+                        </NavLink>
                       </td>
                     </tr>
                   )

@@ -15,17 +15,12 @@ import EditorField from '../home/EditorField'
 import AdminSelect from '../AdminSelect'
 import { useToast } from '../../common/ToastProvider'
 import {
-  addLeadTimelineNote,
   formatLeadPriority,
   formatLeadStatus,
   formatLeadTimelineSummary,
   LEAD_PRIORITY_OPTIONS,
   LEAD_STATUS_OPTIONS,
-  listLeadTimeline,
-  setLeadPriority,
-  setLeadStatus,
-  updateLead,
-} from '../../../lib/leads'
+} from '../../../lib/leadsFormat'
 
 /**
  * @param {Record<string, unknown> | null} lead
@@ -70,14 +65,30 @@ function timelineSummary(event) {
 
 /**
  * Complete CRM editor for a single lead.
+ * `api` injects Supabase-backed mutations so Vite and Next can share this UI
+ * without sharing a browser client.
  * @param {{
  *   lead: Record<string, unknown> | null,
  *   isOpen: boolean,
  *   onClose: () => void,
  *   onLeadUpdated?: (lead: Record<string, unknown>) => void,
+ *   api: {
+ *     listLeadTimeline: (leadId: string) => Promise<Record<string, unknown>[]>,
+ *     updateLead: (id: string, fields: Record<string, unknown>) => Promise<Record<string, unknown>>,
+ *     setLeadStatus: (id: string, status: string) => Promise<Record<string, unknown>>,
+ *     setLeadPriority: (id: string, priority: string) => Promise<Record<string, unknown>>,
+ *     addLeadTimelineNote: (leadId: string, input?: Record<string, unknown>) => Promise<Record<string, unknown>>,
+ *   },
  * }} props
  */
-export default function LeadDetailDrawer({ lead, isOpen, onClose, onLeadUpdated }) {
+export default function LeadDetailDrawer({ lead, isOpen, onClose, onLeadUpdated, api }) {
+  const {
+    listLeadTimeline,
+    updateLead,
+    setLeadStatus,
+    setLeadPriority,
+    addLeadTimelineNote,
+  } = api
   const titleId = useId()
   const closeRef = useRef(/** @type {HTMLButtonElement | null} */ (null))
   const { success, error } = useToast()

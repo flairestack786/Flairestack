@@ -251,8 +251,9 @@ function normalizeTrustItems(items, fallback) {
 /**
  * @param {Record<string, unknown> | undefined} section
  * @param {Record<string, unknown>} fallback
+ * @param {(path: string) => string} resolveUrl
  */
-function buildHeroSection(section, fallback) {
+function buildHeroSection(section, fallback, resolveUrl) {
   const config =
     section?.config && typeof section.config === 'object'
       ? /** @type {Record<string, unknown>} */ (section.config)
@@ -266,7 +267,7 @@ function buildHeroSection(section, fallback) {
     body: textOrFallback(section?.body, fallback.body),
     ctaLabel: textOrFallback(section?.cta_primary_label, fallback.ctaLabel),
     ctaUrl: textOrFallback(section?.cta_primary_url, fallback.ctaUrl),
-    backgroundImageUrl: backgroundPath ? getPublicUrl(backgroundPath) : null,
+    backgroundImageUrl: backgroundPath ? resolveUrl(backgroundPath) : null,
     useBundledBackground: !backgroundPath,
   }
 }
@@ -274,8 +275,9 @@ function buildHeroSection(section, fallback) {
 /**
  * @param {Record<string, unknown> | undefined} section
  * @param {Record<string, unknown>} fallback
+ * @param {(path: string) => string} resolveUrl
  */
-function buildServicesSection(section, fallback) {
+function buildServicesSection(section, fallback, resolveUrl) {
   const config =
     section?.config && typeof section.config === 'object'
       ? /** @type {Record<string, unknown>} */ (section.config)
@@ -292,7 +294,7 @@ function buildServicesSection(section, fallback) {
     ctaUrl: textOrFallback(section?.cta_primary_url, fallback.ctaUrl),
     panelLabel: textOrFallback(config.panel_label, fallback.panelLabel),
     visualAlt: textOrFallback(config.visual_alt, fallback.visualAlt),
-    visualImageUrl: imagePath ? getPublicUrl(imagePath) : null,
+    visualImageUrl: imagePath ? resolveUrl(imagePath) : null,
     useBundledVisual: !imagePath,
     details: stringArrayOrFallback(config.details, fallback.details),
     points: stringArrayOrFallback(config.points, fallback.points),
@@ -371,6 +373,7 @@ export const FALLBACK_PUBLIC_HOME = {
         'A proven six-step framework that keeps projects transparent, on schedule, and built for long-term success — from first workshop to production scale.',
       steps: homeProcessSteps,
       icons: FALLBACK_PROCESS_ICONS,
+      iconNames: ['Search', 'Compass', 'Palette', 'Code2', 'FlaskConical', 'Rocket'],
     },
     technologies: {
       eyebrow: 'Tech stack',
@@ -402,9 +405,13 @@ export const FALLBACK_PUBLIC_HOME = {
 /**
  * @param {Record<string, unknown> | null | undefined} page
  * @param {Record<string, unknown>[] | null | undefined} sectionRows
+ * @param {Record<string, unknown> | null} [seoRow]
+ * @param {{ getUrl?: (path: string) => string }} [options] — Next can inject a Storage URL resolver
  * @returns {typeof FALLBACK_PUBLIC_HOME}
  */
-export function buildPublicHomePage(page, sectionRows, seoRow = null) {
+export function buildPublicHomePage(page, sectionRows, seoRow = null, options = {}) {
+  const resolveUrl =
+    typeof options?.getUrl === 'function' ? options.getUrl : getPublicUrl
   const fallback = FALLBACK_PUBLIC_HOME
   const sectionMap = Object.fromEntries(
     (sectionRows ?? []).map((row) => [String(row.section_key), row])
@@ -460,8 +467,8 @@ export function buildPublicHomePage(page, sectionRows, seoRow = null) {
       row: seoRow ?? null,
     },
     sections: {
-      hero: buildHeroSection(heroSection, fallback.sections.hero),
-      services: buildServicesSection(servicesSection, fallback.sections.services),
+      hero: buildHeroSection(heroSection, fallback.sections.hero, resolveUrl),
+      services: buildServicesSection(servicesSection, fallback.sections.services, resolveUrl),
       'why-choose': {
         eyebrow: textOrFallback(whySection?.eyebrow, fallback.sections['why-choose'].eyebrow),
         title: textOrFallback(whySection?.title, fallback.sections['why-choose'].title),
@@ -485,6 +492,10 @@ export function buildPublicHomePage(page, sectionRows, seoRow = null) {
         intro: textOrFallback(processSection?.intro, fallback.sections.process.intro),
         steps: normalizeProcessSteps(processConfig.steps),
         icons: normalizeProcessIcons(processConfig.icons),
+        iconNames: stringArrayOrFallback(
+          processConfig.icons,
+          ['Search', 'Compass', 'Palette', 'Code2', 'FlaskConical', 'Rocket']
+        ),
       },
       technologies: {
         eyebrow: textOrFallback(
