@@ -1,12 +1,11 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { useAboutPage } from '../../hooks/useAboutPage'
 import { aboutFadeUp } from './aboutMotion'
 
-export default function AboutHero() {
-  const { sections } = useAboutPage()
-  const hero = sections.hero
-
+/**
+ * @param {{ hero: { eyebrow: string, title: string, titleAccent: string, intro: string } }} props
+ */
+export default function AboutHero({ hero }) {
   return (
     <section className="about-page-hero" aria-labelledby="about-page-title">
       <div className="about-page-hero-glow" aria-hidden />

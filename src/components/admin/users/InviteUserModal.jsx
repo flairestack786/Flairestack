@@ -3,11 +3,7 @@ import { Loader2, MailPlus, X } from 'lucide-react'
 import EditorField from '../home/EditorField'
 import AdminSelect from '../AdminSelect'
 import { useToast } from '../../common/ToastProvider'
-import {
-  CMS_ROLE_OPTIONS,
-  createUserInvite,
-  formatCmsRole,
-} from '../../../lib/users'
+import { CMS_ROLE_OPTIONS, formatCmsRole } from '../../../lib/usersFormat'
 
 /**
  * Send a Supabase Auth invitation email and create a pending CMS invite record.
@@ -15,11 +11,15 @@ import {
  *   isOpen: boolean,
  *   onClose: () => void,
  *   onCreated?: (invite: Record<string, unknown>) => void,
+ *   api: {
+ *     createUserInvite: (input: Record<string, unknown>) => Promise<Record<string, unknown>>,
+ *   },
  * }} props
  */
-export default function InviteUserModal({ isOpen, onClose, onCreated }) {
+export default function InviteUserModal({ isOpen, onClose, onCreated, api }) {
   const titleId = useId()
   const { success, error } = useToast()
+  const { createUserInvite } = api
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState('administrator')
@@ -66,7 +66,7 @@ export default function InviteUserModal({ isOpen, onClose, onCreated }) {
         setIsSaving(false)
       }
     },
-    [email, fullName, role, onCreated, onClose, success, error]
+    [email, fullName, role, onCreated, onClose, success, error, createUserInvite]
   )
 
   if (!isOpen) return null

@@ -3,7 +3,7 @@ import React from 'react'
 /**
  * @param {{
  *   id: string,
- *   label: string,
+ *   label: string | React.ReactNode,
  *   hint?: string,
  *   children: React.ReactNode,
  * }} props

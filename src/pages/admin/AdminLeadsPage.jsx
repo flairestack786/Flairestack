@@ -13,11 +13,16 @@ import {
 import LeadDetailDrawer from '../../components/admin/leads/LeadDetailDrawer'
 import AdminSelect from '../../components/admin/AdminSelect'
 import {
+  addLeadTimelineNote,
   formatLeadPriority,
   formatLeadStatus,
   LEAD_PRIORITY_OPTIONS,
   LEAD_STATUS_OPTIONS,
+  listLeadTimeline,
   listLeads,
+  setLeadPriority,
+  setLeadStatus,
+  updateLead,
 } from '../../lib/leads'
 
 /**
@@ -384,6 +389,13 @@ export default function AdminLeadsPage() {
         isOpen={drawerOpen}
         onClose={handleCloseDrawer}
         onLeadUpdated={handleLeadUpdated}
+        api={{
+          listLeadTimeline,
+          updateLead,
+          setLeadStatus,
+          setLeadPriority,
+          addLeadTimelineNote,
+        }}
       />
     </div>
   )

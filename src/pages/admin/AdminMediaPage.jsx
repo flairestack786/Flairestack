@@ -1,11 +1,33 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Image, Search, X } from 'lucide-react'
 import MediaGrid from '../../components/admin/MediaGrid'
 import MediaUploader from '../../components/admin/MediaUploader'
+import {
+  buildRenamedStoragePath,
+  deleteFile,
+  getPathExtension,
+  getPublicUrl,
+  listFiles,
+  renameFile,
+  uploadFile,
+} from '../../lib/media'
 
 export default function AdminMediaPage() {
   const [gridRefreshKey, setGridRefreshKey] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+
+  const mediaApi = useMemo(
+    () => ({
+      listFiles,
+      uploadFile,
+      deleteFile,
+      renameFile,
+      getPublicUrl,
+      buildRenamedStoragePath,
+      getPathExtension,
+    }),
+    []
+  )
 
   const handleUploadComplete = useCallback(() => {
     setGridRefreshKey((key) => key + 1)
@@ -33,7 +55,7 @@ export default function AdminMediaPage() {
         </div>
       </header>
 
-      <MediaUploader onUploadComplete={handleUploadComplete} />
+      <MediaUploader onUploadComplete={handleUploadComplete} api={mediaApi} />
 
       <div className="admin-media-search">
         <Search size={18} strokeWidth={1.75} className="admin-media-search-icon" aria-hidden />
@@ -57,7 +79,7 @@ export default function AdminMediaPage() {
         )}
       </div>
 
-      <MediaGrid refreshKey={gridRefreshKey} searchQuery={searchQuery} />
+      <MediaGrid refreshKey={gridRefreshKey} searchQuery={searchQuery} api={mediaApi} />
     </div>
   )
 }

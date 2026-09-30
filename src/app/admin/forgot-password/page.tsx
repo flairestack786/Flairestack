@@ -1,14 +1,17 @@
-import { AuthPlaceholder } from '../AuthPlaceholder'
+import { NextGuestGate } from '@/lib/next/NextAuthGates'
+import AdminForgotPasswordClient from './AdminForgotPasswordClient'
+
+export const metadata = {
+  title: 'Forgot password | FlaireStack Admin',
+}
 
 /**
- * Placeholder so the login "Forgot password?" link does not 404.
- * Full forgot-password flow remains on Vite for now.
+ * Phase 14: full forgot-password flow (replaces placeholder).
  */
-export default function AdminForgotPasswordPlaceholderPage() {
+export default function AdminForgotPasswordPage() {
   return (
-    <AuthPlaceholder
-      title="Forgot password (placeholder)"
-      subtitle="Self-service password reset is not migrated to Next.js yet. Use the Vite admin app (npm run dev → /admin/forgot-password) to request a reset link."
-    />
+    <NextGuestGate>
+      <AdminForgotPasswordClient />
+    </NextGuestGate>
   )
 }

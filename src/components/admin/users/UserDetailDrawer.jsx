@@ -4,7 +4,6 @@ import EditorField from '../home/EditorField'
 import AdminSelect from '../AdminSelect'
 import UserAvatar from './UserAvatar'
 import { useToast } from '../../common/ToastProvider'
-import { useAuth } from '../../../context/AuthContext'
 import { LAST_ADMIN_GUARD_MESSAGE } from '../../../lib/cmsPermissions'
 import {
   CMS_ROLE_OPTIONS,
@@ -12,11 +11,8 @@ import {
   formatCmsRole,
   formatCmsUserStatus,
   INVALID_MANAGEABLE_STATUS_MESSAGE,
-  requestPasswordReset,
   SELF_ACCOUNT_LOCKOUT_MESSAGE,
-  setUserStatus,
-  updateUser,
-} from '../../../lib/users'
+} from '../../../lib/usersFormat'
 
 /**
  * @param {Record<string, unknown> | null} user
@@ -48,12 +44,21 @@ function formatDateTime(value) {
 
 /**
  * CRM-style editor for a CMS user profile.
+ * `api` injects privileged mutations so Vite and Next can share this UI
+ * without sharing a Supabase/admin client.
  * @param {{
  *   user: Record<string, unknown> | null,
  *   isOpen: boolean,
  *   onClose: () => void,
  *   onUserUpdated?: (user: Record<string, unknown>) => void,
  *   hasPendingInvite?: boolean,
+ *   currentUserId?: string | null,
+ *   resolveAvatarUrl?: (path: string) => string,
+ *   api: {
+ *     updateUser: (id: string, fields: Record<string, unknown>) => Promise<Record<string, unknown>>,
+ *     setUserStatus: (id: string, status: string) => Promise<Record<string, unknown>>,
+ *     requestPasswordReset: (userId: string) => Promise<unknown>,
+ *   },
  * }} props
  */
 export default function UserDetailDrawer({
@@ -62,11 +67,14 @@ export default function UserDetailDrawer({
   onClose,
   onUserUpdated,
   hasPendingInvite = false,
+  currentUserId = null,
+  resolveAvatarUrl,
+  api,
 }) {
   const titleId = useId()
   const closeRef = useRef(/** @type {HTMLButtonElement | null} */ (null))
   const { success, error } = useToast()
-  const { user: authUser } = useAuth()
+  const { updateUser, setUserStatus, requestPasswordReset } = api
 
   const [draft, setDraft] = useState(() => userToForm(user))
   const [baseline, setBaseline] = useState(() => userToForm(user))
@@ -74,7 +82,7 @@ export default function UserDetailDrawer({
   const [busyAction, setBusyAction] = useState('')
 
   const userId = user ? String(user.id ?? '') : ''
-  const isSelf = Boolean(userId && authUser?.id && userId === authUser.id)
+  const isSelf = Boolean(userId && currentUserId && userId === String(currentUserId))
 
   useEffect(() => {
     if (!isOpen || !user) return
@@ -175,7 +183,19 @@ export default function UserDetailDrawer({
     } finally {
       setIsSaving(false)
     }
-  }, [userId, dirty, draft, baseline.role, baseline.status, isSelf, onUserUpdated, success, error])
+  }, [
+    userId,
+    dirty,
+    draft,
+    baseline.role,
+    baseline.status,
+    isSelf,
+    onUserUpdated,
+    success,
+    error,
+    updateUser,
+    setUserStatus,
+  ])
 
   const handlePasswordReset = useCallback(async () => {
     if (!userId) return
@@ -193,7 +213,7 @@ export default function UserDetailDrawer({
     } finally {
       setBusyAction('')
     }
-  }, [userId, user?.email, success, error])
+  }, [userId, user?.email, success, error, requestPasswordReset])
 
   const handleCopyEmail = useCallback(async () => {
     const email = String(user?.email ?? '').trim()
@@ -253,6 +273,7 @@ export default function UserDetailDrawer({
               email={String(user.email ?? '')}
               avatarPath={user.avatar_path ? String(user.avatar_path) : null}
               size="md"
+              resolveAvatarUrl={resolveAvatarUrl}
             />
             <div>
               <p className="admin-leads-drawer-kicker">CMS User</p>

@@ -19,6 +19,7 @@ import {
 } from '../../components/admin/about/aboutPageForm'
 import SaveBar from '../../components/admin/settings/SaveBar'
 import { pathToPickerImage } from '../../components/admin/settings/settingsImage'
+import { useMediaPublicUrl } from '../../components/admin/MediaUrlContext'
 import { useToast } from '../../components/common/ToastProvider'
 import { getAboutPageWithSections, saveAboutSections } from '../../lib/aboutPage'
 
@@ -28,6 +29,7 @@ import { getAboutPageWithSections, saveAboutSections } from '../../lib/aboutPage
 
 export default function AdminAboutPage() {
   const { success, error } = useToast()
+  const getPublicUrl = useMediaPublicUrl()
   const [activeTab, setActiveTab] = useState('hero')
   const [status, setStatus] = useState('loading')
   const [loadError, setLoadError] = useState('')
@@ -45,8 +47,8 @@ export default function AdminAboutPage() {
     const members = Array.isArray(config.members) ? config.members : []
     const member = members[pickerTarget.memberIndex]
     const path = typeof member?.image_path === 'string' ? member.image_path : ''
-    return pathToPickerImage(path)
-  }, [pickerTarget, form])
+    return pathToPickerImage(path, getPublicUrl)
+  }, [pickerTarget, form, getPublicUrl])
 
   const loadAboutPage = useCallback(async () => {
     setStatus('loading')

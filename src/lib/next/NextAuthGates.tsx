@@ -3,6 +3,8 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useNextAuth } from '@/lib/next/NextAuthProvider'
+import { canAccessModule } from '@/lib/cmsPermissions'
+import '@/admin-auth.css'
 
 function AuthChecking({ label = 'Checking session…' }: { label?: string }) {
   return (
@@ -49,14 +51,39 @@ export function NextGuestGate({ children }: { children: React.ReactNode }) {
   return children
 }
 
+type NextProtectedGateProps = {
+  children: React.ReactNode
+  /** When set, enforces CMS module RBAC (Vite PermissionRoute equivalent). */
+  module?: string
+}
+
 /**
- * Next equivalent of Vite ProtectedRoute for temporary protected placeholders.
- * Recovery sessions are forced to /admin/reset-password.
+ * Central protected-route gate for Next CMS pages.
+ * - Unauthenticated → /admin/login
+ * - Password recovery → /admin/reset-password (never CMS access)
+ * - Invited → /admin/set-password
+ * - Inactive CMS user → /admin/login
+ * - Optional module RBAC → /admin/forbidden
  */
-export function NextProtectedGate({ children }: { children: React.ReactNode }) {
+export function NextProtectedGate({ children, module }: NextProtectedGateProps) {
   const router = useRouter()
-  const { session, profile, isActiveCmsUser, isPasswordRecovery, loading, profileLoading } =
-    useNextAuth()
+  const {
+    session,
+    profile,
+    cmsRole,
+    isActiveCmsUser,
+    isPasswordRecovery,
+    loading,
+    profileLoading,
+  } = useNextAuth()
+
+  const missingProfile = Boolean(session) && !profile
+  const moduleDenied =
+    Boolean(module) &&
+    Boolean(profile) &&
+    isActiveCmsUser &&
+    cmsRole != null &&
+    !canAccessModule(cmsRole, module as never)
 
   useEffect(() => {
     if (loading || profileLoading) return
@@ -73,8 +100,13 @@ export function NextProtectedGate({ children }: { children: React.ReactNode }) {
       router.replace('/admin/set-password')
       return
     }
-    if (profile && !isActiveCmsUser) {
+    // Never grant CMS access when profile is missing (no silent administrator fallback).
+    if (!profile || !isActiveCmsUser) {
       router.replace('/admin/login')
+      return
+    }
+    if (moduleDenied) {
+      router.replace('/admin/forbidden')
     }
   }, [
     loading,
@@ -83,6 +115,7 @@ export function NextProtectedGate({ children }: { children: React.ReactNode }) {
     profile,
     isActiveCmsUser,
     isPasswordRecovery,
+    moduleDenied,
     router,
   ])
 
@@ -94,7 +127,11 @@ export function NextProtectedGate({ children }: { children: React.ReactNode }) {
     return <AuthChecking label="Redirecting…" />
   }
 
-  if (profile && !isActiveCmsUser) {
+  if (missingProfile || !isActiveCmsUser) {
+    return <AuthChecking label="Redirecting…" />
+  }
+
+  if (moduleDenied) {
     return <AuthChecking label="Redirecting…" />
   }
 

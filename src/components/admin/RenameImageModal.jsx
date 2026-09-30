@@ -4,7 +4,7 @@ import {
   getFilenameStem,
   getPathExtension,
   validateFilenameStem,
-} from '../../lib/media'
+} from '../../lib/mediaFormat'
 
 /**
  * Reusable rename modal for media library images.

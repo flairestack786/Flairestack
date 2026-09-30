@@ -1,11 +1,10 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { useAboutPage } from '../../hooks/useAboutPage'
 
-export default function AboutMission() {
-  const { sections } = useAboutPage()
-  const mission = sections.mission
-
+/**
+ * @param {{ mission: { eyebrow: string, title: string, titleAccent: string, body: string } }} props
+ */
+export default function AboutMission({ mission }) {
   return (
     <section className="about-page-mission" aria-labelledby="mission-heading">
       <div className="about-page-inner">

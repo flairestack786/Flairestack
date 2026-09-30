@@ -1,12 +1,26 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { useAboutPage } from '../../hooks/useAboutPage'
 import { aboutFadeUp } from './aboutMotion'
 
-export default function AboutTeam() {
-  const { sections } = useAboutPage()
-  const team = sections.team
-
+/**
+ * @param {{
+ *   team: {
+ *     eyebrow: string,
+ *     title: string,
+ *     titleAccent: string,
+ *     members: Array<{
+ *       id: string,
+ *       name: string,
+ *       title: string,
+ *       bio: string,
+ *       imageAlt: string,
+ *       imagePosition: string,
+ *       imageUrl: string,
+ *     }>
+ *   }
+ * }} props
+ */
+export default function AboutTeam({ team }) {
   return (
     <section className="about-page-founders" aria-labelledby="founders-heading">
       <div className="about-page-inner">

@@ -71,7 +71,12 @@ export function stringifyStructuredData(structuredData) {
 /**
  * @param {Record<string, unknown>} seo
  * @param {{
- *   duplicates?: { titles?: Set<string>, descriptions?: Set<string>, selfTitle?: string, selfDescription?: string },
+ *   duplicates?: {
+ *     titles?: Map<string, number> | Set<string>,
+ *     descriptions?: Map<string, number> | Set<string>,
+ *     selfTitle?: string,
+ *     selfDescription?: string,
+ *   },
  *   siteUrl?: string,
  * }} [context]
  * @returns {SeoIssue[]}

@@ -28,7 +28,8 @@ type NextAuthContextValue = {
   session: Session | null
   user: User | null
   profile: CmsProfile | null
-  cmsRole: CmsRole
+  /** Null when profile is missing — never defaults to administrator. */
+  cmsRole: CmsRole | null
   isActiveCmsUser: boolean
   isAdministrator: boolean
   isPasswordRecovery: boolean
@@ -39,6 +40,17 @@ type NextAuthContextValue = {
   canAccess: (moduleId: string) => boolean
   signIn: (email: string, password: string) => Promise<unknown>
   signOut: () => Promise<void>
+}
+
+function resolveCmsRoleFromProfile(profile: CmsProfile | null): CmsRole | null {
+  if (!profile) return null
+  const role = profile.role
+  if (role === 'administrator' || role === 'editor' || role === 'sales') {
+    return role
+  }
+  if (role == null || role === '') return null
+  // Known non-empty but unexpected values: normalize without inventing a role for null profiles.
+  return normalizeCmsRole(String(role))
 }
 
 const NextAuthContext = createContext<NextAuthContextValue | null>(null)
@@ -211,7 +223,7 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
     setProfile(null)
   }
 
-  const cmsRole = normalizeCmsRole(String(profile?.role ?? 'administrator'))
+  const cmsRole = resolveCmsRoleFromProfile(profile)
   const isActiveCmsUser = profile?.status === 'active'
   const isAdministrator = cmsRole === 'administrator' && isActiveCmsUser
 
@@ -228,7 +240,8 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
       profileLoading,
       refreshProfile,
       clearPasswordRecovery,
-      canAccess: (moduleId) => canAccessModule(cmsRole, moduleId as never),
+      canAccess: (moduleId) =>
+        cmsRole != null && canAccessModule(cmsRole, moduleId as never),
       signIn,
       signOut,
     }),

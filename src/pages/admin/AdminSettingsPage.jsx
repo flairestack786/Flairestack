@@ -11,6 +11,7 @@ import SettingsTabs from '../../components/admin/settings/SettingsTabs'
 import SocialSettings from '../../components/admin/settings/SocialSettings'
 import { formsAreEqual, settingsToForm } from '../../components/admin/settings/settingsForm'
 import { pathToPickerImage } from '../../components/admin/settings/settingsImage'
+import { useMediaPublicUrl } from '../../components/admin/MediaUrlContext'
 import { useToast } from '../../components/common/ToastProvider'
 import { getSiteSettings, saveSiteSettings } from '../../lib/siteSettings'
 import { invalidatePublicSeoCaches } from '../../lib/invalidatePublicSeoCaches'
@@ -20,6 +21,7 @@ const IMAGE_FIELDS = ['logo_url', 'favicon_url']
 
 export default function AdminSettingsPage() {
   const { success, error } = useToast()
+  const getPublicUrl = useMediaPublicUrl()
   const [activeTab, setActiveTab] = useState('company')
   const [status, setStatus] = useState('loading')
   const [loadError, setLoadError] = useState('')
@@ -33,8 +35,8 @@ export default function AdminSettingsPage() {
 
   const pickerSelectedImage = useMemo(() => {
     if (!pickerTarget) return null
-    return pathToPickerImage(form[pickerTarget])
-  }, [pickerTarget, form])
+    return pathToPickerImage(form[pickerTarget], getPublicUrl)
+  }, [pickerTarget, form, getPublicUrl])
 
   const loadSettings = useCallback(async () => {
     setStatus('loading')

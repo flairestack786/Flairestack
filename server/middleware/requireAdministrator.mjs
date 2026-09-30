@@ -25,8 +25,14 @@ export async function authenticateBearerUser(authorizationHeader) {
     return { ok: false, status: 401, body: { error: 'Missing authorization token.' } }
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  const anonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  const supabaseUrl =
+    process.env.SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey =
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !anonKey) {
     return { ok: false, status: 500, body: { error: 'Admin API is not configured on the server.' } }

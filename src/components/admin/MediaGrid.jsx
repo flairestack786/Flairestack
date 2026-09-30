@@ -10,14 +10,6 @@ import ConfirmationModal from './ConfirmationModal'
 import RenameImageModal from './RenameImageModal'
 import MediaGridCard from './MediaGridCard'
 import { useToast } from '../common/ToastProvider'
-import {
-  buildRenamedStoragePath,
-  deleteFile,
-  getPathExtension,
-  getPublicUrl,
-  listFiles,
-  renameFile,
-} from '../../lib/media'
 import { getMediaDisplayFilename } from '../../lib/mediaMetadata'
 
 /**
@@ -33,6 +25,7 @@ function matchesSearchQuery(file, normalizedQuery) {
 
 /**
  * Responsive media gallery grid for the admin media library.
+ * `api` injects storage operations so Vite and Next can share this UI.
  * @param {{
  *   className?: string,
  *   refreshKey?: number,
@@ -41,6 +34,14 @@ function matchesSearchQuery(file, normalizedQuery) {
  *   selectedPath?: string | null,
  *   onItemSelect?: (image: { path: string, publicUrl: string, filename: string }) => void,
  *   emptyHint?: string,
+ *   api: {
+ *     listFiles: () => Promise<import('@supabase/storage-js').FileObject[]>,
+ *     deleteFile: (path: string) => Promise<void>,
+ *     renameFile: (oldPath: string, newPath: string, options?: { originalFilename?: string }) => Promise<void>,
+ *     getPublicUrl: (path: string) => string,
+ *     buildRenamedStoragePath: (currentPath: string, newStem: string) => string,
+ *     getPathExtension: (path: string) => string,
+ *   },
  * }} props
  */
 export default function MediaGrid({
@@ -51,8 +52,17 @@ export default function MediaGrid({
   selectedPath = null,
   onItemSelect,
   emptyHint,
+  api,
 }) {
   const { success, error } = useToast()
+  const {
+    listFiles,
+    deleteFile,
+    renameFile,
+    getPublicUrl,
+    buildRenamedStoragePath,
+    getPathExtension,
+  } = api
   const [files, setFiles] = useState([])
   const [status, setStatus] = useState('loading')
   const [errorMessage, setErrorMessage] = useState('')
@@ -77,7 +87,7 @@ export default function MediaGrid({
       setStatus('error')
       setErrorMessage(err?.message || 'Unable to load media files.')
     }
-  }, [])
+  }, [listFiles])
 
   useEffect(() => {
     loadFiles()
@@ -122,7 +132,7 @@ export default function MediaGrid({
     } finally {
       setIsDeleting(false)
     }
-  }, [deleteTarget, loadFiles, success, error])
+  }, [deleteTarget, loadFiles, success, error, deleteFile])
 
   const handleRenameRequest = useCallback((path, publicUrl, itemName) => {
     setRenameTarget({ path, publicUrl, itemName })
@@ -156,7 +166,15 @@ export default function MediaGrid({
         setIsRenaming(false)
       }
     },
-    [renameTarget, loadFiles, success, error]
+    [
+      renameTarget,
+      loadFiles,
+      success,
+      error,
+      buildRenamedStoragePath,
+      getPathExtension,
+      renameFile,
+    ]
   )
 
   const rootClassName = ['admin-media-grid', className].filter(Boolean).join(' ')

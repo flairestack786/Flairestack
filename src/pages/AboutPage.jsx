@@ -12,7 +12,7 @@ import AboutTeam from '../components/about/AboutTeam'
 import AboutContact from '../components/about/AboutContact'
 
 function AboutPageContent() {
-  const { seo, page, loading } = useAboutPage()
+  const { seo, page, sections, loading } = useAboutPage()
 
   usePageDocumentSeo({
     seoRow: seo?.row,
@@ -33,13 +33,13 @@ function AboutPageContent() {
       {seo?.pageDescription ? (
         <p className="sr-only">{seo.pageDescription}</p>
       ) : null}
-      <AboutHero />
-      <AboutCompanyStory />
-      <AboutMission />
-      <AboutVision />
-      <AboutValues />
-      <AboutTeam />
-      <AboutContact />
+      <AboutHero hero={sections.hero} />
+      <AboutCompanyStory story={sections['company-story']} />
+      <AboutMission mission={sections.mission} />
+      <AboutVision vision={sections.vision} />
+      <AboutValues values={sections.values} />
+      <AboutTeam team={sections.team} />
+      <AboutContact contact={sections.contact} />
     </main>
   )
 }

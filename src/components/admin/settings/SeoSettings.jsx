@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link as RouterLink } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 
 /**
@@ -9,9 +9,19 @@ import { ArrowRight, Search } from 'lucide-react'
  * @param {{
  *   panelId: string,
  *   labelledBy: string,
+ *   LinkComponent?: React.ComponentType<{ href: string, className?: string, children?: React.ReactNode }>,
  * }} props
  */
-export default function SeoSettings({ panelId, labelledBy }) {
+export default function SeoSettings({ panelId, labelledBy, LinkComponent }) {
+  const href = '/admin/seo/global'
+  const className = 'admin-settings-retry admin-seo-module-redirect-cta'
+  const children = (
+    <>
+      Open Global SEO
+      <ArrowRight size={16} strokeWidth={1.75} aria-hidden />
+    </>
+  )
+
   return (
     <section
       id={panelId}
@@ -37,10 +47,15 @@ export default function SeoSettings({ panelId, labelledBy }) {
             JSON-LD from the SEO module. This Settings tab no longer edits those fields.
           </p>
         </div>
-        <Link to="/admin/seo/global" className="admin-settings-retry admin-seo-module-redirect-cta">
-          Open Global SEO
-          <ArrowRight size={16} strokeWidth={1.75} aria-hidden />
-        </Link>
+        {LinkComponent ? (
+          <LinkComponent href={href} className={className}>
+            {children}
+          </LinkComponent>
+        ) : (
+          <RouterLink to={href} className={className}>
+            {children}
+          </RouterLink>
+        )}
       </div>
     </section>
   )

@@ -1,13 +1,21 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import { useAboutPage } from '../../hooks/useAboutPage'
 import { aboutFadeUp } from './aboutMotion'
 
-export default function AboutContact() {
-  const { sections } = useAboutPage()
-  const contact = sections.contact
-
+/**
+ * @param {{
+ *   contact: {
+ *     eyebrow: string,
+ *     title: string,
+ *     titleAccent: string,
+ *     body: string,
+ *     ctaLabel: string,
+ *     ctaUrl: string,
+ *   }
+ * }} props
+ */
+export default function AboutContact({ contact }) {
   return (
     <section className="about-page-contact" aria-labelledby="about-contact-heading">
       <div className="about-page-inner about-page-contact-inner">

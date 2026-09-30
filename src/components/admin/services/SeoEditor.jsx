@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link as RouterLink } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 import EditorSection from '../home/EditorSection'
 
@@ -10,10 +10,18 @@ import EditorSection from '../home/EditorSection'
  *   serviceId: string,
  *   panelId: string,
  *   labelledBy: string,
+ *   LinkComponent?: React.ComponentType<{ href: string, className?: string, children?: React.ReactNode }>,
  * }} props
  */
-export default function SeoEditor({ serviceId, panelId, labelledBy }) {
+export default function SeoEditor({ serviceId, panelId, labelledBy, LinkComponent }) {
   const seoPath = serviceId ? `/admin/seo/service/${serviceId}` : '/admin/seo'
+  const linkClassName = 'admin-settings-retry admin-seo-module-redirect-cta'
+  const linkChildren = (
+    <>
+      Edit SEO
+      <ArrowRight size={16} strokeWidth={1.75} aria-hidden />
+    </>
+  )
 
   return (
     <EditorSection
@@ -33,10 +41,15 @@ export default function SeoEditor({ serviceId, panelId, labelledBy }) {
             full SEO editor. This service tab no longer duplicates those fields.
           </p>
         </div>
-        <Link to={seoPath} className="admin-settings-retry admin-seo-module-redirect-cta">
-          Edit SEO
-          <ArrowRight size={16} strokeWidth={1.75} aria-hidden />
-        </Link>
+        {LinkComponent ? (
+          <LinkComponent href={seoPath} className={linkClassName}>
+            {linkChildren}
+          </LinkComponent>
+        ) : (
+          <RouterLink to={seoPath} className={linkClassName}>
+            {linkChildren}
+          </RouterLink>
+        )}
       </div>
     </EditorSection>
   )

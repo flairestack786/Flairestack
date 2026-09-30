@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import AdminSidebar from './AdminSidebar'
 import AdminTopNav from './AdminTopNav'
+import { MediaUrlContext } from './MediaUrlContext'
 import { ToastProvider } from '../common/ToastProvider'
 import { adminNavItems } from '../../data/adminNav'
+import { getPublicUrl } from '../../lib/media'
 import '../../admin-dashboard.css'
 
 export default function AdminLayout() {
@@ -38,37 +40,39 @@ export default function AdminLayout() {
 
   return (
     <ToastProvider>
-      <div
-        className={[
-          'admin-shell',
-          collapsed ? 'admin-shell--collapsed' : '',
-          mobileOpen ? 'admin-shell--mobile-open' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
-      {mobileOpen && (
-        <button
-          type="button"
-          className="admin-sidebar-backdrop"
-          aria-label="Close navigation menu"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      <MediaUrlContext.Provider value={getPublicUrl}>
+        <div
+          className={[
+            'admin-shell',
+            collapsed ? 'admin-shell--collapsed' : '',
+            mobileOpen ? 'admin-shell--mobile-open' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {mobileOpen && (
+            <button
+              type="button"
+              className="admin-sidebar-backdrop"
+              aria-label="Close navigation menu"
+              onClick={() => setMobileOpen(false)}
+            />
+          )}
 
-      <AdminSidebar
-        collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed((v) => !v)}
-        onNavigate={() => setMobileOpen(false)}
-      />
+          <AdminSidebar
+            collapsed={collapsed}
+            onToggleCollapse={() => setCollapsed((v) => !v)}
+            onNavigate={() => setMobileOpen(false)}
+          />
 
-      <div className="admin-main">
-        <AdminTopNav pageTitle={pageTitle} onOpenMobile={() => setMobileOpen(true)} />
-        <div className="admin-content">
-          <Outlet />
+          <div className="admin-main">
+            <AdminTopNav pageTitle={pageTitle} onOpenMobile={() => setMobileOpen(true)} />
+            <div className="admin-content">
+              <Outlet />
+            </div>
+          </div>
         </div>
-      </div>
-      </div>
+      </MediaUrlContext.Provider>
     </ToastProvider>
   )
 }

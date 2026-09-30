@@ -31,9 +31,14 @@ import ServicesRequestedBarChart from '../../components/admin/dashboard/Services
 import LeadDetailDrawer from '../../components/admin/leads/LeadDetailDrawer'
 import { buildLeadAnalytics, buildLeadStats, CMS_VERSION, fetchDashboardSnapshot } from '../../lib/dashboard'
 import {
+  addLeadTimelineNote,
   formatLeadPriority,
   formatLeadStatus,
   formatLeadTimelineSummary,
+  listLeadTimeline,
+  setLeadPriority,
+  setLeadStatus,
+  updateLead,
 } from '../../lib/leads'
 import { canAccessModule, canManageContent } from '../../lib/cmsPermissions'
 import { formatCmsRole, getCurrentProfile } from '../../lib/users'
@@ -225,6 +230,17 @@ export default function DashboardPage() {
   const canViewSeo = canAccess('seo')
   const canViewContent = canAccess('home') || canAccess('services') || canAccess('media')
   const isSalesDashboard = canViewLeads && !canViewContent && !canViewTeam
+
+  const leadDrawerApi = useMemo(
+    () => ({
+      listLeadTimeline,
+      updateLead,
+      setLeadStatus,
+      setLeadPriority,
+      addLeadTimelineNote,
+    }),
+    []
+  )
 
   return (
     <div className="admin-page admin-dashboard-page">
@@ -555,6 +571,7 @@ export default function DashboardPage() {
         isOpen={drawerOpen}
         onClose={handleCloseDrawer}
         onLeadUpdated={handleLeadUpdated}
+        api={leadDrawerApi}
       />
     </div>
   )

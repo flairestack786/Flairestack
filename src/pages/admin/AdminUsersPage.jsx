@@ -19,16 +19,22 @@ import UserAvatar from '../../components/admin/users/UserAvatar'
 import InviteStatusBadge from '../../components/admin/users/InviteStatusBadge'
 import ConfirmationModal from '../../components/admin/ConfirmationModal'
 import {
+  createUserInvite,
   fetchUsersSnapshot,
   formatCmsRole,
   formatCmsUserStatus,
   getInviteLastEmailSentAt,
+  requestPasswordReset,
   resendInvite,
   resolveCmsUserListStatus,
   revokeUserInvite,
+  setUserStatus,
   summarizeTeam,
+  updateUser,
   userHasPendingInvite,
 } from '../../lib/users'
+import { getPublicUrl } from '../../lib/media'
+import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/ToastProvider'
 
 const QUICK_FILTERS = [
@@ -96,6 +102,16 @@ function resolveInviterName(users, invitedBy) {
 
 export default function AdminUsersPage() {
   const { success, error } = useToast()
+  const { user: authUser } = useAuth()
+  const userDrawerApi = useMemo(
+    () => ({
+      updateUser,
+      setUserStatus,
+      requestPasswordReset,
+    }),
+    []
+  )
+  const inviteModalApi = useMemo(() => ({ createUserInvite }), [])
   const [status, setStatus] = useState(/** @type {'loading' | 'ready' | 'error'} */ ('loading'))
   const [loadError, setLoadError] = useState('')
   const [users, setUsers] = useState(/** @type {Record<string, unknown>[]} */ ([]))
@@ -496,6 +512,7 @@ export default function AdminUsersPage() {
                               fullName={String(user.full_name ?? '')}
                               email={String(user.email ?? '')}
                               avatarPath={user.avatar_path ? String(user.avatar_path) : null}
+                              resolveAvatarUrl={getPublicUrl}
                             />
                             <div className="admin-leads-person">
                               <span className="admin-leads-person-name">
@@ -690,12 +707,16 @@ export default function AdminUsersPage() {
         hasPendingInvite={
           selectedUser ? userHasPendingInvite(selectedUser, invites) : false
         }
+        currentUserId={authUser?.id ?? null}
+        resolveAvatarUrl={getPublicUrl}
+        api={userDrawerApi}
       />
 
       <InviteUserModal
         isOpen={inviteOpen}
         onClose={() => setInviteOpen(false)}
         onCreated={handleInviteCreated}
+        api={inviteModalApi}
       />
 
       <ConfirmationModal

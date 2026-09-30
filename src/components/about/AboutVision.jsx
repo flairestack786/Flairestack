@@ -1,12 +1,11 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { useAboutPage } from '../../hooks/useAboutPage'
 import { aboutFadeUp } from './aboutMotion'
 
-export default function AboutVision() {
-  const { sections } = useAboutPage()
-  const vision = sections.vision
-
+/**
+ * @param {{ vision: { eyebrow: string, title: string, titleAccent: string, body: string } }} props
+ */
+export default function AboutVision({ vision }) {
   return (
     <section className="about-page-vision" aria-labelledby="vision-heading">
       <div className="about-page-inner">

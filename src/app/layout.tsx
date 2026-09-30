@@ -1,15 +1,10 @@
-import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import NextProviders from './providers'
 
-export const metadata: Metadata = {
-  title: 'FlaireStack (Next.js)',
-  description: 'Next.js App Router migration running beside the Vite application.',
-}
-
 /**
- * Root layout for the Next.js scaffold.
- * Vite continues to own the production SPA; this layout is only used by `next` scripts.
+ * Root layout for all Next routes (public + admin).
+ * Public marketing metadata lives in `(public)/layout.tsx`.
+ * Admin pages keep their own shells and are not wrapped by the public Header/Footer.
  */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -21,6 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap"
           rel="stylesheet"
         />
+        <link rel="icon" href="/favicon.png?v=2" />
       </head>
       <body
         style={{

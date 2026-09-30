@@ -1,7 +1,6 @@
 import React, { useCallback, useId, useRef, useState } from 'react'
 import { CloudUpload, ImageIcon, Loader2 } from 'lucide-react'
 import { useToast } from '../common/ToastProvider'
-import { uploadFile } from '../../lib/media'
 
 const IMAGE_ACCEPT = 'image/*'
 
@@ -15,10 +14,15 @@ function isImageFile(file) {
 
 /**
  * Reusable drag-and-drop image uploader for the admin media library.
- * @param {{ onUploadComplete?: (file: File, result: { path: string, publicUrl: string }) => void, className?: string }} props
+ * @param {{
+ *   onUploadComplete?: (file: File, result: { path: string, publicUrl: string }) => void,
+ *   className?: string,
+ *   api: { uploadFile: (file: File) => Promise<{ path: string, publicUrl: string }> },
+ * }} props
  */
-export default function MediaUploader({ onUploadComplete, className = '' }) {
+export default function MediaUploader({ onUploadComplete, className = '', api }) {
   const { success, error, warning } = useToast()
+  const { uploadFile } = api
   const inputId = useId()
   const inputRef = useRef(null)
   const progressTimerRef = useRef(null)
@@ -90,6 +94,7 @@ export default function MediaUploader({ onUploadComplete, className = '' }) {
       startProgressSimulation,
       success,
       warning,
+      uploadFile,
     ]
   )
 

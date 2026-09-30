@@ -14,6 +14,7 @@ import EditorSection from '../../components/admin/home/EditorSection'
 import SaveBar from '../../components/admin/settings/SaveBar'
 import SettingsImageField from '../../components/admin/settings/SettingsImageField'
 import { pathToPickerImage } from '../../components/admin/settings/settingsImage'
+import { useMediaPublicUrl } from '../../components/admin/MediaUrlContext'
 import { useToast } from '../../components/common/ToastProvider'
 import { clearPublishedTestimonialsCache } from '../../hooks/useTestimonials'
 import {
@@ -101,6 +102,7 @@ export default function AdminTestimonialEditPage() {
   const { testimonialId } = useParams()
   const navigate = useNavigate()
   const { success, error } = useToast()
+  const getPublicUrl = useMediaPublicUrl()
   const [status, setStatus] = useState('loading')
   const [loadError, setLoadError] = useState('')
   const [baseline, setBaseline] = useState(emptyForm)
@@ -116,8 +118,8 @@ export default function AdminTestimonialEditPage() {
   const pickerSelectedImage = useMemo(() => {
     if (!pickerTarget) return null
     const path = typeof form[pickerTarget] === 'string' ? form[pickerTarget] : ''
-    return pathToPickerImage(path)
-  }, [pickerTarget, form])
+    return pathToPickerImage(path, getPublicUrl)
+  }, [pickerTarget, form, getPublicUrl])
 
   const loadTestimonial = useCallback(async () => {
     if (!testimonialId) return

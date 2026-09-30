@@ -1,5 +1,5 @@
 import { SERVICE_SECTION_KEYS } from '../../../lib/serviceDefaults'
-import { SERVICE_MEDIA_SLOTS } from '../../../lib/servicePage'
+import { SERVICE_MEDIA_SLOTS } from '../../../lib/serviceMediaSlots'
 
 export { SERVICE_SECTION_KEYS as SERVICE_EDITOR_SECTION_KEYS, SERVICE_MEDIA_SLOTS }
 
