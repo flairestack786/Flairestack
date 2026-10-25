@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+﻿import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Check, ImageIcon, Search, X } from 'lucide-react'
 import MediaGrid from './MediaGrid'
 import { buildRenamedStoragePath, getPathExtension } from '../../lib/mediaFormat'
@@ -8,23 +8,8 @@ import { buildRenamedStoragePath, getPathExtension } from '../../lib/mediaFormat
  */
 
 /**
- * Lazy Vite media client — avoids pulling `lib/supabase` into the Next SSR graph.
- * @returns {Promise<Record<string, unknown>>}
- */
-function loadViteMediaApi() {
-  return import('../../lib/media').then((media) => ({
-    listFiles: media.listFiles,
-    deleteFile: media.deleteFile,
-    renameFile: media.renameFile,
-    getPublicUrl: media.getPublicUrl,
-    buildRenamedStoragePath: media.buildRenamedStoragePath,
-    getPathExtension: media.getPathExtension,
-  }))
-}
-
-/**
  * Reusable image picker modal for CMS editors.
- * Defaults to the Vite media client (lazy); Next callers should pass `api={nextMediaApi}`.
+ * Callers must pass `api={nextMediaApi}` (or equivalent).
  * @param {{
  *   isOpen: boolean,
  *   selectedImage?: PickerImage | null,
@@ -32,7 +17,7 @@ function loadViteMediaApi() {
  *   onClose: () => void,
  *   title?: string,
  *   className?: string,
- *   api?: Record<string, unknown>,
+ *   api: Record<string, unknown>,
  * }} props
  */
 export default function ImagePickerModal({
@@ -49,32 +34,10 @@ export default function ImagePickerModal({
   const closeRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [pendingSelection, setPendingSelection] = useState(/** @type {PickerImage | null} */ (null))
-  const [viteApi, setViteApi] = useState(/** @type {Record<string, unknown> | null} */ (null))
-  const [viteApiError, setViteApiError] = useState('')
-
-  useEffect(() => {
-    if (apiProp || viteApi || viteApiError) return undefined
-    let cancelled = false
-
-    loadViteMediaApi()
-      .then((api) => {
-        if (!cancelled) setViteApi(api)
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setViteApiError(err?.message ?? 'Failed to load media library.')
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [apiProp, viteApi, viteApiError])
 
   const api = useMemo(
     () =>
-      apiProp ??
-      viteApi ?? {
+      apiProp ?? {
         listFiles: async () => [],
         deleteFile: async () => {},
         renameFile: async () => {},
@@ -82,7 +45,7 @@ export default function ImagePickerModal({
         buildRenamedStoragePath,
         getPathExtension,
       },
-    [apiProp, viteApi]
+    [apiProp]
   )
 
   useEffect(() => {
@@ -143,7 +106,7 @@ export default function ImagePickerModal({
 
   const rootClassName = ['admin-image-picker-modal', className].filter(Boolean).join(' ')
   const canConfirm = Boolean(pendingSelection)
-  const apiReady = Boolean(apiProp || viteApi)
+  const apiReady = Boolean(apiProp)
 
   return (
     <div className={rootClassName} onClick={handleBackdropClick}>
@@ -226,11 +189,7 @@ export default function ImagePickerModal({
         </div>
 
         <div className="admin-image-picker-modal-body">
-          {viteApiError && !apiProp ? (
-            <p className="admin-settings-state admin-settings-state--error" role="alert">
-              {viteApiError}
-            </p>
-          ) : apiReady ? (
+          {apiReady ? (
             <MediaGrid
               className="admin-media-grid--picker"
               searchQuery={searchQuery}
@@ -241,8 +200,8 @@ export default function ImagePickerModal({
               api={api}
             />
           ) : (
-            <p className="admin-settings-state" role="status">
-              Loading media library…
+            <p className="admin-settings-state admin-settings-state--error" role="alert">
+              Media API is required. Pass api={'{nextMediaApi}'}.
             </p>
           )}
         </div>

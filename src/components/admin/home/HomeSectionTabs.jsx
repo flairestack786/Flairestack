@@ -2,6 +2,7 @@ import React from 'react'
 
 const TABS = [
   { id: 'hero', label: 'Hero' },
+  { id: 'slideshow', label: 'Slideshow' },
   { id: 'services', label: 'Services' },
   { id: 'why-choose', label: 'Why Choose' },
   { id: 'stats', label: 'Stats' },

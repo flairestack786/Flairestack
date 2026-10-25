@@ -4,6 +4,7 @@ import {
 import { homeProcessSteps } from '@/data/homeProcessSteps'
 import { technologiesRowA, technologiesRowB } from '@/data/technologies'
 import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
+import { resolvePublicHeroSlides } from '@/lib/heroSlides'
 
 export type SerializableHomePage = {
   page: {
@@ -19,6 +20,7 @@ export type SerializableHomePage = {
     pageDescription: string
     row: Record<string, unknown> | null
   }
+  heroSlides: ReturnType<typeof resolvePublicHeroSlides>
   sections: {
     hero: Record<string, unknown>
     services: Record<string, unknown>
@@ -143,7 +145,8 @@ function configOf(section: Record<string, unknown> | undefined): Record<string, 
 export function buildNextSerializableHomePage(
   page: Record<string, unknown> | null | undefined,
   sectionRows: Record<string, unknown>[] | null | undefined,
-  seoRow: Record<string, unknown> | null = null
+  seoRow: Record<string, unknown> | null = null,
+  heroSlideRows: Record<string, unknown>[] | null = null
 ): SerializableHomePage {
   const sectionMap = Object.fromEntries(
     (sectionRows ?? []).map((row) => [String(row.section_key), row])
@@ -249,6 +252,20 @@ export function buildNextSerializableHomePage(
           .filter(Boolean) as Array<{ iconName: string; text: string }>
       : FALLBACK_CONTACT_TRUST
 
+  const legacyHero = {
+    title: textOrFallback(hero?.title, 'Building intelligent'),
+    titleAccent: textOrFallback(hero?.title_accent, 'digital experiences'),
+    intro: textOrFallback(hero?.intro, 'for the future.'),
+    body: textOrFallback(
+      hero?.body,
+      'FlaireStack delivers elite software engineering, AI solutions, cloud systems, and modern digital products designed to scale businesses globally.'
+    ),
+    ctaLabel: textOrFallback(hero?.cta_primary_label, 'Book Consultation'),
+    ctaUrl: textOrFallback(hero?.cta_primary_url, '#contact'),
+    backgroundImageUrl: backgroundPath ? getPublicMediaUrl(backgroundPath) : null,
+    useBundledBackground: !backgroundPath,
+  }
+
   return {
     page: {
       slug: textOrFallback(page?.slug, 'home'),
@@ -272,20 +289,9 @@ export function buildNextSerializableHomePage(
       ),
       row: (seoRow as Record<string, unknown> | null) ?? null,
     },
+    heroSlides: resolvePublicHeroSlides(heroSlideRows, getPublicMediaUrl, legacyHero),
     sections: {
-      hero: {
-        title: textOrFallback(hero?.title, 'Building intelligent'),
-        titleAccent: textOrFallback(hero?.title_accent, 'digital experiences'),
-        intro: textOrFallback(hero?.intro, 'for the future.'),
-        body: textOrFallback(
-          hero?.body,
-          'FlaireStack delivers elite software engineering, AI solutions, cloud systems, and modern digital products designed to scale businesses globally.'
-        ),
-        ctaLabel: textOrFallback(hero?.cta_primary_label, 'Book Consultation'),
-        ctaUrl: textOrFallback(hero?.cta_primary_url, '#contact'),
-        backgroundImageUrl: backgroundPath ? getPublicMediaUrl(backgroundPath) : null,
-        useBundledBackground: !backgroundPath,
-      },
+      hero: legacyHero,
       services: {
         eyebrow: textOrFallback(services?.eyebrow, 'Our services'),
         title: textOrFallback(services?.title, 'Redefining'),

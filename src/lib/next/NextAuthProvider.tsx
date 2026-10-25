@@ -280,7 +280,7 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
           <p style={{ color: 'rgba(245,245,245,0.55)', fontSize: '0.875rem' }}>
             Copy your project URL and anon key into{' '}
             <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in
-            <code> .env.local</code>. Vite continues to use <code>VITE_*</code>.
+            <code> .env.local</code>.
           </p>
         </div>
       </div>

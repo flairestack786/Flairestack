@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl =
   process.env.SUPABASE_URL ||
-  process.env.VITE_SUPABASE_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_URL
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !serviceRoleKey) {
@@ -28,10 +28,9 @@ export const supabaseAdmin =
  * Canonical public origin for invite / password-reset email links.
  * Prefer explicit SITE_URL in all environments.
  *
- * Dual-runtime local defaults:
- * - Vite CMS primary: SITE_URL=http://localhost:5173 (fallback below)
- * - Next CMS primary: SITE_URL=http://localhost:3000 (or NEXT_PUBLIC_SITE_URL)
- * Production: SITE_URL=https://your-production-domain (required for correct emails)
+ * Prefer SITE_URL in all environments.
+ * Local default: http://localhost:3000 (Next.js).
+ * Production: SITE_URL=https://your-production-domain (required for correct emails).
  *
  * On Vercel, if SITE_URL is unset, fall back to platform-provided production host
  * (never invent a custom domain). Browser self-service forgot-password uses
@@ -41,7 +40,6 @@ export function getSiteUrl() {
   const explicit =
     process.env.SITE_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.VITE_SITE_URL ||
     process.env.PUBLIC_SITE_URL
 
   if (explicit) {
@@ -58,7 +56,7 @@ export function getSiteUrl() {
     return `https://${String(vercelDeployment).replace(/^https?:\/\//, '').replace(/\/$/, '')}`
   }
 
-  return 'http://localhost:5173'
+  return 'http://localhost:3000'
 }
 
 export function ensureAdminClient() {

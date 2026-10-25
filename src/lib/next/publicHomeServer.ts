@@ -42,7 +42,7 @@ export const getPublicHomePage = cache(async (): Promise<SerializableHomePage> =
     if (error) throw error
     if (!page) return FALLBACK_NEXT_HOME
 
-    const [sectionsResult, seoResult] = await Promise.all([
+    const [sectionsResult, seoResult, slidesResult] = await Promise.all([
       supabase
         .from('page_sections')
         .select('*')
@@ -54,15 +54,25 @@ export const getPublicHomePage = cache(async (): Promise<SerializableHomePage> =
         .select(PUBLIC_SEO_SELECT)
         .eq('page_id', page.id)
         .maybeSingle(),
+      supabase
+        .from('home_hero_slides')
+        .select('*')
+        .eq('is_enabled', true)
+        .order('sort_order', { ascending: true }),
     ])
 
     if (sectionsResult.error) throw sectionsResult.error
     if (seoResult.error) throw seoResult.error
+    // Slides table may not exist until migration is applied — fall back to legacy hero.
+    const heroSlideRows = slidesResult.error
+      ? null
+      : ((slidesResult.data ?? []) as Record<string, unknown>[])
 
     return buildNextSerializableHomePage(
       page as Record<string, unknown>,
       (sectionsResult.data ?? []) as Record<string, unknown>[],
-      (seoResult.data as Record<string, unknown> | null) ?? null
+      (seoResult.data as Record<string, unknown> | null) ?? null,
+      heroSlideRows
     )
   } catch {
     return FALLBACK_NEXT_HOME

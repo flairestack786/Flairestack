@@ -1,15 +1,13 @@
 import React from 'react'
-import { Link as RouterLink } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 
 /**
  * Settings → SEO tab: redirect only. Global SEO is edited at /admin/seo/global.
- * Settings is admin-only, so this link stays within Admin RBAC.
  *
  * @param {{
  *   panelId: string,
  *   labelledBy: string,
- *   LinkComponent?: React.ComponentType<{ href: string, className?: string, children?: React.ReactNode }>,
+ *   LinkComponent: React.ComponentType<{ href: string, className?: string, children?: React.ReactNode }>,
  * }} props
  */
 export default function SeoSettings({ panelId, labelledBy, LinkComponent }) {
@@ -21,6 +19,12 @@ export default function SeoSettings({ panelId, labelledBy, LinkComponent }) {
       <ArrowRight size={16} strokeWidth={1.75} aria-hidden />
     </>
   )
+
+  const Link = LinkComponent ?? (({ href: h, className: c, children: kids }) => (
+    <a href={h} className={c}>
+      {kids}
+    </a>
+  ))
 
   return (
     <section
@@ -47,15 +51,9 @@ export default function SeoSettings({ panelId, labelledBy, LinkComponent }) {
             JSON-LD from the SEO module. This Settings tab no longer edits those fields.
           </p>
         </div>
-        {LinkComponent ? (
-          <LinkComponent href={href} className={className}>
-            {children}
-          </LinkComponent>
-        ) : (
-          <RouterLink to={href} className={className}>
-            {children}
-          </RouterLink>
-        )}
+        <Link href={href} className={className}>
+          {children}
+        </Link>
       </div>
     </section>
   )

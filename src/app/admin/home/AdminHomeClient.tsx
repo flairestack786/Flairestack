@@ -5,6 +5,7 @@ import { AlertCircle, Home, Loader2, RefreshCw } from 'lucide-react'
 import ImagePickerModal from '@/components/admin/ImagePickerModal'
 import ContactEditor from '@/components/admin/home/ContactEditor'
 import HeroEditor from '@/components/admin/home/HeroEditor'
+import HeroSlideshowEditor from '@/components/admin/home/HeroSlideshowEditor'
 import HomeSectionTabs from '@/components/admin/home/HomeSectionTabs'
 import ProcessEditor from '@/components/admin/home/ProcessEditor'
 import ServicesHeaderEditor from '@/components/admin/home/ServicesHeaderEditor'
@@ -24,6 +25,23 @@ import { useMediaPublicUrl } from '@/components/admin/MediaUrlContext'
 import { useToast } from '@/components/common/ToastProvider'
 import { getHomePageWithSections, saveHomeSections } from '@/lib/next/homeBrowser'
 import { nextMediaApi } from '@/lib/next/mediaBrowser'
+import {
+  createHeroSlide,
+  deleteHeroSlide,
+  listHeroSlides,
+  reorderHeroSlides,
+  updateHeroSlide,
+  uploadHeroMedia,
+} from '@/lib/next/heroSlidesBrowser'
+
+const heroSlidesApi = {
+  listHeroSlides,
+  createHeroSlide,
+  updateHeroSlide,
+  deleteHeroSlide,
+  reorderHeroSlides,
+  uploadHeroMedia,
+}
 
 type ImagePickerTarget = { sectionKey: string; configKey: string } | null
 
@@ -154,19 +172,19 @@ export default function AdminHomeClient() {
         <div>
           <h1 className="admin-page-title">Home</h1>
           <p className="admin-page-desc">
-            Manage hero content, homepage sections, and structured section data.
+            Manage hero content, slideshow, homepage sections, and structured section data.
           </p>
         </div>
       </header>
 
-      {status === 'loading' && (
+      {status === 'loading' && activeTab !== 'slideshow' && (
         <div className="admin-settings-state" role="status">
           <Loader2 size={24} strokeWidth={1.75} className="admin-settings-spinner" aria-hidden />
           <span>Loading home page…</span>
         </div>
       )}
 
-      {status === 'error' && (
+      {status === 'error' && activeTab !== 'slideshow' && (
         <div className="admin-settings-state admin-settings-state--error" role="alert">
           <AlertCircle size={22} strokeWidth={1.75} aria-hidden />
           <span>{loadError}</span>
@@ -177,12 +195,21 @@ export default function AdminHomeClient() {
         </div>
       )}
 
-      {status === 'ready' && activeSection && (
+      {(status === 'ready' || activeTab === 'slideshow') && (
         <>
           <HomeSectionTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           <div className="admin-settings-panel">
-            {activeTab === 'hero' && (
+            {activeTab === 'slideshow' && (
+              <HeroSlideshowEditor
+                api={heroSlidesApi}
+                mediaApi={nextMediaApi}
+                panelId={panelId}
+                labelledBy={labelledBy}
+              />
+            )}
+
+            {status === 'ready' && activeTab === 'hero' && activeSection && (
               <HeroEditor
                 section={activeSection}
                 onFieldChange={(field, value) => handleSectionFieldChange('hero', field, value)}
@@ -193,7 +220,7 @@ export default function AdminHomeClient() {
               />
             )}
 
-            {activeTab === 'services' && (
+            {status === 'ready' && activeTab === 'services' && activeSection && (
               <ServicesHeaderEditor
                 section={activeSection}
                 onFieldChange={(field, value) => handleSectionFieldChange('services', field, value)}
@@ -205,7 +232,7 @@ export default function AdminHomeClient() {
               />
             )}
 
-            {activeTab === 'why-choose' && (
+            {status === 'ready' && activeTab === 'why-choose' && activeSection && (
               <WhyChooseEditor
                 section={activeSection}
                 onFieldChange={(field, value) =>
@@ -217,7 +244,7 @@ export default function AdminHomeClient() {
               />
             )}
 
-            {activeTab === 'stats' && (
+            {status === 'ready' && activeTab === 'stats' && activeSection && (
               <StatsEditor
                 section={activeSection}
                 onConfigChange={(key, value) => handleSectionConfigChange('stats', key, value)}
@@ -226,7 +253,7 @@ export default function AdminHomeClient() {
               />
             )}
 
-            {activeTab === 'process' && (
+            {status === 'ready' && activeTab === 'process' && activeSection && (
               <ProcessEditor
                 section={activeSection}
                 onFieldChange={(field, value) => handleSectionFieldChange('process', field, value)}
@@ -236,7 +263,7 @@ export default function AdminHomeClient() {
               />
             )}
 
-            {activeTab === 'technologies' && (
+            {status === 'ready' && activeTab === 'technologies' && activeSection && (
               <TechnologiesEditor
                 section={activeSection}
                 onFieldChange={(field, value) =>
@@ -250,7 +277,7 @@ export default function AdminHomeClient() {
               />
             )}
 
-            {activeTab === 'contact' && (
+            {status === 'ready' && activeTab === 'contact' && activeSection && (
               <ContactEditor
                 section={activeSection}
                 onFieldChange={(field, value) => handleSectionFieldChange('contact', field, value)}
@@ -261,7 +288,9 @@ export default function AdminHomeClient() {
             )}
           </div>
 
-          <SaveBar isDirty={isDirty} isSaving={isSaving} onSave={() => void handleSave()} />
+          {activeTab !== 'slideshow' && status === 'ready' ? (
+            <SaveBar isDirty={isDirty} isSaving={isSaving} onSave={() => void handleSave()} />
+          ) : null}
 
           <ImagePickerModal
             isOpen={pickerOpen}

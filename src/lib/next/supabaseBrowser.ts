@@ -6,7 +6,7 @@ let browserClient: SupabaseClient | null = null
 
 /**
  * Next.js-only browser Supabase client.
- * Uses NEXT_PUBLIC_* only — never the Vite VITE_* client in src/lib/supabase.js.
+ * Uses NEXT_PUBLIC_* only — never service-role credentials.
  */
 export function getSupabaseBrowser(): SupabaseClient {
   if (browserClient) {

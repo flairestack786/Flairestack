@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { Link as RouterLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
@@ -156,10 +155,19 @@ function useScrollSpy(anchorNav) {
   return activeId
 }
 
+function DefaultServiceLink({ to, href, children, className, ...rest }) {
+  const dest = to || href || '#'
+  return (
+    <a href={dest} className={className} {...rest}>
+      {children}
+    </a>
+  )
+}
+
 export default function ServicePageLayout({
   service,
   page,
-  LinkComponent = RouterLink,
+  LinkComponent = DefaultServiceLink,
   testimonials,
   companyStats,
   servicesIndexHref = '/#services',

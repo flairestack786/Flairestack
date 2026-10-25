@@ -3,13 +3,13 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, ArrowUpRight, Calendar, Star } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Star } from 'lucide-react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, EffectFade, Pagination } from 'swiper/modules'
 import { resolveLucideIcon } from '@/lib/lucideIcons'
 import { publicServicePath } from '@/lib/serviceSlug'
 import { technologiesRowA, technologiesRowB } from '@/data/technologies'
-import TrustedBy from '@/components/TrustedBy'
+import HomeHeroSlideshow from '@/components/public/HomeHeroSlideshow'
 import { AnimatedCounter, fadeUp, FloatingOrb, staggerContainer } from '@/components/service/ServiceMotion'
 import heroJpg from '@/assets/hero-4k.jpg'
 import heroWebp from '@/assets/hero-4k.webp'
@@ -46,17 +46,7 @@ type HomePageViewProps = {
 }
 
 export default function HomePageView({ home, services, testimonials }: HomePageViewProps) {
-  const { sections } = home
-  const hero = sections.hero as {
-    title: string
-    titleAccent: string
-    intro: string
-    body: string
-    ctaLabel: string
-    ctaUrl: string
-    backgroundImageUrl: string | null
-    useBundledBackground: boolean
-  }
+  const { sections, heroSlides } = home
   const servicesContent = sections.services as {
     eyebrow: string
     title: string
@@ -114,82 +104,16 @@ export default function HomePageView({ home, services, testimonials }: HomePageV
     window.location.assign(servicesContent.ctaUrl)
   }
 
+  const bundledJpg = typeof heroJpg === 'string' ? heroJpg : heroJpg.src
+  const bundledWebp = typeof heroWebp === 'string' ? heroWebp : heroWebp.src ?? heroWebp
+
   return (
     <main>
-      {/* Hero */}
-      <section className="hero">
-        <picture className="hero-media" aria-hidden>
-          {hero.useBundledBackground ? (
-            <>
-              <source srcSet={heroWebp.src ?? heroWebp} type="image/webp" />
-              <img
-                src={typeof heroJpg === 'string' ? heroJpg : heroJpg.src}
-                alt=""
-                className="hero-bg-img"
-                decoding="async"
-                fetchPriority="high"
-                sizes="100vw"
-              />
-            </>
-          ) : (
-            <img
-              src={hero.backgroundImageUrl ?? undefined}
-              alt=""
-              className="hero-bg-img"
-              decoding="async"
-              fetchPriority="high"
-              sizes="100vw"
-            />
-          )}
-        </picture>
-        <div className="absolute inset-0 hero-overlay" aria-hidden />
-        <div className="absolute inset-0 hero-vignette" aria-hidden />
-        <div className="absolute inset-0 hero-grain" aria-hidden />
-        <div className="hero-inner">
-          <div className="hero-content">
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="hero-title text-white"
-            >
-              {hero.title}
-              <br />
-              <span className="text-accent">{hero.titleAccent}</span>
-              <br />
-              {hero.intro}
-            </motion.h1>
-            <div className="hero-rule" aria-hidden />
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.08 }}
-              className="hero-subtext"
-            >
-              {hero.body}
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.16 }}
-              className="hero-actions"
-            >
-              <a href={hero.ctaUrl} className="hero-btn-secondary">
-                <Calendar size={16} strokeWidth={1.75} />
-                {hero.ctaLabel}
-              </a>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.45, delay: 0.24 }}
-              className="hero-trusted"
-            >
-              <TrustedBy />
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      <HomeHeroSlideshow
+        slides={heroSlides}
+        bundledImageSrc={bundledJpg}
+        bundledWebpSrc={bundledWebp}
+      />
 
       {/* Services */}
       <section id="services" className="services-section">

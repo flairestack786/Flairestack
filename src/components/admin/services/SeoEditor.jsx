@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link as RouterLink } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 import EditorSection from '../home/EditorSection'
 
@@ -23,6 +22,12 @@ export default function SeoEditor({ serviceId, panelId, labelledBy, LinkComponen
     </>
   )
 
+  const Link = LinkComponent ?? (({ href, className, children }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ))
+
   return (
     <EditorSection
       panelId={panelId}
@@ -41,15 +46,9 @@ export default function SeoEditor({ serviceId, panelId, labelledBy, LinkComponen
             full SEO editor. This service tab no longer duplicates those fields.
           </p>
         </div>
-        {LinkComponent ? (
-          <LinkComponent href={seoPath} className={linkClassName}>
-            {linkChildren}
-          </LinkComponent>
-        ) : (
-          <RouterLink to={seoPath} className={linkClassName}>
-            {linkChildren}
-          </RouterLink>
-        )}
+        <Link href={seoPath} className={linkClassName}>
+          {linkChildren}
+        </Link>
       </div>
     </EditorSection>
   )

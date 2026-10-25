@@ -141,31 +141,165 @@ a:visited {
   inset: 0;
   z-index: 0;
   overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-slide-media {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  /* 550ms crossfade ? outgoing stays visible until incoming is marked ready */
+  transition: opacity 0.55s ease;
+  pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.hero-slide-media.is-pending {
+  /* Incoming layer sits under the still-visible outgoing slide until ready */
+  z-index: 0;
+}
+
+.hero-slide-media.is-active {
+  opacity: 1;
+  z-index: 1;
 }
 
 .hero-bg-img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center right;
+  /* Center crop so media reads edge-to-edge, not right-half only */
+  object-position: center center;
   transform: translateZ(0);
+}
+
+.hero-bg-video {
+  background: var(--black);
+  object-fit: cover;
+  object-position: center center;
+}
+
+.hero-eyebrow {
+  margin: 0 0 0.75rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero-slideshow-controls {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.75rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  pointer-events: auto;
+}
+
+.hero-slideshow-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hero-slideshow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(5, 5, 5, 0.45);
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.hero-slideshow-btn:hover,
+.hero-slideshow-btn:focus-visible {
+  border-color: rgba(255, 122, 0, 0.7);
+  background: rgba(5, 5, 5, 0.7);
+  outline: none;
+}
+
+.hero-slideshow-btn:focus-visible {
+  outline: 2px solid rgba(255, 122, 0, 0.85);
+  outline-offset: 2px;
+}
+
+.hero-slideshow-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hero-slideshow-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hero-slideshow-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.35);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.hero-slideshow-dot:focus-visible {
+  outline: 2px solid rgba(255, 122, 0, 0.85);
+  outline-offset: 3px;
+}
+
+.hero-slideshow-dot.is-active {
+  background: var(--accent);
+  transform: scale(1.2);
+}
+
+.hero-btn-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide-media {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-slideshow-controls {
+    right: 1rem;
+    bottom: 1rem;
+  }
 }
 
 .hero-overlay {
   z-index: 1;
+  /* Smooth full-bleed wash — media stays visible; no hard vertical panel edge */
   background:
     linear-gradient(
-      90deg,
-      #050505 0%,
-      #050505 18%,
-      rgba(5, 5, 5, 0.99) 26%,
-      rgba(5, 5, 5, 0.94) 34%,
-      rgba(5, 5, 5, 0.78) 42%,
-      rgba(5, 5, 5, 0.52) 50%,
-      rgba(255, 122, 0, 0.1) 58%,
-      rgba(255, 122, 0, 0.04) 62%,
-      rgba(5, 5, 5, 0.08) 68%,
-      transparent 78%
+      105deg,
+      rgba(5, 5, 5, 0.62) 0%,
+      rgba(5, 5, 5, 0.48) 16%,
+      rgba(5, 5, 5, 0.3) 34%,
+      rgba(5, 5, 5, 0.16) 52%,
+      rgba(5, 5, 5, 0.06) 72%,
+      transparent 100%
     );
   pointer-events: none;
 }
@@ -173,8 +307,8 @@ a:visited {
 .hero-vignette {
   z-index: 2;
   background:
-    radial-gradient(ellipse 90% 85% at 12% 50%, rgba(5, 5, 5, 0.92) 0%, transparent 58%),
-    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 40%, rgba(5, 5, 5, 0.35) 100%);
+    radial-gradient(ellipse 100% 90% at 12% 42%, rgba(5, 5, 5, 0.22) 0%, transparent 72%),
+    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 55%, rgba(5, 5, 5, 0.18) 100%);
   pointer-events: none;
 }
 
@@ -190,15 +324,11 @@ a:visited {
 
 .hero-content {
   position: relative;
-}
-
-.hero-content::before {
-  content: '';
-  position: absolute;
-  inset: -48px -64px -48px -48px;
-  background: radial-gradient(ellipse 90% 80% at 0% 45%, rgba(5, 5, 5, 0.55) 0%, transparent 72%);
-  pointer-events: none;
-  z-index: -1;
+  /* No panel background / ::before scrub — readability from full-bleed overlay + text-shadow */
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .hero-title {
@@ -207,7 +337,7 @@ a:visited {
   font-weight: 700;
   line-height: 0.98;
   letter-spacing: -0.04em;
-  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.65), 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
 .hero-rule {
@@ -230,7 +360,7 @@ a:visited {
   margin-top: 1rem;
   font-size: clamp(1.05rem, 1.75vw, 1.35rem);
   line-height: 1.65;
-  text-shadow: 0 1px 24px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 20px rgba(0, 0, 0, 0.7), 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .hero-actions {
@@ -464,18 +594,23 @@ a:visited {
   max-height: min(80vh, 40rem);
   padding: 0.875rem;
   border-radius: 14px;
-  background: rgba(10, 10, 12, 0.94);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  /* Liquid glass: translucent dark wash so hero media shows through */
+  background: rgba(8, 8, 10, 0.38);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 24px 64px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
+    0 12px 40px rgba(0, 0, 0, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.16);
   z-index: 200;
   /* Clip the scrolling list to the rounded corners. */
   overflow: hidden;
+  isolation: isolate;
 }
 
+/* Invisible hover bridge between trigger and panel (must receive pointer events). */
 .nav-dropdown-panel::before {
   content: '';
   position: absolute;
@@ -485,7 +620,31 @@ a:visited {
   height: 14px;
 }
 
+/* Soft top-edge highlight for glass depth ? decorative only. */
+.nav-dropdown-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.03) 12%,
+    transparent 42%
+  );
+  z-index: 0;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav-dropdown-panel {
+    background: rgba(12, 12, 14, 0.92);
+  }
+}
+
 .nav-dropdown-label {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   margin: 0 0 0.5rem;
   padding: 0 0.5rem;
@@ -493,10 +652,13 @@ a:visited {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.48);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
 .nav-dropdown-list {
+  position: relative;
+  z-index: 1;
   list-style: none;
   margin: 0;
   padding: 0 0.15rem 0 0;
@@ -535,22 +697,29 @@ a:visited {
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.88);
   text-decoration: none;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
   transition:
     color 0.2s ease,
     background 0.2s ease;
 }
 
-.nav-dropdown-link:hover {
+.nav-dropdown-link:hover,
+.nav-dropdown-link:focus-visible {
   color: #fff;
-  background: rgba(255, 122, 0, 0.12);
+  background: rgba(255, 122, 0, 0.16);
   text-decoration: none;
+  outline: none;
+}
+
+.nav-dropdown-link:focus-visible {
+  box-shadow: inset 0 0 0 1px rgba(255, 122, 0, 0.55);
 }
 
 .nav-dropdown-link--active {
   color: #fff;
-  background: rgba(255, 122, 0, 0.16);
+  background: rgba(255, 122, 0, 0.18);
 }
 
 .nav-dropdown-link--active::before {
@@ -729,12 +898,13 @@ a:visited {
 
 .trusted-marquee-fade--left {
   left: 0;
-  background: linear-gradient(90deg, rgba(5, 5, 5, 0.95) 0%, transparent 100%);
+  /* Soft edge only ? do not paint an opaque black strip over hero media */
+  background: linear-gradient(90deg, rgba(5, 5, 5, 0.35) 0%, transparent 100%);
 }
 
 .trusted-marquee-fade--right {
   right: 0;
-  background: linear-gradient(270deg, rgba(5, 5, 5, 0.85) 0%, transparent 100%);
+  background: linear-gradient(270deg, rgba(5, 5, 5, 0.3) 0%, transparent 100%);
 }
 
 .trusted-logo-img {
@@ -855,25 +1025,33 @@ a:visited {
     justify-content: center;
   }
 
-  .hero-bg-img {
-    object-position: 78% center;
+  .hero-bg-img,
+  .hero-bg-video {
+    object-position: center 40%;
   }
 
   .hero-overlay {
     background:
       linear-gradient(
         180deg,
-        rgba(5, 5, 5, 0.88) 0%,
-        rgba(5, 5, 5, 0.72) 35%,
-        rgba(5, 5, 5, 0.35) 65%,
+        rgba(5, 5, 5, 0.42) 0%,
+        rgba(5, 5, 5, 0.28) 35%,
+        rgba(5, 5, 5, 0.16) 70%,
         rgba(5, 5, 5, 0.1) 100%
       ),
       linear-gradient(
-        90deg,
-        #050505 0%,
-        rgba(5, 5, 5, 0.85) 55%,
-        transparent 85%
+        105deg,
+        rgba(5, 5, 5, 0.45) 0%,
+        rgba(5, 5, 5, 0.28) 40%,
+        rgba(5, 5, 5, 0.1) 70%,
+        transparent 100%
       );
+  }
+
+  .hero-vignette {
+    background:
+      radial-gradient(ellipse 110% 80% at 50% 30%, rgba(5, 5, 5, 0.22) 0%, transparent 70%),
+      radial-gradient(ellipse 120% 100% at 50% 50%, transparent 50%, rgba(5, 5, 5, 0.2) 100%);
   }
 
   .hero-title {
@@ -1502,7 +1680,7 @@ a:visited {
   pointer-events: none;
 }
 
-/* Phase 15 � Next public foundation placeholder / states */
+/* Phase 15 � Next public foundation placeholder / states */
 .public-phase15-main {
   min-height: calc(100vh - 72px);
   display: flex;

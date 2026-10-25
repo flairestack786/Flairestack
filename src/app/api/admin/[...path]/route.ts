@@ -22,7 +22,7 @@ type HandlerResult = { status: number; body: Record<string, unknown> }
  * Next App Router catch-all for privileged CMS user-management operations.
  * Reuses the same Express/Vercel handlers — service-role never reaches the browser.
  *
- * Mirrors `/api/admin/*` paths used by Vite `adminApi.js`.
+ * Privileged CMS user-management operations under `/api/admin/*`.
  */
 export async function POST(
   request: Request,

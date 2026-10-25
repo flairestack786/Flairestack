@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   AlertCircle,
   AlertTriangle,
@@ -20,8 +19,7 @@ import { canManageGlobalSeo } from '../../../lib/cmsPermissions'
 
 /**
  * SEO health dashboard + page manager list.
- * Pass `cmsRole` from the host (Vite AuthContext or Next auth).
- * Optional `LinkComponent` (href-based) for Next; omit to keep react-router Link.
+ * Pass `cmsRole` from Next auth and `LinkComponent` (href-based, e.g. next/link).
  * @param {{
  *   health: Record<string, unknown>,
  *   entities: Record<string, unknown>[],
@@ -40,13 +38,20 @@ export default function SeoOverview({
   LinkComponent,
 }) {
   const showGlobal = Boolean(cmsRole) && canManageGlobalSeo(cmsRole)
-  const NavLink = LinkComponent
-    ? ({ to, className, children }) => (
+  const NavLink = ({ to, className, children }) => {
+    if (LinkComponent) {
+      return (
         <LinkComponent href={to} className={className}>
           {children}
         </LinkComponent>
       )
-    : Link
+    }
+    return (
+      <a href={to} className={className}>
+        {children}
+      </a>
+    )
+  }
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')
 
