@@ -10,7 +10,10 @@ import {
   type PublicTestimonial,
 } from '@/lib/next/publicTestimonialsServer'
 import { buildVisualsForService } from '@/data/serviceVisuals'
-import { resolveServiceCardDescription } from '@/data/serviceCardCopy'
+import {
+  resolveServiceCardDescription,
+  resolveServiceShowcaseCopy,
+} from '@/data/serviceCardCopy'
 import { resolveLegacyAssetKey } from '@/lib/serviceCatalogAssets'
 
 const HOME_SLUG = 'home'
@@ -26,6 +29,9 @@ export type HomeServiceCard = {
   shortDescription: string
   imageUrl: string | null
   imageAlt: string
+  accent: string
+  ctaLabel: string
+  highlights: string[]
 }
 
 /** Home testimonial shape used by HomePageView (subset of shared PublicTestimonial). */
@@ -106,6 +112,7 @@ export const getHomeServiceCards = cache(async (): Promise<HomeServiceCard[]> =>
             title,
           }) ?? slug
         const visuals = assetKey ? buildVisualsForService(assetKey, title) : null
+        const showcase = resolveServiceShowcaseCopy(slug, title)
         return {
           id: String(row.id ?? ''),
           slug,
@@ -117,6 +124,9 @@ export const getHomeServiceCards = cache(async (): Promise<HomeServiceCard[]> =>
           ),
           imageUrl: visuals?.hero?.src ?? null,
           imageAlt: visuals?.hero?.alt ?? title,
+          accent: showcase.accent,
+          ctaLabel: showcase.ctaLabel,
+          highlights: showcase.highlights,
         }
       })
       .filter((row) => Boolean(row.slug))
