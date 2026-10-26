@@ -408,20 +408,21 @@ export default function HeroSlideshowEditor({ api, mediaApi, panelId, labelledBy
 
               <EditorField id="slide-media" label="Background media">
                 <div className="hero-slides-media-actions">
-                  <button
-                    type="button"
-                    className="admin-settings-secondary-btn"
-                    onClick={handleUploadClick}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? (
-                      <Loader2 size={16} className="admin-settings-spinner" aria-hidden />
-                    ) : (
-                      <Upload size={16} aria-hidden />
-                    )}
-                    Upload {draft.media_type === 'video' ? 'video' : 'image'}
-                  </button>
-                  {draft.media_type !== 'video' ? (
+                  {draft.media_type === 'video' ? (
+                    <button
+                      type="button"
+                      className="admin-settings-secondary-btn"
+                      onClick={handleUploadClick}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <Loader2 size={16} className="admin-settings-spinner" aria-hidden />
+                      ) : (
+                        <Upload size={16} aria-hidden />
+                      )}
+                      Upload video
+                    </button>
+                  ) : (
                     <button
                       type="button"
                       className="admin-settings-secondary-btn"
@@ -432,7 +433,7 @@ export default function HeroSlideshowEditor({ api, mediaApi, panelId, labelledBy
                     >
                       Choose from library
                     </button>
-                  ) : null}
+                  )}
                   {draft.media_path ? (
                     <button
                       type="button"
@@ -443,17 +444,15 @@ export default function HeroSlideshowEditor({ api, mediaApi, panelId, labelledBy
                     </button>
                   ) : null}
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="sr-only"
-                  accept={
-                    draft.media_type === 'video'
-                      ? 'video/mp4,video/webm,video/quicktime'
-                      : 'image/*'
-                  }
-                  onChange={(e) => void handleFileChange(e)}
-                />
+                {draft.media_type === 'video' ? (
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="sr-only"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    onChange={(e) => void handleFileChange(e)}
+                  />
+                ) : null}
                 {mediaPreviewUrl ? (
                   <div className="hero-slides-preview">
                     {draft.media_type === 'video' ? (
