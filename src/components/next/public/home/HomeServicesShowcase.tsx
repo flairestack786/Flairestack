@@ -62,7 +62,9 @@ export default function HomeServicesShowcase({ services, header }: HomeServicesS
 
         <div className="svc-feature-list">
           {services.map((service, index) => {
-            const href = publicServicePath(service.slug)
+            const href = service.slug
+              ? publicServicePath(service.slug)
+              : service.secondaryCtaUrl || '/#contact'
             const reverse = index % 2 === 1
             const highlights = Array.isArray(service.highlights) ? service.highlights.slice(0, 4) : []
 
@@ -125,12 +127,17 @@ export default function HomeServicesShowcase({ services, header }: HomeServicesS
                       </span>
                       {service.ctaLabel || 'Explore service'}
                     </Link>
-                    <Link href="/#contact" className="svc-feature-btn svc-feature-btn--ghost">
-                      <span className="svc-feature-btn-icon" aria-hidden>
-                        <ArrowUpRight size={14} strokeWidth={2.25} />
-                      </span>
-                      Talk to us
-                    </Link>
+                    {service.secondaryCtaLabel ? (
+                      <Link
+                        href={service.secondaryCtaUrl || '/#contact'}
+                        className="svc-feature-btn svc-feature-btn--ghost"
+                      >
+                        <span className="svc-feature-btn-icon" aria-hidden>
+                          <ArrowUpRight size={14} strokeWidth={2.25} />
+                        </span>
+                        {service.secondaryCtaLabel}
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
               </motion.article>

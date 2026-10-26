@@ -15,6 +15,8 @@ import {
   resolveServiceShowcaseCopy,
 } from '@/data/serviceCardCopy'
 import { resolveLegacyAssetKey } from '@/lib/serviceCatalogAssets'
+import { resolvePublicAssetUrl } from '@/lib/next/publicMediaUrl'
+import { readShowcaseItemsFromConfig } from '@/lib/homeServicesShowcase'
 
 const HOME_SLUG = 'home'
 const PUBLIC_SEO_SELECT =
@@ -31,6 +33,8 @@ export type HomeServiceCard = {
   imageAlt: string
   accent: string
   ctaLabel: string
+  secondaryCtaLabel: string
+  secondaryCtaUrl: string
   highlights: string[]
 }
 
@@ -90,46 +94,120 @@ export const getPublicHomePage = cache(async (): Promise<SerializableHomePage> =
   }
 })
 
+function cardFromCatalogRow(row: Record<string, unknown>): HomeServiceCard | null {
+  const slug = normalizeServiceSlug(row.slug)
+  if (!slug) return null
+  const title = String(row.title ?? '').trim() || 'Service'
+  const assetKey =
+    resolveLegacyAssetKey({
+      legacy_asset_key: row.legacy_asset_key,
+      slug,
+      title,
+    }) ?? slug
+  const visuals = assetKey ? buildVisualsForService(assetKey, title) : null
+  const showcase = resolveServiceShowcaseCopy(slug, title)
+  return {
+    id: String(row.id ?? slug),
+    slug,
+    title,
+    shortDescription: resolveServiceCardDescription(
+      slug,
+      String(row.short_description ?? ''),
+      title
+    ),
+    imageUrl: visuals?.hero?.src ?? null,
+    imageAlt: visuals?.hero?.alt ?? title,
+    accent: showcase.accent,
+    ctaLabel: showcase.ctaLabel,
+    secondaryCtaLabel: 'Talk to us',
+    secondaryCtaUrl: '/#contact',
+    highlights: showcase.highlights,
+  }
+}
+
+async function listPublishedCatalogCards(): Promise<HomeServiceCard[]> {
+  const supabase = getSupabasePublicServer()
+  const { data, error } = await supabase
+    .from('services')
+    .select('id, slug, title, short_description, sort_order, legacy_asset_key')
+    .eq('status', 'published')
+    .order('sort_order', { ascending: true })
+
+  if (error) throw error
+
+  return (data ?? [])
+    .map((row) => cardFromCatalogRow(row as Record<string, unknown>))
+    .filter((row): row is HomeServiceCard => Boolean(row))
+}
+
+/**
+ * Homepage services rows — CMS `page_sections.services.config.showcase_items`
+ * when present; otherwise all published catalog services.
+ */
 export const getHomeServiceCards = cache(async (): Promise<HomeServiceCard[]> => {
   try {
     const supabase = getSupabasePublicServer()
-    const { data, error } = await supabase
-      .from('services')
-      .select('id, slug, title, short_description, sort_order, legacy_asset_key')
+    const { data: page, error: pageError } = await supabase
+      .from('pages')
+      .select('id')
+      .eq('slug', HOME_SLUG)
       .eq('status', 'published')
-      .order('sort_order', { ascending: true })
+      .maybeSingle()
 
-    if (error) throw error
+    if (pageError) throw pageError
 
-    return (data ?? [])
-      .map((row) => {
-        const slug = normalizeServiceSlug(row.slug)
-        const title = String(row.title ?? '').trim() || 'Service'
-        const assetKey =
-          resolveLegacyAssetKey({
-            legacy_asset_key: row.legacy_asset_key,
+    let showcaseConfig: unknown = null
+    if (page?.id) {
+      const { data: section, error: sectionError } = await supabase
+        .from('page_sections')
+        .select('config')
+        .eq('page_id', page.id)
+        .eq('section_key', 'services')
+        .maybeSingle()
+
+      if (sectionError) throw sectionError
+      showcaseConfig = section?.config ?? null
+    }
+
+    const cmsItems = readShowcaseItemsFromConfig(showcaseConfig)
+    if (cmsItems) {
+      const catalog = await listPublishedCatalogCards()
+      const catalogBySlug = new Map(catalog.map((item) => [item.slug, item]))
+
+      return cmsItems
+        .filter((item) => item.enabled)
+        .map((item, index) => {
+          const linked = item.service_slug ? catalogBySlug.get(item.service_slug) : null
+          const title = item.title || linked?.title || 'Service'
+          const slug = item.service_slug || linked?.slug || ''
+          const customImage = resolvePublicAssetUrl(item.image_path)
+          const catalogImage =
+            linked?.imageUrl ??
+            (item.service_slug
+              ? buildVisualsForService(item.service_slug, title)?.hero?.src ?? null
+              : null)
+
+          return {
+            id: item.id || `cms-${index + 1}`,
             slug,
             title,
-          }) ?? slug
-        const visuals = assetKey ? buildVisualsForService(assetKey, title) : null
-        const showcase = resolveServiceShowcaseCopy(slug, title)
-        return {
-          id: String(row.id ?? ''),
-          slug,
-          title,
-          shortDescription: resolveServiceCardDescription(
-            slug,
-            String(row.short_description ?? ''),
-            title
-          ),
-          imageUrl: visuals?.hero?.src ?? null,
-          imageAlt: visuals?.hero?.alt ?? title,
-          accent: showcase.accent,
-          ctaLabel: showcase.ctaLabel,
-          highlights: showcase.highlights,
-        }
-      })
-      .filter((row) => Boolean(row.slug))
+            shortDescription:
+              item.description ||
+              linked?.shortDescription ||
+              resolveServiceCardDescription(slug, '', title),
+            imageUrl: customImage || catalogImage,
+            imageAlt: item.image_alt || linked?.imageAlt || title,
+            accent: item.accent,
+            ctaLabel: item.cta_label,
+            secondaryCtaLabel: item.secondary_cta_label,
+            secondaryCtaUrl: item.secondary_cta_url,
+            highlights: item.highlights,
+          } satisfies HomeServiceCard
+        })
+        .filter((item) => Boolean(item.title))
+    }
+
+    return listPublishedCatalogCards()
   } catch {
     return []
   }
