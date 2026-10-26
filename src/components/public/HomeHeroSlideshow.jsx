@@ -320,9 +320,11 @@ export default function HomeHeroSlideshow({
         })}
       </div>
 
-      <div className="absolute inset-0 hero-overlay" aria-hidden />
-      <div className="absolute inset-0 hero-vignette" aria-hidden />
-      <div className="absolute inset-0 hero-grain" aria-hidden />
+      {/* Section-level scrims — apply to every CMS slide, not baked into media */}
+      <div className="hero-left-scrim" aria-hidden />
+      <div className="hero-overlay" aria-hidden />
+      <div className="hero-vignette" aria-hidden />
+      <div className="hero-grain" aria-hidden />
 
       <div className="hero-inner">
         <div className="hero-content">
