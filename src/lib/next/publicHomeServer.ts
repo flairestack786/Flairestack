@@ -9,6 +9,9 @@ import {
   getHomeTestimonialsShared,
   type PublicTestimonial,
 } from '@/lib/next/publicTestimonialsServer'
+import { buildVisualsForService } from '@/data/serviceVisuals'
+import { resolveServiceCardDescription } from '@/data/serviceCardCopy'
+import { resolveLegacyAssetKey } from '@/lib/serviceCatalogAssets'
 
 const HOME_SLUG = 'home'
 const PUBLIC_SEO_SELECT =
@@ -21,6 +24,8 @@ export type HomeServiceCard = {
   slug: string
   title: string
   shortDescription: string
+  imageUrl: string | null
+  imageAlt: string
 }
 
 /** Home testimonial shape used by HomePageView (subset of shared PublicTestimonial). */
@@ -84,19 +89,36 @@ export const getHomeServiceCards = cache(async (): Promise<HomeServiceCard[]> =>
     const supabase = getSupabasePublicServer()
     const { data, error } = await supabase
       .from('services')
-      .select('id, slug, title, short_description, sort_order')
+      .select('id, slug, title, short_description, sort_order, legacy_asset_key')
       .eq('status', 'published')
       .order('sort_order', { ascending: true })
 
     if (error) throw error
 
     return (data ?? [])
-      .map((row) => ({
-        id: String(row.id ?? ''),
-        slug: normalizeServiceSlug(row.slug),
-        title: String(row.title ?? '').trim() || 'Service',
-        shortDescription: String(row.short_description ?? '').trim(),
-      }))
+      .map((row) => {
+        const slug = normalizeServiceSlug(row.slug)
+        const title = String(row.title ?? '').trim() || 'Service'
+        const assetKey =
+          resolveLegacyAssetKey({
+            legacy_asset_key: row.legacy_asset_key,
+            slug,
+            title,
+          }) ?? slug
+        const visuals = assetKey ? buildVisualsForService(assetKey, title) : null
+        return {
+          id: String(row.id ?? ''),
+          slug,
+          title,
+          shortDescription: resolveServiceCardDescription(
+            slug,
+            String(row.short_description ?? ''),
+            title
+          ),
+          imageUrl: visuals?.hero?.src ?? null,
+          imageAlt: visuals?.hero?.alt ?? title,
+        }
+      })
       .filter((row) => Boolean(row.slug))
   } catch {
     return []

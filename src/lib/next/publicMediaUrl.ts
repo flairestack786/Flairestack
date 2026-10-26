@@ -22,3 +22,14 @@ export function getPublicMediaUrl(path: string | null | undefined): string | nul
   const normalized = trimmed.replace(/^\/+/, '')
   return `${base.replace(/\/$/, '')}/storage/v1/object/public/${MEDIA_BUCKET}/${normalized}`
 }
+
+/**
+ * Site-relative public files (`/images/...`) stay on this origin.
+ * Other paths resolve through the public media bucket.
+ */
+export function resolvePublicAssetUrl(path: string | null | undefined): string | null {
+  const trimmed = String(path ?? '').trim()
+  if (!trimmed) return null
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('/')) return trimmed
+  return getPublicMediaUrl(trimmed)
+}

@@ -1,20 +1,19 @@
 'use client'
 
 import { useMemo } from 'react'
-import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, ArrowUpRight, Star } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, EffectFade, Pagination } from 'swiper/modules'
 import { resolveLucideIcon } from '@/lib/lucideIcons'
-import { publicServicePath } from '@/lib/serviceSlug'
 import { technologiesRowA, technologiesRowB } from '@/data/technologies'
 import HomeHeroSlideshow from '@/components/public/HomeHeroSlideshow'
-import { AnimatedCounter, fadeUp, FloatingOrb, staggerContainer } from '@/components/service/ServiceMotion'
+import { AnimatedCounter, fadeUp, staggerContainer } from '@/components/service/ServiceMotion'
 import heroJpg from '@/assets/hero-4k.jpg'
 import heroWebp from '@/assets/hero-4k.webp'
-import servicesStackImage from '@/assets/logos/FlaireStack_Service_Image.png'
 import HomeInquiryForm from './HomeInquiryForm'
+import HomeProcessSection from './HomeProcessSection'
+import HomeServicesShowcase from './HomeServicesShowcase'
 import type {
   HomeServiceCard,
   HomeTestimonial,
@@ -55,12 +54,6 @@ export default function HomePageView({ home, services, testimonials }: HomePageV
     body: string
     ctaLabel: string
     ctaUrl: string
-    panelLabel: string
-    visualAlt: string
-    visualImageUrl: string | null
-    useBundledVisual: boolean
-    details: string[]
-    points: string[]
   }
   const why = sections['why-choose']
   const process = sections.process
@@ -93,17 +86,6 @@ export default function HomePageView({ home, services, testimonials }: HomePageV
     [tech.rowB]
   )
 
-  const handleServicesCta = () => {
-    if (servicesContent.ctaUrl.startsWith('#')) {
-      document.querySelector(servicesContent.ctaUrl)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-      return
-    }
-    window.location.assign(servicesContent.ctaUrl)
-  }
-
   const bundledJpg = typeof heroJpg === 'string' ? heroJpg : heroJpg.src
   const bundledWebp = typeof heroWebp === 'string' ? heroWebp : heroWebp.src ?? heroWebp
 
@@ -115,103 +97,18 @@ export default function HomePageView({ home, services, testimonials }: HomePageV
         bundledWebpSrc={bundledWebp}
       />
 
-      {/* Services */}
-      <section id="services" className="services-section">
-        <FloatingOrb className="services-orb services-orb--1" delay={0} />
-        <FloatingOrb className="services-orb services-orb--2" delay={2} />
-        <motion.div
-          className="services-ambient"
-          aria-hidden
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.2 }}
-        />
-        <motion.div className="services-ambient services-ambient--secondary" aria-hidden />
-        <div className="absolute inset-0 hero-grain pointer-events-none" aria-hidden />
-        <div className="services-inner">
-          <div className="services-layout">
-            <motion.header
-              className="services-header"
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <p className="services-eyebrow">{servicesContent.eyebrow}</p>
-              <h2 className="services-title">
-                <span className="services-title-muted">{servicesContent.title}</span>{' '}
-                <span className="services-title-accent">{servicesContent.titleAccent}</span>{' '}
-                <span className="services-title-muted">{servicesContent.intro}</span>
-              </h2>
-              <motion.figure
-                className="services-visual"
-                initial={{ opacity: 0, y: 18, scale: 0.98 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <img
-                  src={
-                    servicesContent.useBundledVisual
-                      ? typeof servicesStackImage === 'string'
-                        ? servicesStackImage
-                        : servicesStackImage.src
-                      : servicesContent.visualImageUrl ?? undefined
-                  }
-                  alt={servicesContent.visualAlt}
-                  loading="lazy"
-                />
-              </motion.figure>
-              <p className="services-subtitle">{servicesContent.body}</p>
-              <div className="services-panel">
-                <div className="services-panel-accent" aria-hidden />
-                <p className="services-panel-label">{servicesContent.panelLabel}</p>
-                <div className="services-copy-stack">
-                  {servicesContent.details.map((detail) => (
-                    <p key={detail} className="services-detail">
-                      {detail}
-                    </p>
-                  ))}
-                  <div className="services-divider" aria-hidden />
-                  <ul className="services-points" aria-label="Core service strengths">
-                    {servicesContent.points.map((point) => (
-                      <li key={point}>{point}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <button type="button" className="services-cta" onClick={handleServicesCta}>
-                {servicesContent.ctaLabel}
-                <ArrowRight size={18} aria-hidden />
-              </button>
-            </motion.header>
-            <div className="services-grid">
-              {services.map((service, index) => (
-                <motion.article
-                  key={service.id || service.slug}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-40px' }}
-                  transition={{ duration: 0.5, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-                  className="service-card group"
-                >
-                  <Link href={publicServicePath(service.slug)} className="service-card-link">
-                    <div className="service-card-inner service-card-inner--grid">
-                      <h3 className="service-card-title">{service.title}</h3>
-                      <p className="service-card-desc">{service.shortDescription}</p>
-                      <span className="service-card-cta">
-                        Learn more
-                        <ArrowUpRight size={18} strokeWidth={2} aria-hidden />
-                      </span>
-                    </div>
-                  </Link>
-                </motion.article>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <HomeServicesShowcase
+        services={services}
+        header={{
+          eyebrow: servicesContent.eyebrow,
+          title: servicesContent.title,
+          titleAccent: servicesContent.titleAccent,
+          intro: servicesContent.intro,
+          body: servicesContent.body,
+          ctaLabel: servicesContent.ctaLabel,
+          ctaUrl: servicesContent.ctaUrl,
+        }}
+      />
 
       {/* Why choose */}
       <section id="why-choose" className="why-section" aria-labelledby="why-choose-heading">
@@ -359,48 +256,13 @@ export default function HomePageView({ home, services, testimonials }: HomePageV
         </div>
       </section>
 
-      {/* Process */}
-      <section id="process" className="process-section" aria-labelledby="process-heading">
-        <div className="process-inner">
-          <header className="process-header">
-            <p className="process-eyebrow">{process.eyebrow}</p>
-            <h2 id="process-heading" className="process-title">
-              {process.title} <span className="process-accent">{process.titleAccent}</span>
-            </h2>
-            <p className="process-intro">{process.intro}</p>
-          </header>
-          <div className="process-track" aria-hidden>
-            <div className="process-track-line" />
-          </div>
-          <ol className="process-grid">
-            {process.steps.map((item, i) => {
-              const Icon = resolveLucideIcon(process.iconNames[i] ?? process.iconNames[0])
-              return (
-                <motion.li
-                  key={item.step}
-                  className="process-card"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-40px' }}
-                  transition={{ duration: 0.45, delay: i * 0.07, ease: [0.4, 0, 0.2, 1] }}
-                >
-                  <div className="process-card-top">
-                    <span className="process-step-num">{item.step}</span>
-                    <span className="process-step-icon" aria-hidden>
-                      <Icon size={18} strokeWidth={1.75} />
-                    </span>
-                  </div>
-                  <h3 className="process-card-title">{item.title}</h3>
-                  <p className="process-card-text">{item.text}</p>
-                  {i < process.steps.length - 1 && (
-                    <span className="process-card-connector" aria-hidden />
-                  )}
-                </motion.li>
-              )
-            })}
-          </ol>
-        </div>
-      </section>
+      <HomeProcessSection
+        eyebrow={process.eyebrow}
+        title={process.title}
+        titleAccent={process.titleAccent}
+        intro={process.intro}
+        steps={process.steps}
+      />
 
       {/* Technologies */}
       <section id="technologies" className="tech-section" aria-labelledby="technologies-heading">

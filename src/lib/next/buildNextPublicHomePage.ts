@@ -3,7 +3,7 @@ import {
 } from '@/data/companyStats'
 import { homeProcessSteps } from '@/data/homeProcessSteps'
 import { technologiesRowA, technologiesRowB } from '@/data/technologies'
-import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
+import { getPublicMediaUrl, resolvePublicAssetUrl } from '@/lib/next/publicMediaUrl'
 import { resolvePublicHeroSlides } from '@/lib/heroSlides'
 
 export type SerializableHomePage = {
@@ -37,7 +37,14 @@ export type SerializableHomePage = {
       title: string
       titleAccent: string
       intro: string
-      steps: Array<{ step: string; title: string; text: string }>
+      steps: Array<{
+        step: string
+        title: string
+        text: string
+        iconName: string
+        imageUrl: string | null
+        imageAlt: string
+      }>
       iconNames: string[]
     }
     technologies: {
@@ -211,21 +218,42 @@ export function buildNextSerializableHomePage(
         }))
 
   const stepsRaw = Array.isArray(processConfig.steps) ? processConfig.steps : []
-  const steps =
-    stepsRaw.length > 0
-      ? stepsRaw
-          .map((item, index) => {
-            if (!item || typeof item !== 'object') return null
-            const source = item as Record<string, unknown>
-            const fallback = homeProcessSteps[index] ?? homeProcessSteps[0]
-            return {
-              step: textOrFallback(source.step, fallback.step),
-              title: textOrFallback(source.title, fallback.title),
-              text: textOrFallback(source.text, fallback.text),
-            }
-          })
-          .filter(Boolean) as Array<{ step: string; title: string; text: string }>
-      : homeProcessSteps.map((s) => ({ step: s.step, title: s.title, text: s.text }))
+  const processIconNames = stringArrayOrFallback(
+    processConfig.icons,
+    FALLBACK_PROCESS_ICON_NAMES
+  )
+  const stepSource = stepsRaw.length > 0 ? stepsRaw : homeProcessSteps
+  const steps = stepSource
+    .map((item, index) => {
+      if (!item || typeof item !== 'object') return null
+      const source = item as Record<string, unknown>
+      if (source.enabled === false || source.enabled === 'false') return null
+      const fallback = homeProcessSteps[index] ?? homeProcessSteps[0]
+      const title = textOrFallback(source.title, fallback.title)
+      const hasImageField = Object.prototype.hasOwnProperty.call(source, 'image_path')
+      const imagePath = hasImageField
+        ? String(source.image_path ?? '').trim()
+        : textOrFallback(source.image, fallback.image)
+      return {
+        step: textOrFallback(source.step, fallback.step),
+        title,
+        text: textOrFallback(source.text, fallback.text),
+        iconName: textOrFallback(
+          source.icon_name,
+          processIconNames[index] ?? fallback.iconName
+        ),
+        imageUrl: resolvePublicAssetUrl(imagePath),
+        imageAlt: textOrFallback(source.image_alt, fallback.imageAlt || title),
+      }
+    })
+    .filter(Boolean) as Array<{
+    step: string
+    title: string
+    text: string
+    iconName: string
+    imageUrl: string | null
+    imageAlt: string
+  }>
 
   const techNamesA = stringArrayOrFallback(
     techConfig.row_a,
@@ -342,7 +370,7 @@ export function buildNextSerializableHomePage(
           'A proven six-step framework that keeps projects transparent, on schedule, and built for long-term success — from first workshop to production scale.'
         ),
         steps,
-        iconNames: stringArrayOrFallback(processConfig.icons, FALLBACK_PROCESS_ICON_NAMES),
+        iconNames: processIconNames,
       },
       technologies: {
         eyebrow: textOrFallback(technologies?.eyebrow, 'Tech stack'),

@@ -41,6 +41,8 @@ const CATALOG_TITLE_TO_KEY = {
   'data & analytics': 'data-analytics',
   'data and analytics': 'data-analytics',
   'business process services': 'business-process-services',
+  'saas development services': 'business-process-services',
+  'saas development': 'business-process-services',
   'digital marketing': 'digital-marketing',
   'graphic design': 'graphic-design',
   'ui/ux design services': 'ui-ux-design',
