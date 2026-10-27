@@ -2,6 +2,7 @@ import {
   companyStats,
 } from '@/data/companyStats'
 import { homeProcessSteps } from '@/data/homeProcessSteps'
+import { inquiryServiceOptions } from '@/data/inquiryServices'
 import { technologiesRowA, technologiesRowB } from '@/data/technologies'
 import { getPublicMediaUrl, resolvePublicAssetUrl } from '@/lib/next/publicMediaUrl'
 import { resolvePublicHeroSlides } from '@/lib/heroSlides'
@@ -61,6 +62,7 @@ export type SerializableHomePage = {
       titleAccent: string
       body: string
       capabilities: string[]
+      serviceOptions: string[]
       trustItems: Array<{ iconName: string; text: string }>
     }
   }
@@ -404,6 +406,10 @@ export function buildNextSerializableHomePage(
           'Cloud systems',
           'Custom development services',
         ]),
+        serviceOptions: stringArrayOrFallback(
+          contactConfig.service_options,
+          inquiryServiceOptions
+        ),
         trustItems,
       },
     },

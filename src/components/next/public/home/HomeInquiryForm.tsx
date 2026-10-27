@@ -9,6 +9,10 @@ import { inquiryServiceOptions } from '@/data/inquiryServices'
 import ServiceSelect from '@/components/inquiry/ServiceSelect'
 import { createPublicLead } from '@/lib/next/createPublicLead'
 
+type HomeInquiryFormProps = {
+  serviceOptions?: string[]
+}
+
 const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || ''
 const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || ''
 const EMAILJS_PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || ''
@@ -90,7 +94,11 @@ async function verifyTurnstileWithServer(token: string) {
  * Phase 19 — Next public inquiry form (Vite InquiryForm parity).
  * Flow: validate → Turnstile verify → anon lead insert → EmailJS → success.
  */
-export default function HomeInquiryForm() {
+export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps) {
+  const options =
+    Array.isArray(serviceOptions) && serviceOptions.length > 0
+      ? serviceOptions
+      : inquiryServiceOptions
   const [values, setValues] = useState(initial)
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle')
@@ -311,7 +319,7 @@ export default function HomeInquiryForm() {
             label="Select Service"
             value={values.service}
             onChange={set('service')}
-            options={inquiryServiceOptions}
+            options={options}
             error={errors.service}
             required
           />

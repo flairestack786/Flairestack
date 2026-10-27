@@ -356,7 +356,7 @@ export default function HomePageView({ home, services, testimonials }: HomePageV
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              <HomeInquiryForm />
+              <HomeInquiryForm serviceOptions={contact.serviceOptions} />
             </motion.div>
           </div>
         </div>
