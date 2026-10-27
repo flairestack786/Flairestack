@@ -86,7 +86,7 @@ export default function ContactEditor({
         onChange={(next) =>
           onConfigChange(
             'service_options',
-            next.map((item) => String(item ?? '').trim()).filter(Boolean)
+            next.map((item) => String(item ?? ''))
           )
         }
         createItem={() => ''}
