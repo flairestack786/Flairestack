@@ -566,6 +566,7 @@
   gap: clamp(3.5rem, 8vw, 7rem);
   width: 100%;
   min-width: 0;
+  overflow-x: clip;
 }
 
 .svc-feature {
@@ -575,6 +576,15 @@
   align-items: center;
   width: 100%;
   min-width: 0;
+  overflow-x: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svc-feature-media,
+  .svc-feature-copy {
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 
 @media (min-width: 900px) {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
@@ -7,6 +8,10 @@ import { publicServicePath } from '@/lib/serviceSlug'
 import type { HomeServiceCard } from '@/lib/next/publicHomeServer'
 
 const easeOut = [0.22, 1, 0.36, 1] as const
+const DESKTOP_FEATURE_MQ = '(min-width: 900px)'
+
+/** Trigger when ~20–25% of the row is visible (near the lower viewport band). */
+const rowViewport = { once: true, amount: 0.22, margin: '0px 0px -12% 0px' } as const
 
 type ServicesHeaderContent = {
   eyebrow: string
@@ -25,6 +30,19 @@ type HomeServicesShowcaseProps = {
 
 export default function HomeServicesShowcase({ services, header }: HomeServicesShowcaseProps) {
   const reduceMotion = useReducedMotion()
+  const [isDesktopLayout, setIsDesktopLayout] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false
+    return window.matchMedia(DESKTOP_FEATURE_MQ).matches
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined
+    const mq = window.matchMedia(DESKTOP_FEATURE_MQ)
+    const sync = () => setIsDesktopLayout(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   const handleSectionCta = () => {
     if (header.ctaUrl.startsWith('#')) {
@@ -68,20 +86,49 @@ export default function HomeServicesShowcase({ services, header }: HomeServicesS
             const reverse = index % 2 === 1
             const highlights = Array.isArray(service.highlights) ? service.highlights.slice(0, 4) : []
 
+            /*
+              Desktop (≥900px): animate by visual side (CSS order).
+              Mobile stack: media first → from left; copy second → from right.
+            */
+            const mediaFromLeft = isDesktopLayout ? !reverse : true
+            const copyFromLeft = isDesktopLayout ? reverse : false
+
+            const travel = reduceMotion ? 0 : isDesktopLayout ? 80 : 56
+            const duration = reduceMotion ? 0 : 0.85
+            const stagger = reduceMotion ? 0 : 0.1
+
+            const sideMotion = (fromLeft: boolean, delay: number) =>
+              reduceMotion
+                ? {
+                    initial: false as const,
+                    whileInView: { opacity: 1, x: 0 },
+                    transition: { duration: 0 },
+                  }
+                : {
+                    initial: { opacity: 0.12, x: fromLeft ? -travel : travel },
+                    whileInView: { opacity: 1, x: 0 },
+                    transition: {
+                      duration,
+                      delay,
+                      ease: easeOut,
+                    },
+                  }
+
+            const mediaMotion = sideMotion(mediaFromLeft, mediaFromLeft ? 0 : stagger)
+            const copyMotion = sideMotion(copyFromLeft, copyFromLeft ? 0 : stagger)
+
             return (
-              <motion.article
-                key={service.id || service.slug}
+              <article
+                key={service.id || service.slug || `service-${index}`}
                 className={`svc-feature${reverse ? ' svc-feature--reverse' : ''}`}
-                initial={reduceMotion ? false : { opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-64px' }}
-                transition={{
-                  duration: reduceMotion ? 0 : 0.7,
-                  delay: reduceMotion ? 0 : 0.04,
-                  ease: easeOut,
-                }}
               >
-                <div className="svc-feature-media">
+                <motion.div
+                  className="svc-feature-media"
+                  initial={mediaMotion.initial}
+                  whileInView={mediaMotion.whileInView}
+                  viewport={rowViewport}
+                  transition={mediaMotion.transition}
+                >
                   {service.imageUrl ? (
                     <img
                       src={service.imageUrl}
@@ -95,9 +142,15 @@ export default function HomeServicesShowcase({ services, header }: HomeServicesS
                   ) : (
                     <div className="svc-feature-media-fallback" aria-hidden />
                   )}
-                </div>
+                </motion.div>
 
-                <div className="svc-feature-copy">
+                <motion.div
+                  className="svc-feature-copy"
+                  initial={copyMotion.initial}
+                  whileInView={copyMotion.whileInView}
+                  viewport={rowViewport}
+                  transition={copyMotion.transition}
+                >
                   <h3 className="svc-feature-title">
                     <span className="svc-feature-title-lead">{service.title}</span>{' '}
                     <span className="svc-feature-title-accent">{service.accent}</span>
@@ -139,8 +192,8 @@ export default function HomeServicesShowcase({ services, header }: HomeServicesS
                       </Link>
                     ) : null}
                   </div>
-                </div>
-              </motion.article>
+                </motion.div>
+              </article>
             )
           })}
         </div>
