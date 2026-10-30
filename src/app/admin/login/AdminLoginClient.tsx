@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { useNextAuth } from '@/lib/next/NextAuthProvider'
+import AdminAuthTheme from '@/lib/next/admin/AdminAuthTheme'
 import '@/admin-auth.css'
 
 /**
@@ -44,6 +45,7 @@ export default function AdminLoginClient() {
 
   return (
     <div className="admin-auth-page">
+      <AdminAuthTheme />
       <div className="admin-auth-bg" aria-hidden>
         <div className="admin-auth-bg-grid" />
         <div className="admin-auth-bg-orb admin-auth-bg-orb--a" />

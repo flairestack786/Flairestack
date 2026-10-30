@@ -45,16 +45,21 @@ html {
   --admin-sidebar-collapsed-w: 76px;
   --admin-topnav-h: 64px;
   --admin-accent: #ff7a00;
+  --accent: #ff7a00;
   --admin-bg: #060608;
   --admin-surface: #0e0e12;
-  --admin-border: rgba(255, 255, 255, 0.07);
-  --accent: #ff7a00;
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-text: #ffffff;
+  --admin-text-muted: rgba(255, 255, 255, 0.58);
+  --admin-text-faint: rgba(255, 255, 255, 0.4);
+  --admin-input-bg: rgba(0, 0, 0, 0.28);
+  --admin-hover: rgba(255, 255, 255, 0.06);
   width: 100%;
   max-width: 100%;
   min-height: 100dvh;
   display: flex;
   background: var(--admin-bg);
-  color: #fff;
+  color: var(--admin-text);
 }
 
 .admin-shell--collapsed {
@@ -2875,8 +2880,8 @@ html {
   padding: 0.65rem 0.8rem;
   border-radius: 10px;
   border: 1px solid var(--admin-border);
-  background: rgba(0, 0, 0, 0.28);
-  color: #fff;
+  background: var(--admin-input-bg);
+  color: var(--admin-text);
   font-size: 0.875rem;
   font-family: inherit;
   transition:
@@ -3129,17 +3134,6 @@ html {
   backdrop-filter: blur(6px);
 }
 
-/* Portaled to document.body, so light mode must invert the dialog itself. */
-html[data-admin-theme='light'] .admin-image-picker-modal {
-  filter: invert(1) hue-rotate(180deg);
-}
-
-html[data-admin-theme='light'] .admin-image-picker-modal img,
-html[data-admin-theme='light'] .admin-image-picker-modal video,
-html[data-admin-theme='light'] .admin-image-picker-modal picture {
-  filter: hue-rotate(180deg) invert(1);
-}
-
 .admin-image-picker-modal-panel {
   display: flex;
   flex-direction: column;
@@ -3358,19 +3352,17 @@ html[data-admin-theme='light'] .admin-image-picker-modal picture {
   background-color: color-mix(in srgb, #ff7a00 82%, white);
 }
 
-/* Light mode inverts the portaled dialog, so use dark scrollbar colors
-   that invert into a light track with the same orange thumb. */
 html[data-admin-theme='light'] .admin-image-picker-modal-body {
-  scrollbar-color: #ff7a00 #0a0a0a;
+  scrollbar-color: #ff7a00 #e6e7ea;
 }
 
 html[data-admin-theme='light'] .admin-image-picker-modal-body::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: #e6e7ea;
 }
 
 html[data-admin-theme='light'] .admin-image-picker-modal-body::-webkit-scrollbar-thumb {
   background-color: #ff7a00;
-  border: 2px solid #0a0a0a;
+  border: 2px solid #e6e7ea;
   background-clip: padding-box;
 }
 
@@ -4172,8 +4164,8 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
   padding: 0.65rem 0.85rem;
   border-radius: 10px;
   border: 1px solid var(--admin-border);
-  background: rgba(0, 0, 0, 0.28);
-  color: #fff;
+  background: var(--admin-input-bg);
+  color: var(--admin-text);
   font-size: 0.875rem;
   font-family: inherit;
   font-weight: 500;
@@ -4210,7 +4202,7 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
 }
 
 .admin-select-value {
-  color: #fff;
+  color: var(--admin-text);
 }
 
 .admin-select-chevron {
@@ -4229,8 +4221,9 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
   padding: 0.35rem;
   list-style: none;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #121218;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+  color: var(--admin-text);
   box-shadow:
     0 16px 40px rgba(0, 0, 0, 0.45),
     0 0 0 1px rgba(255, 122, 0, 0.06);
@@ -4284,7 +4277,7 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--admin-text);
   font-size: 0.875rem;
   font-family: inherit;
   font-weight: 500;
@@ -4312,6 +4305,34 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
 .admin-select-option svg {
   flex-shrink: 0;
   color: var(--admin-accent);
+}
+
+html[data-admin-theme='light'] .admin-select-menu {
+  background: #ffffff;
+  border-color: rgba(10, 15, 26, 0.12);
+  color: #171717;
+}
+
+html[data-admin-theme='light'] .admin-select-option {
+  color: #171717;
+}
+
+html[data-admin-theme='light'] .admin-select-option:hover,
+html[data-admin-theme='light'] .admin-select-option--selected {
+  background: rgba(255, 122, 0, 0.14);
+  color: #171717;
+}
+
+html[data-admin-theme='light'] .admin-select-menu {
+  scrollbar-color: #ff7a00 #e6e7ea;
+}
+
+html[data-admin-theme='light'] .admin-select-menu::-webkit-scrollbar-track {
+  background: #e6e7ea;
+}
+
+html[data-admin-theme='light'] .admin-select-menu::-webkit-scrollbar-thumb {
+  border-color: #e6e7ea;
 }
 
 .admin-leads-table tbody tr.admin-leads-row {
@@ -4551,14 +4572,6 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
-}
-
-html[data-admin-theme='light'] .admin-users-drawer-root {
-  filter: invert(1) hue-rotate(180deg);
-}
-
-html[data-admin-theme='light'] .admin-users-drawer-root img {
-  filter: hue-rotate(180deg) invert(1);
 }
 
 .admin-leads-drawer-section {
@@ -5379,11 +5392,9 @@ html[data-admin-theme='light'] .admin-users-modal .admin-select-trigger {
 @keyframes admin-users-modal-in {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
@@ -6702,15 +6713,26 @@ html[data-admin-theme='light'] .admin-users-modal .admin-select-trigger {
 
 
 /*
-  Light theme: keep the authored dark surfaces, then invert the shell.
-  Dark backgrounds become light, white text becomes black.
-  hue-rotate(180deg) restores FlaireStack orange.
-  Photos/media are inverted again so they stay natural.
-  color-scheme stays dark so native controls are dark before the invert.
+  Light theme uses the same tokens as dark, with light values.
+  Portals inherit them from html[data-admin-theme='light'].
 */
+.admin-shell[data-theme='light'],
+html[data-admin-theme='light'] {
+  --admin-bg: #f3f4f6;
+  --admin-surface: #ffffff;
+  --admin-border: rgba(15, 18, 28, 0.1);
+  --admin-text: #171717;
+  --admin-text-muted: rgba(23, 23, 23, 0.58);
+  --admin-text-faint: rgba(23, 23, 23, 0.42);
+  --admin-input-bg: #ffffff;
+  --admin-hover: rgba(15, 18, 28, 0.05);
+  --admin-accent: #ff7a00;
+  --accent: #ff7a00;
+}
+
 .admin-shell[data-theme='light'] {
-  background: #f3f4f6;
-  color: #171717;
+  background: var(--admin-bg);
+  color: var(--admin-text);
   color-scheme: light;
   filter: none;
   -webkit-font-smoothing: antialiased;
@@ -6755,8 +6777,17 @@ html[data-admin-theme='light'] .admin-users-modal .admin-select-trigger {
 
 .admin-shell[data-theme='light'] .admin-main :where(
   h1, h2, h3, h4, p, span, a, td, th, label, li, strong, small, button, div, code
-) {
-  color: #171717;
+),
+html[data-admin-theme='light'] :is(
+  .admin-select-menu,
+  .admin-image-picker-modal,
+  .admin-users-modal,
+  .admin-users-drawer-root,
+  .admin-leads-drawer-root,
+  .admin-leads-export-dialog,
+  .admin-confirm-dialog
+) :where(h1, h2, h3, h4, p, span, a, td, th, label, li, strong, small, button, div, code) {
+  color: var(--admin-text);
 }
 
 .admin-shell[data-theme='light'] .admin-page-desc,
@@ -6772,21 +6803,62 @@ html[data-admin-theme='light'] .admin-users-modal .admin-select-trigger {
   .admin-services-table-wrap,
   .admin-dashboard-card,
   .admin-stat-card,
+  .admin-dashboard-stats-card,
   .admin-leads-summary-card,
   .admin-settings-panel,
   .admin-settings-section,
-  .admin-users-summary .admin-stat-card
+  .admin-settings-tabs-list,
+  .admin-media-grid-card,
+  .admin-profile-menu-dropdown,
+  .admin-users-summary .admin-stat-card,
+  .admin-dashboard-quick-card,
+  .admin-forbidden-card,
+  .hero-slides-list-panel,
+  .hero-slides-editor-panel
+),
+html[data-admin-theme='light'] :is(
+  .admin-select-menu,
+  .admin-image-picker-modal-panel,
+  .admin-users-modal,
+  .admin-leads-drawer,
+  .admin-confirm-dialog-panel
 ) {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.08);
-  color: #171717;
+  background: var(--admin-surface);
+  border-color: var(--admin-border);
+  color: var(--admin-text);
 }
 
 .admin-shell[data-theme='light'] .admin-settings-input,
-.admin-shell[data-theme='light'] .admin-settings-textarea {
-  background: #ffffff;
-  color: #171717;
-  border-color: rgba(0, 0, 0, 0.14);
+.admin-shell[data-theme='light'] .admin-settings-textarea,
+.admin-shell[data-theme='light'] .admin-select-trigger,
+html[data-admin-theme='light'] .admin-settings-input,
+html[data-admin-theme='light'] .admin-select-trigger {
+  background: var(--admin-input-bg);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-shell[data-theme='light'] .admin-settings-input::placeholder,
+.admin-shell[data-theme='light'] .admin-settings-textarea::placeholder,
+html[data-admin-theme='light'] .admin-settings-input::placeholder {
+  color: rgba(23, 23, 23, 0.4);
+}
+
+.admin-shell[data-theme='light'] .admin-settings-tab,
+.admin-shell[data-theme='light'] .admin-users-chip,
+.admin-shell[data-theme='light'] .admin-leads-export-btn,
+.admin-shell[data-theme='light'] .admin-theme-toggle {
+  background: var(--admin-hover);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-shell[data-theme='light'] .admin-settings-tab--active,
+.admin-shell[data-theme='light'] .admin-users-chip.is-active,
+.admin-shell[data-theme='light'] .admin-theme-toggle-btn.is-active {
+  color: #9a3412;
+  background: rgba(255, 122, 0, 0.16);
+  border-color: rgba(255, 122, 0, 0.35);
 }
 
 .admin-shell[data-theme='light'] .admin-services-create-btn,
@@ -6818,7 +6890,7 @@ html[data-admin-theme='light'] body {
   background: #f3f4f6;
 }
 
-/* Window scrollbar sits outside the inverted shell, so style it light directly. */
+/* Window scrollbar sits outside the shell, so style it for the active theme directly. */
 html[data-admin-theme='light']::-webkit-scrollbar-track {
   background: #e6e7ea;
 }
@@ -6837,16 +6909,8 @@ html[data-admin-theme='light']::-webkit-scrollbar-corner {
   background: #e6e7ea;
 }
 
-/*
-  Scrollbars inside an inverted surface are painted, then inverted.
-  Author them dark so the result is a light track with the orange thumb.
-*/
 html[data-admin-theme='light'] .admin-shell,
-html[data-admin-theme='light'] .admin-shell * {
-  scrollbar-width: thin;
-  scrollbar-color: #ff7a00 #e6e7ea;
-}
-
+html[data-admin-theme='light'] .admin-shell *,
 html[data-admin-theme='light'] :is(
     .admin-image-picker-modal,
     .admin-users-drawer-root,
@@ -6858,14 +6922,11 @@ html[data-admin-theme='light'] :is(
     .admin-leads-drawer-root
   ) * {
   scrollbar-width: thin;
-  scrollbar-color: #ff7a00 #0a0a0a;
+  scrollbar-color: #ff7a00 #e6e7ea;
 }
 
 html[data-admin-theme='light'] .admin-shell::-webkit-scrollbar-track,
-html[data-admin-theme='light'] .admin-shell *::-webkit-scrollbar-track {
-  background: #e6e7ea;
-}
-
+html[data-admin-theme='light'] .admin-shell *::-webkit-scrollbar-track,
 html[data-admin-theme='light'] :is(
     .admin-image-picker-modal,
     .admin-users-drawer-root,
@@ -6876,7 +6937,7 @@ html[data-admin-theme='light'] :is(
     .admin-users-drawer-root,
     .admin-leads-drawer-root
   ) *::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: #e6e7ea;
 }
 
 html[data-admin-theme='light'] .admin-shell::-webkit-scrollbar-thumb,
@@ -6897,7 +6958,7 @@ html[data-admin-theme='light'] :is(
     .admin-leads-drawer-root
   ) *::-webkit-scrollbar-thumb {
   background-color: #ff7a00;
-  border: 2px solid #0a0a0a;
+  border: 2px solid #e6e7ea;
   background-clip: padding-box;
 }
 
@@ -6916,11 +6977,165 @@ html[data-admin-theme='light'] :is(
     .admin-users-drawer-root,
     .admin-leads-drawer-root
   ) *::-webkit-scrollbar-corner {
-  background: #0a0a0a;
+  background: #e6e7ea;
 }
 
 html[data-admin-theme='dark'] {
+  --admin-accent: #ff7a00;
+  --accent: #ff7a00;
+  --admin-bg: #060608;
+  --admin-surface: #0e0e12;
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-text: #ffffff;
+  --admin-text-muted: rgba(255, 255, 255, 0.58);
+  --admin-text-faint: rgba(255, 255, 255, 0.4);
+  --admin-input-bg: rgba(0, 0, 0, 0.28);
+  --admin-hover: rgba(255, 255, 255, 0.06);
   color-scheme: dark;
+}
+
+/* Surfaces that stay dark after the shell turns light, or text outside .admin-main. */
+.admin-shell[data-theme='light'] .admin-profile-menu-role,
+.admin-shell[data-theme='light'] .admin-profile-menu-chevron,
+.admin-shell[data-theme='light'] .admin-profile-menu-summary-email {
+  color: var(--admin-text-faint);
+}
+
+.admin-shell[data-theme='light'] .admin-profile-menu-summary {
+  border-bottom-color: var(--admin-border);
+}
+
+.admin-shell[data-theme='light'] .admin-profile-menu-summary-name,
+.admin-shell[data-theme='light'] .admin-profile-menu-item {
+  color: var(--admin-text);
+}
+
+.admin-shell[data-theme='light'] .admin-profile-menu-item:hover {
+  background: var(--admin-hover);
+  color: var(--admin-text);
+}
+
+.admin-shell[data-theme='light'] .admin-profile-menu-item--danger {
+  color: #b91c1c;
+}
+
+.admin-shell[data-theme='light'] .admin-profile-menu-item--danger:hover {
+  background: rgba(185, 28, 28, 0.08);
+  color: #991b1b;
+}
+
+.admin-shell[data-theme='light'] .admin-profile-menu-trigger {
+  background: var(--admin-hover);
+}
+
+.admin-shell[data-theme='light'] .admin-leads-table tbody tr.admin-leads-row:hover,
+.admin-shell[data-theme='light'] .admin-leads-table tbody tr.admin-leads-row:focus-visible {
+  background: var(--admin-hover);
+}
+
+.admin-shell[data-theme='light'] .admin-theme-toggle-btn:hover {
+  color: var(--admin-text);
+  background: var(--admin-hover);
+}
+
+.admin-shell[data-theme='light'] .hero-slides-list-item {
+  background: var(--admin-hover);
+  border-color: var(--admin-border);
+}
+
+.admin-shell[data-theme='light'] .hero-slides-list-item:hover {
+  background: rgba(15, 18, 28, 0.06);
+  border-color: rgba(15, 18, 28, 0.16);
+}
+
+.admin-shell[data-theme='light'] .hero-slides-list-item.is-active {
+  background: rgba(255, 122, 0, 0.1);
+  border-color: rgba(255, 122, 0, 0.45);
+}
+
+.admin-shell[data-theme='light'] .hero-slides-list-order {
+  color: var(--admin-text);
+  background: rgba(15, 18, 28, 0.06);
+  border-color: var(--admin-border);
+}
+
+.admin-shell[data-theme='light'] .hero-slides-list-item.is-active .hero-slides-list-order {
+  color: #9a3412;
+  background: rgba(255, 122, 0, 0.2);
+  border-color: rgba(255, 122, 0, 0.4);
+}
+
+.admin-shell[data-theme='light'] .hero-slides-media-type label:has(input:checked) {
+  color: #9a3412;
+}
+
+.admin-shell[data-theme='light'] .hero-slides-preview,
+.admin-shell[data-theme='light'] .hero-slides-confirm-card,
+.admin-shell[data-theme='light'] .admin-seo-social-card,
+.admin-shell[data-theme='light'] .admin-media-uploader-dropzone {
+  background: var(--admin-surface);
+  border-color: var(--admin-border);
+  color: var(--admin-text);
+}
+
+.admin-shell[data-theme='light'] .hero-slides-confirm-card p,
+.admin-shell[data-theme='light'] .admin-seo-social-placeholder {
+  color: var(--admin-text-muted);
+}
+
+.admin-shell[data-theme='light'] .admin-seo-google-url {
+  color: #15803d;
+}
+
+.admin-shell[data-theme='light'] .admin-seo-google-title {
+  color: #1d4ed8;
+}
+
+.admin-shell[data-theme='light'] .admin-seo-google-desc,
+.admin-shell[data-theme='light'] .admin-seo-google-site {
+  color: var(--admin-text-muted);
+}
+
+.admin-shell[data-theme='light'] .admin-seo-progress-ring {
+  background:
+    radial-gradient(circle at center, var(--admin-surface) 58%, transparent 59%),
+    conic-gradient(#f97316 var(--progress), rgba(15, 18, 28, 0.1) 0);
+}
+
+.admin-shell[data-theme='light'] .admin-seo-progress-ring strong {
+  color: var(--admin-text);
+}
+
+.admin-shell[data-theme='light'] .admin-seo-progress-ring span,
+.admin-shell[data-theme='light'] .admin-seo-progress-hint {
+  color: var(--admin-text-muted);
+}
+
+.admin-shell[data-theme='light'] .admin-media-search-input,
+html[data-admin-theme='light'] .admin-image-picker-modal-search-input {
+  background: var(--admin-input-bg);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-shell[data-theme='light'] .admin-media-search-input::placeholder,
+.admin-shell[data-theme='light'] .admin-media-search-icon,
+html[data-admin-theme='light'] .admin-image-picker-modal-search-input::placeholder {
+  color: var(--admin-text-faint);
+}
+
+html[data-admin-theme='light'] .admin-image-picker-modal-footer {
+  background: #f6f6f7;
+}
+
+html[data-admin-theme='light'] :is(
+  .admin-confirm-dialog-close,
+  .admin-rename-modal-close,
+  .admin-image-picker-modal-close,
+  .admin-leads-drawer-close
+):hover {
+  color: var(--admin-text);
+  background: var(--admin-hover);
 }
 
 /* Keep CMS cards and form columns from painting over their neighbors. */

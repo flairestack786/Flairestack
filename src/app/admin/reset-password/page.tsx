@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Eye, EyeOff, Lock } from 'lucide-react'
 import { useNextAuth } from '@/lib/next/NextAuthProvider'
 import { getSupabaseBrowser } from '@/lib/next/supabaseBrowser'
+import AdminAuthTheme from '@/lib/next/admin/AdminAuthTheme'
 import '@/admin-auth.css'
 
 const MIN_PASSWORD_LENGTH = 8
@@ -131,6 +132,7 @@ export default function AdminResetPasswordPage() {
   if (loading || !recoveryReady) {
     return (
       <div className="admin-auth-page" role="status" aria-live="polite">
+      <AdminAuthTheme />
         <div className="admin-auth-loading">
           <span className="admin-auth-spinner" aria-hidden />
           <span>Checking reset link…</span>
@@ -142,6 +144,7 @@ export default function AdminResetPasswordPage() {
   if (success) {
     return (
       <div className="admin-auth-page">
+      <AdminAuthTheme />
         <div className="admin-auth-bg" aria-hidden>
           <div className="admin-auth-bg-grid" />
           <div className="admin-auth-bg-orb admin-auth-bg-orb--a" />
@@ -187,6 +190,7 @@ export default function AdminResetPasswordPage() {
   if (!canUpdatePassword) {
     return (
       <div className="admin-auth-page">
+      <AdminAuthTheme />
         <div className="admin-auth-bg" aria-hidden>
           <div className="admin-auth-bg-grid" />
           <div className="admin-auth-bg-orb admin-auth-bg-orb--a" />
@@ -242,6 +246,7 @@ export default function AdminResetPasswordPage() {
 
   return (
     <div className="admin-auth-page">
+      <AdminAuthTheme />
       <div className="admin-auth-bg" aria-hidden>
         <div className="admin-auth-bg-grid" />
         <div className="admin-auth-bg-orb admin-auth-bg-orb--a" />

@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Check, ChevronDown } from 'lucide-react'
 
 /**
@@ -25,9 +26,11 @@ export default function AdminSelect({
   className = '',
 }) {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [menuStyle, setMenuStyle] = useState(/** @type {React.CSSProperties} */ ({}))
   const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const triggerRef = useRef(/** @type {HTMLButtonElement | null} */ (null))
+  const menuRef = useRef(/** @type {HTMLUListElement | null} */ (null))
   const listId = useId()
   const selected = options.find((option) => option.value === value)
 
@@ -45,9 +48,13 @@ export default function AdminSelect({
       width: rect.width,
       top: openUp ? undefined : rect.bottom + 6,
       bottom: openUp ? window.innerHeight - rect.top + 6 : undefined,
-      zIndex: 300,
+      zIndex: 6100,
     })
   }
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useLayoutEffect(() => {
     if (!open) return undefined
@@ -66,9 +73,11 @@ export default function AdminSelect({
     if (!open) return undefined
 
     const onDoc = (event) => {
-      if (!rootRef.current?.contains(/** @type {Node} */ (event.target))) {
-        setOpen(false)
-      }
+      const target = /** @type {Node | null} */ (event.target)
+      if (!target) return
+      if (rootRef.current?.contains(target)) return
+      if (menuRef.current?.contains(target)) return
+      setOpen(false)
     }
 
     const onKey = (event) => {
@@ -103,7 +112,9 @@ export default function AdminSelect({
         aria-controls={listId}
         aria-label={ariaLabel}
         disabled={disabled}
-        onClick={() => {
+        onPointerDown={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
           if (!disabled) setOpen((current) => !current)
         }}
       >
@@ -113,33 +124,38 @@ export default function AdminSelect({
         <ChevronDown size={16} strokeWidth={1.75} className="admin-select-chevron" aria-hidden />
       </button>
 
-      {open && (
-        <ul
-          id={listId}
-          role="listbox"
-          className="admin-select-menu"
-          style={menuStyle}
-          aria-label={ariaLabel}
-        >
-          {options.map((option) => {
-            const isSelected = option.value === value
-            return (
-              <li key={option.value} role="presentation">
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={isSelected}
-                  className={`admin-select-option${isSelected ? ' admin-select-option--selected' : ''}`}
-                  onClick={() => handleSelect(option.value)}
-                >
-                  <span>{option.label}</span>
-                  {isSelected && <Check size={15} strokeWidth={2} aria-hidden />}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      )}
+      {mounted && open
+        ? createPortal(
+            <ul
+              ref={menuRef}
+              id={listId}
+              role="listbox"
+              className="admin-select-menu"
+              style={menuStyle}
+              aria-label={ariaLabel}
+            >
+              {options.map((option) => {
+                const isSelected = option.value === value
+                return (
+                  <li key={option.value} role="presentation">
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      className={`admin-select-option${isSelected ? ' admin-select-option--selected' : ''}`}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={() => handleSelect(option.value)}
+                    >
+                      <span>{option.label}</span>
+                      {isSelected && <Check size={15} strokeWidth={2} aria-hidden />}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>,
+            document.body
+          )
+        : null}
     </div>
   )
 }

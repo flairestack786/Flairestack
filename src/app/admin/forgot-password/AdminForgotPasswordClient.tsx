@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, Mail } from 'lucide-react'
 import { getSupabaseBrowser } from '@/lib/next/supabaseBrowser'
+import AdminAuthTheme from '@/lib/next/admin/AdminAuthTheme'
 import '@/admin-auth.css'
 
 const GENERIC_SUCCESS =
@@ -56,6 +57,7 @@ export default function AdminForgotPasswordClient() {
 
   return (
     <div className="admin-auth-page">
+      <AdminAuthTheme />
       <div className="admin-auth-bg" aria-hidden>
         <div className="admin-auth-bg-grid" />
         <div className="admin-auth-bg-orb admin-auth-bg-orb--a" />

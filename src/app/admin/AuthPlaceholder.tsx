@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import AdminAuthTheme from '@/lib/next/admin/AdminAuthTheme'
 import '@/admin-auth.css'
 
 type AuthPlaceholderProps = {
@@ -19,6 +20,7 @@ export function AuthPlaceholder({
 }: AuthPlaceholderProps) {
   return (
     <div className="admin-auth-page">
+      <AdminAuthTheme />
       <div className="admin-auth-bg" aria-hidden>
         <div className="admin-auth-bg-grid" />
         <div className="admin-auth-bg-orb admin-auth-bg-orb--a" />
