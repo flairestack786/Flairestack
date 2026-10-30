@@ -49,6 +49,8 @@ html {
   --admin-surface: #0e0e12;
   --admin-border: rgba(255, 255, 255, 0.07);
   --accent: #ff7a00;
+  width: 100%;
+  max-width: 100%;
   min-height: 100dvh;
   display: flex;
   background: var(--admin-bg);
@@ -254,13 +256,19 @@ html {
 
 /* ── Main area ── */
 .admin-main {
-  flex: 1;
+  flex: 1 1 auto;
+  width: calc(100% - var(--admin-sidebar-w));
+  max-width: calc(100% - var(--admin-sidebar-w));
   min-width: 0;
   margin-left: var(--admin-sidebar-w);
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  transition: margin-left 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  box-sizing: border-box;
+  transition:
+    margin-left 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .admin-topnav {
@@ -530,15 +538,20 @@ html {
 
 .admin-content {
   flex: 1;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   padding: clamp(1.25rem, 3vw, 1.75rem);
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* ── Page content ── */
 .admin-page {
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-  max-width: min(1100px, 100%);
+  box-sizing: border-box;
 }
 
 .admin-page-header {
@@ -645,8 +658,9 @@ html {
 
 /* ── Dashboard module ── */
 .admin-dashboard-page {
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-  max-width: min(1200px, 100%);
 }
 
 .admin-dashboard-metrics {
@@ -1589,6 +1603,8 @@ html {
 
   .admin-main {
     margin-left: 0;
+    width: 100%;
+    max-width: 100%;
   }
 
   .admin-shell--collapsed .admin-sidebar-link-label {
@@ -3655,10 +3671,52 @@ html[data-admin-theme='light'] .admin-image-picker-modal-body::-webkit-scrollbar
 
 .admin-leads-export-dialog {
   z-index: 5000;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.admin-leads-export-dialog .admin-confirm-dialog-panel {
+  background: #121216;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 html[data-admin-theme='light'] .admin-leads-export-dialog {
-  filter: invert(1) hue-rotate(180deg);
+  background: rgba(15, 18, 28, 0.46);
+  color-scheme: light;
+}
+
+html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-panel {
+  background: #ffffff;
+  border-color: rgba(10, 15, 26, 0.1);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.16);
+  color: #0a0f1a;
+}
+
+html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-title {
+  color: #0a0f1a;
+}
+
+html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-message,
+html[data-admin-theme='light'] .admin-leads-export-dialog .admin-leads-export-count,
+html[data-admin-theme='light'] .admin-leads-export-dialog .admin-settings-label {
+  color: rgba(10, 15, 26, 0.62);
+}
+
+html[data-admin-theme='light'] .admin-leads-export-dialog .admin-settings-input {
+  background: #f4f5f7;
+  color: #0a0f1a;
+  border-color: rgba(10, 15, 26, 0.14);
+}
+
+html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-btn--cancel {
+  background: #f4f5f7;
+  color: #0a0f1a;
+  border-color: rgba(10, 15, 26, 0.12);
+}
+
+html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-btn--cancel:hover:not(:disabled) {
+  background: #eceef2;
+  color: #0a0f1a;
 }
 
 .admin-leads-export-panel {
@@ -6678,15 +6736,13 @@ html[data-admin-theme='light'] :is(
     .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
-    .admin-leads-drawer-root,
-    .admin-leads-export-dialog
+    .admin-leads-drawer-root
   ),
 html[data-admin-theme='light'] :is(
     .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
-    .admin-leads-drawer-root,
-    .admin-leads-export-dialog
+    .admin-leads-drawer-root
   ) * {
   scrollbar-width: thin;
   scrollbar-color: #ff7a00 #0a0a0a;
@@ -6696,15 +6752,13 @@ html[data-admin-theme='light'] :is(
     .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
-    .admin-leads-drawer-root,
-    .admin-leads-export-dialog
+    .admin-leads-drawer-root
   )::-webkit-scrollbar-track,
 html[data-admin-theme='light'] :is(
     .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
-    .admin-leads-drawer-root,
-    .admin-leads-export-dialog
+    .admin-leads-drawer-root
   ) *::-webkit-scrollbar-track {
   background: #0a0a0a;
 }
@@ -6713,15 +6767,13 @@ html[data-admin-theme='light'] :is(
     .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
-    .admin-leads-drawer-root,
-    .admin-leads-export-dialog
+    .admin-leads-drawer-root
   )::-webkit-scrollbar-thumb,
 html[data-admin-theme='light'] :is(
     .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
-    .admin-leads-drawer-root,
-    .admin-leads-export-dialog
+    .admin-leads-drawer-root
   ) *::-webkit-scrollbar-thumb {
   background-color: #ff7a00;
   border: 2px solid #0a0a0a;
@@ -6732,15 +6784,13 @@ html[data-admin-theme='light'] :is(
     .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
-    .admin-leads-drawer-root,
-    .admin-leads-export-dialog
+    .admin-leads-drawer-root
   )::-webkit-scrollbar-corner,
 html[data-admin-theme='light'] :is(
     .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
-    .admin-leads-drawer-root,
-    .admin-leads-export-dialog
+    .admin-leads-drawer-root
   ) *::-webkit-scrollbar-corner {
   background: #0a0a0a;
 }
