@@ -1123,7 +1123,7 @@ a:visited {
     radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255, 122, 0, 0.05) 0%, transparent 55%),
     #0b0a14;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding: clamp(3rem, 6vw, 4.5rem) 0 clamp(1.5rem, 3vw, 2rem);
+  padding: clamp(3rem, 6vw, 4.5rem) 0 calc(7.5rem + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
 }
 
@@ -1357,6 +1357,8 @@ a:visited {
   justify-content: space-between;
   gap: 1rem 1.5rem;
   min-width: 0;
+  /* Stay inside the corner call and scroll buttons at every width. */
+  padding-inline: 5.5rem;
 }
 
 .site-footer-copy {
@@ -1422,30 +1424,6 @@ a:visited {
 .site-footer-social:focus-visible {
   outline: 2px solid rgba(255, 122, 0, 0.55);
   outline-offset: 3px;
-}
-
-@media (max-width: 1024px) {
-  .site-footer {
-    /* Keep the footer bar above the fixed call and scroll buttons. */
-    padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .site-footer-bottom {
-    padding-inline: 4.75rem;
-  }
-
-  .floating-call-btn,
-  .scroll-top-btn {
-    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .floating-call-btn {
-    left: 1rem;
-  }
-
-  .scroll-top-btn {
-    right: 1rem;
-  }
 }
 
 @media (max-width: 767px) {
