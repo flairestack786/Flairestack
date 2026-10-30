@@ -3104,13 +3104,24 @@ html {
 .admin-image-picker-modal {
   position: fixed;
   inset: 0;
-  z-index: 210;
+  z-index: 5000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(6px);
+}
+
+/* Portaled to document.body, so light mode must invert the dialog itself. */
+html[data-admin-theme='light'] .admin-image-picker-modal {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html[data-admin-theme='light'] .admin-image-picker-modal img,
+html[data-admin-theme='light'] .admin-image-picker-modal video,
+html[data-admin-theme='light'] .admin-image-picker-modal picture {
+  filter: hue-rotate(180deg) invert(1);
 }
 
 .admin-image-picker-modal-panel {

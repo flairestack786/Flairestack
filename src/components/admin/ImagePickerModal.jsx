@@ -1,4 +1,5 @@
 ﻿import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Check, ImageIcon, Search, X } from 'lucide-react'
 import MediaGrid from './MediaGrid'
 import { buildRenamedStoragePath, getPathExtension } from '../../lib/mediaFormat'
@@ -32,6 +33,7 @@ export default function ImagePickerModal({
   const titleId = useId()
   const descriptionId = useId()
   const closeRef = useRef(null)
+  const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [pendingSelection, setPendingSelection] = useState(/** @type {PickerImage | null} */ (null))
 
@@ -47,6 +49,10 @@ export default function ImagePickerModal({
       },
     [apiProp]
   )
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!isOpen) return
@@ -102,13 +108,13 @@ export default function ImagePickerModal({
     }
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   const rootClassName = ['admin-image-picker-modal', className].filter(Boolean).join(' ')
   const canConfirm = Boolean(pendingSelection)
   const apiReady = Boolean(apiProp)
 
-  return (
+  return createPortal(
     <div className={rootClassName} onClick={handleBackdropClick}>
       <div
         className="admin-image-picker-modal-panel"
@@ -225,6 +231,7 @@ export default function ImagePickerModal({
           </button>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
