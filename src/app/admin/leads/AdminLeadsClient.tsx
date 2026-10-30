@@ -15,6 +15,7 @@ import {
   Users,
 } from 'lucide-react'
 import LeadDetailDrawer from '@/components/admin/leads/LeadDetailDrawer'
+import LeadExportDialog, { type LeadExportFormat } from '@/components/admin/leads/LeadExportDialog'
 import AdminSelect from '@/components/admin/AdminSelect'
 import {
   listLeads,
@@ -66,6 +67,7 @@ export default function AdminLeadsClient() {
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [selectedLead, setSelectedLead] = useState<Record<string, unknown> | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [exportFormat, setExportFormat] = useState<LeadExportFormat | null>(null)
 
   const loadLeads = useCallback(async () => {
     setStatus('loading')
@@ -172,8 +174,8 @@ export default function AdminLeadsClient() {
           <button
             type="button"
             className="admin-leads-export-btn"
-            onClick={() => exportLeadsCsv(filteredLeads)}
-            disabled={status !== 'ready' || filteredLeads.length === 0}
+            onClick={() => setExportFormat('csv')}
+            disabled={status !== 'ready' || leads.length === 0}
           >
             <FileSpreadsheet size={16} strokeWidth={1.75} aria-hidden />
             Export CSV
@@ -181,8 +183,8 @@ export default function AdminLeadsClient() {
           <button
             type="button"
             className="admin-leads-export-btn"
-            onClick={() => exportLeadsPdf(filteredLeads)}
-            disabled={status !== 'ready' || filteredLeads.length === 0}
+            onClick={() => setExportFormat('pdf')}
+            disabled={status !== 'ready' || leads.length === 0}
           >
             <FileText size={16} strokeWidth={1.75} aria-hidden />
             Export PDF
@@ -408,6 +410,26 @@ export default function AdminLeadsClient() {
         onLeadUpdated={handleLeadUpdated}
         api={nextLeadDrawerApi}
       />
+
+      {exportFormat ? (
+        <LeadExportDialog
+          format={exportFormat}
+          leads={leads}
+          initialFilters={{
+            from: '',
+            to: '',
+            status: statusFilter,
+            priority: priorityFilter,
+            service: 'all',
+          }}
+          onClose={() => setExportFormat(null)}
+          onExport={(format, rows, summary) => {
+            if (format === 'csv') exportLeadsCsv(rows)
+            else exportLeadsPdf(rows, summary)
+            setExportFormat(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

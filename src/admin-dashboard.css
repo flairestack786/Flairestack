@@ -3653,6 +3653,46 @@ html[data-admin-theme='light'] .admin-image-picker-modal-body::-webkit-scrollbar
   cursor: not-allowed;
 }
 
+.admin-leads-export-dialog {
+  z-index: 5000;
+}
+
+html[data-admin-theme='light'] .admin-leads-export-dialog {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+.admin-leads-export-panel {
+  max-width: 34rem;
+}
+
+.admin-leads-export-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .admin-leads-export-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-leads-export-field--full {
+    grid-column: 1 / -1;
+  }
+}
+
+.admin-leads-export-count {
+  margin: 0 0 0.85rem;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.admin-leads-export-error {
+  color: #fca5a5;
+  margin-bottom: 0.85rem;
+}
+
 .admin-services-table-wrap {
   overflow-x: auto;
   border-radius: 14px;
@@ -6611,18 +6651,98 @@ html[data-admin-theme='light'] body {
   background: #f3f4f6;
 }
 
-html[data-admin-theme='light'] ::-webkit-scrollbar-track {
+/* Window scrollbar sits outside the inverted shell, so style it light directly. */
+html[data-admin-theme='light']::-webkit-scrollbar-track {
   background: #e6e7ea;
 }
 
-html[data-admin-theme='light'] ::-webkit-scrollbar-thumb {
+html[data-admin-theme='light']::-webkit-scrollbar-thumb {
   background-color: #ff7a00;
   border: 2px solid #e6e7ea;
   background-clip: padding-box;
 }
 
-html[data-admin-theme='light'] ::-webkit-scrollbar-corner {
+html[data-admin-theme='light']::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, #ff7a00 82%, white);
+}
+
+html[data-admin-theme='light']::-webkit-scrollbar-corner {
   background: #e6e7ea;
+}
+
+/*
+  Scrollbars inside an inverted surface are painted, then inverted.
+  Author them dark so the result is a light track with the orange thumb.
+*/
+html[data-admin-theme='light'] :is(
+    .admin-shell,
+    .admin-image-picker-modal,
+    .admin-users-drawer-root,
+    .admin-leads-drawer-root,
+    .admin-leads-export-dialog
+  ),
+html[data-admin-theme='light'] :is(
+    .admin-shell,
+    .admin-image-picker-modal,
+    .admin-users-drawer-root,
+    .admin-leads-drawer-root,
+    .admin-leads-export-dialog
+  ) * {
+  scrollbar-width: thin;
+  scrollbar-color: #ff7a00 #0a0a0a;
+}
+
+html[data-admin-theme='light'] :is(
+    .admin-shell,
+    .admin-image-picker-modal,
+    .admin-users-drawer-root,
+    .admin-leads-drawer-root,
+    .admin-leads-export-dialog
+  )::-webkit-scrollbar-track,
+html[data-admin-theme='light'] :is(
+    .admin-shell,
+    .admin-image-picker-modal,
+    .admin-users-drawer-root,
+    .admin-leads-drawer-root,
+    .admin-leads-export-dialog
+  ) *::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+html[data-admin-theme='light'] :is(
+    .admin-shell,
+    .admin-image-picker-modal,
+    .admin-users-drawer-root,
+    .admin-leads-drawer-root,
+    .admin-leads-export-dialog
+  )::-webkit-scrollbar-thumb,
+html[data-admin-theme='light'] :is(
+    .admin-shell,
+    .admin-image-picker-modal,
+    .admin-users-drawer-root,
+    .admin-leads-drawer-root,
+    .admin-leads-export-dialog
+  ) *::-webkit-scrollbar-thumb {
+  background-color: #ff7a00;
+  border: 2px solid #0a0a0a;
+  background-clip: padding-box;
+}
+
+html[data-admin-theme='light'] :is(
+    .admin-shell,
+    .admin-image-picker-modal,
+    .admin-users-drawer-root,
+    .admin-leads-drawer-root,
+    .admin-leads-export-dialog
+  )::-webkit-scrollbar-corner,
+html[data-admin-theme='light'] :is(
+    .admin-shell,
+    .admin-image-picker-modal,
+    .admin-users-drawer-root,
+    .admin-leads-drawer-root,
+    .admin-leads-export-dialog
+  ) *::-webkit-scrollbar-corner {
+  background: #0a0a0a;
 }
 
 html[data-admin-theme='dark'] {
