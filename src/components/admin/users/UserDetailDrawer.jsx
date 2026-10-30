@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Copy, Loader2, RefreshCw, Save, X } from 'lucide-react'
 import EditorField from '../home/EditorField'
 import AdminSelect from '../AdminSelect'
@@ -80,9 +81,14 @@ export default function UserDetailDrawer({
   const [baseline, setBaseline] = useState(() => userToForm(user))
   const [isSaving, setIsSaving] = useState(false)
   const [busyAction, setBusyAction] = useState('')
+  const [mounted, setMounted] = useState(false)
 
   const userId = user ? String(user.id ?? '') : ''
   const isSelf = Boolean(userId && currentUserId && userId === String(currentUserId))
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!isOpen || !user) return
@@ -229,7 +235,7 @@ export default function UserDetailDrawer({
     }
   }, [user?.email, success, error])
 
-  if (!isOpen || !user) return null
+  if (!isOpen || !user || !mounted) return null
 
   const roleOptions = CMS_ROLE_OPTIONS.map((value) => ({
     value,
@@ -252,7 +258,7 @@ export default function UserDetailDrawer({
       }))
   const statusReadOnly = isBusy || isSelf || isLifecycleStatus
 
-  return (
+  return createPortal(
     <div className="admin-leads-drawer-root admin-users-drawer-root">
       <button
         type="button"
@@ -459,6 +465,7 @@ export default function UserDetailDrawer({
           </section>
         </div>
       </aside>
-    </div>
+    </div>,
+    document.body
   )
 }

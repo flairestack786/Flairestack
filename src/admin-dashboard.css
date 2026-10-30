@@ -3318,6 +3318,44 @@ html[data-admin-theme='light'] .admin-image-picker-modal picture {
   min-height: 0;
   overflow: auto;
   padding: 1rem 1.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: #ff7a00 #0a0a0a;
+}
+
+.admin-image-picker-modal-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-image-picker-modal-body::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+.admin-image-picker-modal-body::-webkit-scrollbar-thumb {
+  background-color: #ff7a00;
+  border-radius: 999px;
+  border: 2px solid #0a0a0a;
+  background-clip: padding-box;
+}
+
+.admin-image-picker-modal-body::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, #ff7a00 82%, white);
+}
+
+/* Light mode inverts the portaled dialog, so use dark scrollbar colors
+   that invert into a light track with the same orange thumb. */
+html[data-admin-theme='light'] .admin-image-picker-modal-body {
+  scrollbar-color: #ff7a00 #0a0a0a;
+}
+
+html[data-admin-theme='light'] .admin-image-picker-modal-body::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+html[data-admin-theme='light'] .admin-image-picker-modal-body::-webkit-scrollbar-thumb {
+  background-color: #ff7a00;
+  border: 2px solid #0a0a0a;
+  background-clip: padding-box;
 }
 
 .admin-image-picker-modal-footer {
@@ -3574,6 +3612,45 @@ html[data-admin-theme='light'] .admin-image-picker-modal picture {
 .admin-services-create-btn:hover {
   background: rgba(255, 122, 0, 0.22);
   border-color: rgba(255, 122, 0, 0.65);
+}
+
+.admin-leads-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.admin-leads-header-actions .admin-services-create-btn {
+  margin-left: 0;
+}
+
+.admin-leads-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 9px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-leads-export-btn:hover:not(:disabled) {
+  border-color: rgba(255, 122, 0, 0.45);
+  color: #fff;
+}
+
+.admin-leads-export-btn:disabled,
+.admin-services-create-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .admin-services-table-wrap {
@@ -4264,9 +4341,11 @@ html[data-admin-theme='light'] .admin-image-picker-modal picture {
 .admin-leads-drawer-root {
   position: fixed;
   inset: 0;
-  z-index: 240;
+  z-index: 5000;
   display: flex;
   justify-content: flex-end;
+  height: 100dvh;
+  max-height: 100dvh;
 }
 
 .admin-leads-drawer-backdrop {
@@ -4284,6 +4363,9 @@ html[data-admin-theme='light'] .admin-image-picker-modal picture {
   flex-direction: column;
   width: min(480px, 100%);
   height: 100%;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   background: #0c0c10;
   border-left: 1px solid var(--admin-border);
   box-shadow: -18px 0 48px rgba(0, 0, 0, 0.35);
@@ -4309,6 +4391,7 @@ html[data-admin-theme='light'] .admin-image-picker-modal picture {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-shrink: 0;
   gap: 1rem;
   padding: 1.25rem 1.25rem 0.75rem;
 }
@@ -4354,17 +4437,30 @@ html[data-admin-theme='light'] .admin-image-picker-modal picture {
 .admin-leads-drawer-badges {
   display: flex;
   flex-wrap: wrap;
+  flex-shrink: 0;
   gap: 0.45rem;
   padding: 0 1.25rem 1rem;
 }
 
 .admin-leads-drawer-body {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 0 1.25rem 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
+}
+
+html[data-admin-theme='light'] .admin-users-drawer-root {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html[data-admin-theme='light'] .admin-users-drawer-root img {
+  filter: hue-rotate(180deg) invert(1);
 }
 
 .admin-leads-drawer-section {

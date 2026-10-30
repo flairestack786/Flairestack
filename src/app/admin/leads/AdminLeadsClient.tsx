@@ -8,6 +8,8 @@ import {
   Loader2,
   MessageSquare,
   PhoneCall,
+  FileSpreadsheet,
+  FileText,
   RefreshCw,
   Search,
   Users,
@@ -24,6 +26,7 @@ import {
   LEAD_PRIORITY_OPTIONS,
   LEAD_STATUS_OPTIONS,
 } from '@/lib/leadsFormat'
+import { exportLeadsCsv, exportLeadsPdf } from '@/lib/next/exportLeads'
 
 function summarizeLeads(leads: Record<string, unknown>[]) {
   return {
@@ -165,15 +168,35 @@ export default function AdminLeadsClient() {
             Review inquiries and manage lead status, priority, and follow-up.
           </p>
         </div>
-        <button
-          type="button"
-          className="admin-services-create-btn"
-          onClick={loadLeads}
-          disabled={status === 'loading'}
-        >
-          <RefreshCw size={16} strokeWidth={1.75} aria-hidden />
-          Refresh
-        </button>
+        <div className="admin-leads-header-actions">
+          <button
+            type="button"
+            className="admin-leads-export-btn"
+            onClick={() => exportLeadsCsv(filteredLeads)}
+            disabled={status !== 'ready' || filteredLeads.length === 0}
+          >
+            <FileSpreadsheet size={16} strokeWidth={1.75} aria-hidden />
+            Export CSV
+          </button>
+          <button
+            type="button"
+            className="admin-leads-export-btn"
+            onClick={() => exportLeadsPdf(filteredLeads)}
+            disabled={status !== 'ready' || filteredLeads.length === 0}
+          >
+            <FileText size={16} strokeWidth={1.75} aria-hidden />
+            Export PDF
+          </button>
+          <button
+            type="button"
+            className="admin-services-create-btn"
+            onClick={loadLeads}
+            disabled={status === 'loading'}
+          >
+            <RefreshCw size={16} strokeWidth={1.75} aria-hidden />
+            Refresh
+          </button>
+        </div>
       </header>
 
       {status === 'loading' && (
