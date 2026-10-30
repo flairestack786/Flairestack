@@ -2,6 +2,14 @@
    Admin dashboard shell — sidebar + top nav
    ═══════════════════════════════════════════════════════════ */
 
+/* Admin CSS loads without the public stylesheet, so keep padding inside widths.
+   Without this, side-by-side fields (Title / Title accent, etc.) overlap. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* Brand scrollbar — match public frontend (dark track, FlaireStack orange thumb) */
 html {
   scrollbar-width: thin;
@@ -522,13 +530,15 @@ html {
 
 .admin-content {
   flex: 1;
+  min-width: 0;
   padding: clamp(1.25rem, 3vw, 1.75rem);
   overflow-x: hidden;
 }
 
 /* ── Page content ── */
 .admin-page {
-  max-width: 1100px;
+  min-width: 0;
+  max-width: min(1100px, 100%);
 }
 
 .admin-page-header {
@@ -635,7 +645,8 @@ html {
 
 /* ── Dashboard module ── */
 .admin-dashboard-page {
-  max-width: 1200px;
+  min-width: 0;
+  max-width: min(1200px, 100%);
 }
 
 .admin-dashboard-metrics {
@@ -2793,6 +2804,13 @@ html {
 .admin-settings-fields {
   display: grid;
   gap: 1rem;
+  min-width: 0;
+  align-items: start;
+}
+
+.admin-settings-fields > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -2835,7 +2853,9 @@ html {
 
 .admin-settings-input,
 .admin-settings-textarea {
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
   padding: 0.65rem 0.8rem;
   border-radius: 10px;
   border: 1px solid var(--admin-border);
@@ -5990,30 +6010,45 @@ html {
 
 /* Home hero slideshow CMS */
 .hero-slides-layout {
-  display: grid;
-  gap: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
   grid-column: 1 / -1;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
 }
 
 @media (min-width: 960px) {
   .hero-slides-layout {
-    grid-template-columns: minmax(16rem, 19rem) minmax(0, 1fr);
-    align-items: start;
-    gap: 1.5rem;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.25rem;
   }
 }
 
 .hero-slides-list-panel,
 .hero-slides-editor-panel {
+  position: relative;
   min-width: 0;
-  width: 100%;
+  max-width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.015) 100%);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  background: #121216;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+@media (min-width: 960px) {
+  .hero-slides-list-panel {
+    flex: 0 0 19rem;
+    width: 19rem;
+  }
+
+  .hero-slides-editor-panel {
+    flex: 1 1 0;
+    width: auto;
+  }
 }
 
 .hero-slides-list-panel {
@@ -6485,4 +6520,17 @@ html[data-admin-theme='light'] ::-webkit-scrollbar-corner {
 
 html[data-admin-theme='dark'] {
   color-scheme: dark;
+}
+
+/* Keep CMS cards and form columns from painting over their neighbors. */
+.admin-main :is(
+  .admin-dashboard-stats,
+  .admin-dashboard-metrics,
+  .admin-dashboard-charts,
+  .admin-dashboard-secondary-grid,
+  .admin-settings-fields,
+  .admin-seo-edit-layout
+) > * {
+  min-width: 0;
+  max-width: 100%;
 }
