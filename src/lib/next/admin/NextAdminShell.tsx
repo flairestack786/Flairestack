@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
+import AdminIdleSignOut from '@/lib/next/admin/AdminIdleSignOut'
 import NextAdminSidebar from '@/lib/next/admin/NextAdminSidebar'
 import NextAdminTopNav from '@/lib/next/admin/NextAdminTopNav'
 import { useAdminTheme } from '@/lib/next/admin/useAdminTheme'
@@ -91,6 +92,7 @@ export default function NextAdminShell({ children, pageTitle }: NextAdminShellPr
             />
             <div className="admin-content">{children}</div>
           </div>
+          <AdminIdleSignOut />
         </div>
       </MediaUrlContext.Provider>
     </ToastProvider>

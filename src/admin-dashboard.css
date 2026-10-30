@@ -2386,6 +2386,20 @@ html {
   color: #fecaca;
 }
 
+.admin-idle-dialog {
+  z-index: 4000;
+}
+
+.admin-idle-dialog-stay {
+  border: 1px solid rgba(255, 122, 0, 0.55);
+  background: var(--admin-accent, #ff7a00);
+  color: #0a0a0a;
+}
+
+.admin-idle-dialog-stay:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
 .admin-confirm-dialog-spinner {
   animation: admin-media-uploader-spin 0.85s linear infinite;
 }
