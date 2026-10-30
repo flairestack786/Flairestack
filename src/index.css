@@ -1425,6 +1425,11 @@ a:visited {
 }
 
 @media (max-width: 767px) {
+  .site-footer {
+    /* Keep copyright and socials above the fixed call / scroll buttons. */
+    padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .site-footer-bottom {
     flex-direction: column;
     align-items: flex-start;
@@ -1437,6 +1442,23 @@ a:visited {
 
   .site-footer-socials {
     order: 3;
+  }
+
+  .floating-call-btn,
+  .scroll-top-btn {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .floating-call-btn {
+    left: 1rem;
+    width: 56px;
+    height: 56px;
+  }
+
+  .scroll-top-btn {
+    right: 1rem;
+    width: 52px;
+    height: 52px;
   }
 }
 
