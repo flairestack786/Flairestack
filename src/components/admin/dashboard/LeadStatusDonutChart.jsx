@@ -52,6 +52,7 @@ export default function LeadStatusDonutChart({ segments, total }) {
               cy="70"
               r="54"
               fill="none"
+              className={ring.status === 'new' ? 'admin-theme-keep-color' : undefined}
               stroke={ring.color}
               strokeWidth="16"
               strokeLinecap="butt"
@@ -71,7 +72,7 @@ export default function LeadStatusDonutChart({ segments, total }) {
         {segments.map((segment) => (
           <li key={segment.status} className="admin-dashboard-donut-legend-item">
             <span
-              className="admin-dashboard-donut-swatch"
+              className={`admin-dashboard-donut-swatch${segment.status === 'new' ? ' admin-theme-keep-color' : ''}`}
               style={{ background: getLeadStatusChartColor(segment.status) }}
               aria-hidden
             />

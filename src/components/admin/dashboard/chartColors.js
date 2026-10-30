@@ -1,6 +1,6 @@
 /** Lead status colors aligned with admin badge palette. */
 export const LEAD_STATUS_CHART_COLORS = {
-  new: '#fdba74',
+  new: '#ff7a00',
   contacted: '#67e8f9',
   qualified: '#c4b5fd',
   proposal: '#93c5fd',

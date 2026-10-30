@@ -8,7 +8,7 @@ import {
 import { canAccessModule, canManageContent } from '@/lib/cmsPermissions'
 
 /** Dashboard / CMS product version shown in System Information. */
-export const CMS_VERSION = '1.1.0'
+export const CMS_VERSION = '1.2.0'
 
 const MEDIA_BUCKET = 'site-media'
 

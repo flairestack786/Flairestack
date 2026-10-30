@@ -2,7 +2,7 @@ import React from 'react'
 import { Database, HardDrive, Info } from 'lucide-react'
 
 /**
- * Small system status card for dashboard v1.1.
+ * Small system status card for dashboard v1.2.
  * @param {{
  *   system: {
  *     cmsVersion: string,

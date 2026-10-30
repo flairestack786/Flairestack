@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import NextAdminSidebar from '@/lib/next/admin/NextAdminSidebar'
 import NextAdminTopNav from '@/lib/next/admin/NextAdminTopNav'
+import { useAdminTheme } from '@/lib/next/admin/useAdminTheme'
 import { ToastProvider } from '@/components/common/ToastProvider'
 import { MediaUrlContext } from '@/components/admin/MediaUrlContext'
 import { adminNavItems } from '@/data/adminNav'
@@ -24,6 +25,8 @@ export default function NextAdminShell({ children, pageTitle }: NextAdminShellPr
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { preference: themePreference, resolved: resolvedTheme, setPreference: setTheme } =
+    useAdminTheme()
 
   const path = pathname ?? ''
   const resolvedTitle =
@@ -61,6 +64,8 @@ export default function NextAdminShell({ children, pageTitle }: NextAdminShellPr
           ]
             .filter(Boolean)
             .join(' ')}
+          data-theme={resolvedTheme}
+          data-theme-pref={themePreference}
         >
           {mobileOpen && (
             <button
@@ -78,7 +83,12 @@ export default function NextAdminShell({ children, pageTitle }: NextAdminShellPr
           />
 
           <div className="admin-main">
-            <NextAdminTopNav pageTitle={resolvedTitle} onOpenMobile={() => setMobileOpen(true)} />
+            <NextAdminTopNav
+              pageTitle={resolvedTitle}
+              onOpenMobile={() => setMobileOpen(true)}
+              themePreference={themePreference}
+              onThemeChange={setTheme}
+            />
             <div className="admin-content">{children}</div>
           </div>
         </div>
