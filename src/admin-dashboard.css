@@ -5329,11 +5329,40 @@ html[data-admin-theme='light'] .admin-users-drawer-root img {
 .admin-users-modal-root {
   position: fixed;
   inset: 0;
-  z-index: 260;
+  z-index: 5000;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
   padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+html[data-admin-theme='light'] .admin-users-modal {
+  background: #ffffff;
+  border-color: rgba(10, 15, 26, 0.1);
+  color: #171717;
+  color-scheme: light;
+}
+
+html[data-admin-theme='light'] .admin-users-modal-title,
+html[data-admin-theme='light'] .admin-users-modal .admin-settings-label,
+html[data-admin-theme='light'] .admin-users-modal .admin-settings-input,
+html[data-admin-theme='light'] .admin-users-modal .admin-select-trigger,
+html[data-admin-theme='light'] .admin-users-modal .admin-select-value {
+  color: #171717;
+}
+
+html[data-admin-theme='light'] .admin-users-modal-desc {
+  color: rgba(23, 23, 23, 0.58);
+}
+
+html[data-admin-theme='light'] .admin-users-modal .admin-settings-input,
+html[data-admin-theme='light'] .admin-users-modal .admin-select-trigger {
+  background: #f4f5f7;
+  border-color: rgba(10, 15, 26, 0.14);
 }
 
 .admin-users-modal {
@@ -6680,23 +6709,103 @@ html[data-admin-theme='light'] .admin-users-drawer-root img {
   color-scheme stays dark so native controls are dark before the invert.
 */
 .admin-shell[data-theme='light'] {
-  background: #060608;
-  color-scheme: dark;
-  filter: invert(1) hue-rotate(180deg);
+  background: #f3f4f6;
+  color: #171717;
+  color-scheme: light;
+  filter: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.admin-shell[data-theme='light'] .admin-main {
-  background: #060608;
+.admin-shell[data-theme='light'] .admin-sidebar {
+  background: #f6f6f7;
+  border-right-color: rgba(0, 0, 0, 0.08);
+  color: #171717;
 }
 
-.admin-shell[data-theme='light'] img,
-.admin-shell[data-theme='light'] video,
-.admin-shell[data-theme='light'] picture,
-.admin-shell[data-theme='light'] canvas,
-.admin-shell[data-theme='light'] iframe,
-.admin-shell[data-theme='light'] .admin-theme-keep-color {
-  /* Reverse of the shell filter so these pixels stay their real colors. */
-  filter: hue-rotate(180deg) invert(1);
+.admin-shell[data-theme='light'] .admin-sidebar-section-label,
+.admin-shell[data-theme='light'] .admin-sidebar-link,
+.admin-shell[data-theme='light'] .admin-sidebar-link-icon,
+.admin-shell[data-theme='light'] .admin-sidebar-collapse {
+  color: rgba(23, 23, 23, 0.62);
+}
+
+.admin-shell[data-theme='light'] .admin-sidebar-link:hover,
+.admin-shell[data-theme='light'] .admin-sidebar-link--active {
+  color: #171717;
+  background: rgba(255, 122, 0, 0.12);
+}
+
+.admin-shell[data-theme='light'] .admin-sidebar-link--active .admin-sidebar-link-icon,
+.admin-shell[data-theme='light'] .admin-page-icon {
+  color: #ff7a00;
+}
+
+.admin-shell[data-theme='light'] .admin-main,
+.admin-shell[data-theme='light'] .admin-content {
+  background: #f3f4f6;
+  color: #171717;
+}
+
+.admin-shell[data-theme='light'] .admin-topnav {
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  color: #171717;
+}
+
+.admin-shell[data-theme='light'] .admin-main :where(
+  h1, h2, h3, h4, p, span, a, td, th, label, li, strong, small, button, div, code
+) {
+  color: #171717;
+}
+
+.admin-shell[data-theme='light'] .admin-page-desc,
+.admin-shell[data-theme='light'] .admin-settings-section-desc,
+.admin-shell[data-theme='light'] .admin-field-hint,
+.admin-shell[data-theme='light'] .admin-settings-hint,
+.admin-shell[data-theme='light'] .admin-services-table th,
+.admin-shell[data-theme='light'] .admin-settings-label {
+  color: rgba(23, 23, 23, 0.55);
+}
+
+.admin-shell[data-theme='light'] :is(
+  .admin-services-table-wrap,
+  .admin-dashboard-card,
+  .admin-stat-card,
+  .admin-leads-summary-card,
+  .admin-settings-panel,
+  .admin-settings-section,
+  .admin-users-summary .admin-stat-card
+) {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #171717;
+}
+
+.admin-shell[data-theme='light'] .admin-settings-input,
+.admin-shell[data-theme='light'] .admin-settings-textarea {
+  background: #ffffff;
+  color: #171717;
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
+.admin-shell[data-theme='light'] .admin-services-create-btn,
+.admin-shell[data-theme='light'] .admin-page-icon {
+  color: #ff7a00;
+}
+
+.admin-shell[data-theme='light'] .admin-services-status--published {
+  color: #15803d;
+}
+
+.admin-shell[data-theme='light'] .admin-services-status--draft {
+  color: #475569;
+}
+
+.admin-shell[data-theme='light'] .admin-sidebar-logo,
+.admin-shell[data-theme='light'] .admin-profile-menu-name,
+.admin-shell[data-theme='light'] .admin-topnav-title {
+  color: #171717;
 }
 
 html[data-admin-theme='light'] {
@@ -6732,14 +6841,18 @@ html[data-admin-theme='light']::-webkit-scrollbar-corner {
   Scrollbars inside an inverted surface are painted, then inverted.
   Author them dark so the result is a light track with the orange thumb.
 */
+html[data-admin-theme='light'] .admin-shell,
+html[data-admin-theme='light'] .admin-shell * {
+  scrollbar-width: thin;
+  scrollbar-color: #ff7a00 #e6e7ea;
+}
+
 html[data-admin-theme='light'] :is(
-    .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
     .admin-leads-drawer-root
   ),
 html[data-admin-theme='light'] :is(
-    .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
     .admin-leads-drawer-root
@@ -6748,14 +6861,17 @@ html[data-admin-theme='light'] :is(
   scrollbar-color: #ff7a00 #0a0a0a;
 }
 
+html[data-admin-theme='light'] .admin-shell::-webkit-scrollbar-track,
+html[data-admin-theme='light'] .admin-shell *::-webkit-scrollbar-track {
+  background: #e6e7ea;
+}
+
 html[data-admin-theme='light'] :is(
-    .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
     .admin-leads-drawer-root
   )::-webkit-scrollbar-track,
 html[data-admin-theme='light'] :is(
-    .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
     .admin-leads-drawer-root
@@ -6763,14 +6879,19 @@ html[data-admin-theme='light'] :is(
   background: #0a0a0a;
 }
 
+html[data-admin-theme='light'] .admin-shell::-webkit-scrollbar-thumb,
+html[data-admin-theme='light'] .admin-shell *::-webkit-scrollbar-thumb {
+  background-color: #ff7a00;
+  border: 2px solid #e6e7ea;
+  background-clip: padding-box;
+}
+
 html[data-admin-theme='light'] :is(
-    .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
     .admin-leads-drawer-root
   )::-webkit-scrollbar-thumb,
 html[data-admin-theme='light'] :is(
-    .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
     .admin-leads-drawer-root
@@ -6780,14 +6901,17 @@ html[data-admin-theme='light'] :is(
   background-clip: padding-box;
 }
 
+html[data-admin-theme='light'] .admin-shell::-webkit-scrollbar-corner,
+html[data-admin-theme='light'] .admin-shell *::-webkit-scrollbar-corner {
+  background: #e6e7ea;
+}
+
 html[data-admin-theme='light'] :is(
-    .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
     .admin-leads-drawer-root
   )::-webkit-scrollbar-corner,
 html[data-admin-theme='light'] :is(
-    .admin-shell,
     .admin-image-picker-modal,
     .admin-users-drawer-root,
     .admin-leads-drawer-root

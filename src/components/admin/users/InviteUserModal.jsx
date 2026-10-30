@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useId, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Loader2, MailPlus, X } from 'lucide-react'
 import EditorField from '../home/EditorField'
 import AdminSelect from '../AdminSelect'
@@ -24,6 +25,11 @@ export default function InviteUserModal({ isOpen, onClose, onCreated, api }) {
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState('administrator')
   const [isSaving, setIsSaving] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!isOpen) return
@@ -69,9 +75,9 @@ export default function InviteUserModal({ isOpen, onClose, onCreated, api }) {
     [email, fullName, role, onCreated, onClose, success, error, createUserInvite]
   )
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
-  return (
+  return createPortal(
     <div className="admin-users-modal-root">
       <button
         type="button"
@@ -156,6 +162,7 @@ export default function InviteUserModal({ isOpen, onClose, onCreated, api }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
