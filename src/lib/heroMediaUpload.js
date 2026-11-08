@@ -16,10 +16,28 @@ export const HERO_IMAGE_MIME = Object.freeze([
   'image/svg+xml',
 ])
 
-export const HERO_VIDEO_MIME = Object.freeze(['video/mp4', 'video/webm', 'video/quicktime'])
+export const HERO_VIDEO_MIME = Object.freeze([
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  // Primary IANA type for AVI; some browsers/OS pickers also send video/avi.
+  'video/x-msvideo',
+  'video/avi',
+])
 
 const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.svg'])
-const VIDEO_EXT = new Set(['.mp4', '.webm', '.mov'])
+const VIDEO_EXT = new Set(['.mp4', '.webm', '.mov', '.avi'])
+
+/** File picker accept list for hero video uploads. */
+export const HERO_VIDEO_ACCEPT =
+  'video/mp4,video/webm,video/quicktime,video/x-msvideo,video/avi,.avi'
+
+/**
+ * AVI is accepted for CMS upload/Storage, but HTML5 video playback is unreliable
+ * in Chrome, Edge, Firefox, and Safari. Prefer a poster (or convert to MP4/WebM).
+ */
+export const HERO_AVI_BROWSER_WARNING =
+  'AVI files can be stored in the CMS, but most browsers cannot play AVI in the homepage hero. Add a poster image, or convert the video to MP4 (H.264) or WebM before publishing.'
 
 /**
  * @param {string} filename
@@ -64,9 +82,23 @@ export function resolveHeroMediaContentType(filename, declaredType = '') {
       return 'video/webm'
     case '.mov':
       return 'video/quicktime'
+    case '.avi':
+      return declared === 'video/avi' ? 'video/avi' : 'video/x-msvideo'
     default:
       return declared || 'application/octet-stream'
   }
+}
+
+/**
+ * Whether a media URL/path looks like an AVI hero video.
+ * @param {string | null | undefined} mediaUrl
+ * @returns {boolean}
+ */
+export function isAviHeroMediaUrl(mediaUrl) {
+  const value = String(mediaUrl ?? '').toLowerCase()
+  if (!value) return false
+  const path = value.split('?')[0].split('#')[0]
+  return path.endsWith('.avi')
 }
 
 /**
@@ -109,7 +141,7 @@ export function validateHeroMediaFile(file) {
     return {
       ok: false,
       error:
-        'Unsupported file type. Use JPEG, PNG, WebP, GIF, or AVIF images; or MP4 / WebM videos.',
+        'Unsupported file type. Use JPEG, PNG, WebP, GIF, or AVIF images; or MP4, WebM, MOV, or AVI videos.',
     }
   }
 
@@ -130,7 +162,8 @@ export function validateHeroMediaFile(file) {
   if (kind === 'video' && !HERO_VIDEO_MIME.includes(contentType) && !VIDEO_EXT.has(getLowerExtension(name))) {
     return {
       ok: false,
-      error: 'Unsupported video format. Use MP4 (video/mp4) or WebM (video/webm).',
+      error:
+        'Unsupported video format. Use MP4 (video/mp4), WebM (video/webm), MOV (video/quicktime), or AVI (video/x-msvideo).',
     }
   }
 
@@ -153,8 +186,9 @@ export function formatHeroUploadError(err) {
   if (lower.includes('mime type') && lower.includes('not supported')) {
     return (
       'This Storage bucket does not allow that media type yet. ' +
-      'Apply migration 20261025150000_site_media_allow_hero_video.sql ' +
-      '(adds video/mp4 and video/webm to site-media), then retry.'
+      'Apply migrations 20261025150000_site_media_allow_hero_video.sql and ' +
+      '20261107200000_site_media_allow_hero_avi.sql ' +
+      '(adds MP4, WebM, QuickTime, and AVI to site-media), then retry.'
     )
   }
   if (lower.includes('payload too large') || lower.includes('maximum allowed size')) {
@@ -175,5 +209,6 @@ export function videoSourceTypeFromUrl(mediaUrl) {
   const value = String(mediaUrl ?? '').toLowerCase()
   if (value.includes('.webm')) return 'video/webm'
   if (value.includes('.mov')) return 'video/quicktime'
+  if (isAviHeroMediaUrl(value)) return 'video/x-msvideo'
   return 'video/mp4'
 }

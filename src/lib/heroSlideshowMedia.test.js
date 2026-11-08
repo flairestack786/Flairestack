@@ -92,6 +92,35 @@ test('failed video without poster may use bundled last resort', () => {
   assert.equal(slideMayUseBundledFallback(slide1Video, { videoFailed: true }), true)
 })
 
+test('AVI with poster prefers poster image over attempting HTML5 playback', () => {
+  const aviSlide = {
+    id: 'avi1',
+    mediaType: 'video',
+    mediaUrl: 'https://cdn.example/hero/legacy.avi',
+    posterUrl: 'https://cdn.example/hero/legacy-poster.jpg',
+    mediaAlt: '',
+    title: 'Legacy',
+  }
+  const visual = resolveHeroSlideVisual(aviSlide, { bundledImageSrc: bundled })
+  assert.equal(visual.kind, 'image')
+  assert.equal(visual.src, aviSlide.posterUrl)
+})
+
+test('AVI without poster still resolves to video so onError can fall back', () => {
+  const aviSlide = {
+    id: 'avi2',
+    mediaType: 'video',
+    mediaUrl: 'https://cdn.example/hero/legacy.avi',
+    posterUrl: null,
+    mediaAlt: '',
+    title: 'Legacy',
+  }
+  const visual = resolveHeroSlideVisual(aviSlide, { bundledImageSrc: bundled })
+  assert.equal(visual.kind, 'video')
+  assert.equal(visual.src, aviSlide.mediaUrl)
+  assert.equal(slideMayUseBundledFallback(aviSlide), true)
+})
+
 test('reduced motion prefers poster over playing video', () => {
   const visual = resolveHeroSlideVisual(slideVideoWithPoster, {
     bundledImageSrc: bundled,

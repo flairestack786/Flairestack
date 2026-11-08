@@ -15,6 +15,11 @@ import EditorSection from './EditorSection'
 import { useMediaPublicUrl } from '../MediaUrlContext'
 import { useToast } from '../../common/ToastProvider'
 import ImagePickerModal from '../ImagePickerModal'
+import {
+  HERO_AVI_BROWSER_WARNING,
+  HERO_VIDEO_ACCEPT,
+  isAviHeroMediaUrl,
+} from '../../../lib/heroMediaUpload'
 
 /**
  * @param {{
@@ -284,8 +289,9 @@ export default function HeroSlideshowEditor({ api, mediaApi, panelId, labelledBy
         <p className="admin-field-hint">
           If this table is missing, apply migration{' '}
           <code>20261025140000_home_hero_slides.sql</code>. For video uploads also apply{' '}
-          <code>20261025150000_site_media_allow_hero_video.sql</code> so{' '}
-          <code>site-media</code> accepts <code>video/mp4</code> and <code>video/webm</code>.
+          <code>20261025150000_site_media_allow_hero_video.sql</code> and{' '}
+          <code>20261107200000_site_media_allow_hero_avi.sql</code> so{' '}
+          <code>site-media</code> accepts MP4, WebM, QuickTime, and AVI.
         </p>
       </EditorSection>
     )
@@ -296,7 +302,7 @@ export default function HeroSlideshowEditor({ api, mediaApi, panelId, labelledBy
       panelId={panelId}
       labelledBy={labelledBy}
       title="Hero Slideshow"
-      description="Manage cinematic homepage slides (video or image). Compress MP4/WebM before upload (npm run compress:hero-video -- file.mp4), always set a poster image, and keep videos under ~15–25 MB when possible to limit Storage bandwidth."
+      description="Manage cinematic homepage slides (video or image). Prefer MP4 (H.264) or WebM for reliable browser playback. Compress before upload (npm run compress:hero-video -- file.mp4), always set a poster image, and keep videos under ~15–25 MB when possible to limit Storage bandwidth."
     >
       <div className="hero-slides-layout">
         <div className="hero-slides-list-panel">
@@ -449,13 +455,27 @@ export default function HeroSlideshowEditor({ api, mediaApi, panelId, labelledBy
                     ref={fileInputRef}
                     type="file"
                     className="sr-only"
-                    accept="video/mp4,video/webm,video/quicktime"
+                    accept={HERO_VIDEO_ACCEPT}
                     onChange={(e) => void handleFileChange(e)}
                   />
                 ) : null}
+                {draft.media_type === 'video' && isAviHeroMediaUrl(draft.media_path) ? (
+                  <p className="admin-field-hint" role="status">
+                    {HERO_AVI_BROWSER_WARNING}
+                  </p>
+                ) : null}
                 {mediaPreviewUrl ? (
                   <div className="hero-slides-preview">
-                    {draft.media_type === 'video' ? (
+                    {draft.media_type === 'video' && isAviHeroMediaUrl(draft.media_path) ? (
+                      posterPreviewUrl ? (
+                        <img src={posterPreviewUrl} alt="" className="hero-slides-preview-media" />
+                      ) : (
+                        <p className="admin-field-hint">
+                          Preview unavailable for AVI in most browsers. Set a poster image below —
+                          the public homepage will use it instead of attempting broken playback.
+                        </p>
+                      )
+                    ) : draft.media_type === 'video' ? (
                       <video src={mediaPreviewUrl} className="hero-slides-preview-media" muted controls playsInline />
                     ) : (
                       <img src={mediaPreviewUrl} alt="" className="hero-slides-preview-media" />

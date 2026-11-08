@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 import { Calendar, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HERO_SLIDE_INTERVAL_MS, HERO_VIDEO_PLAYBACK_RATE } from '../../lib/heroSlides'
-import { videoSourceTypeFromUrl } from '../../lib/heroMediaUpload'
+import { isAviHeroMediaUrl, videoSourceTypeFromUrl } from '../../lib/heroMediaUpload'
 import {
   applyMediaReadyState,
   isIncomingMediaReady,
@@ -264,6 +264,16 @@ export default function HomeHeroSlideshow({
                       } catch {
                         // ignore
                       }
+                      // AVI is rarely supported; fail over immediately when canPlayType is empty
+                      // so we never leave a blank/broken video on screen.
+                      if (
+                        isAviHeroMediaUrl(visual.src) &&
+                        node.canPlayType(videoSourceTypeFromUrl(visual.src)) === ''
+                      ) {
+                        setVideoFailed((current) => ({ ...current, [slide.id]: true }))
+                        markReady(slide.id, true)
+                        return
+                      }
                       if (videoHasDisplayFrame(node)) {
                         markReady(slide.id, true)
                       }
@@ -325,6 +335,10 @@ export default function HomeHeroSlideshow({
                     <source
                       src={visual.src ?? undefined}
                       type={videoSourceTypeFromUrl(visual.src)}
+                      onError={() => {
+                        setVideoFailed((current) => ({ ...current, [slide.id]: true }))
+                        markReady(slide.id, true)
+                      }}
                     />
                   ) : null}
                 </video>

@@ -3,6 +3,8 @@
  * Keeps CMS media from flashing the bundled default during transitions.
  */
 
+import { isAviHeroMediaUrl } from './heroMediaUpload.js'
+
 /**
  * @typedef {import('./heroSlides').PublicHeroSlide & { useBundledBackground?: boolean }} HeroSlideView
  */
@@ -54,14 +56,18 @@ export function resolveHeroSlideVisual(slide, options = {}) {
   }
 
   if (mediaType === 'video' && mediaUrl) {
-    // Prefer live video unless reduced-motion or the element failed.
-    if (!videoFailed && !reducedMotion) {
+    // AVI is accepted for CMS/Storage but rarely decodable in HTML5 <video>.
+    // Prefer the poster when present so the public site never shows a broken player.
+    const aviPreferPoster = isAviHeroMediaUrl(mediaUrl) && Boolean(posterUrl)
+
+    // Prefer live video unless reduced-motion, AVI+poster, or the element failed.
+    if (!videoFailed && !reducedMotion && !aviPreferPoster) {
       return { kind: 'video', src: mediaUrl, poster: posterUrl }
     }
     if (posterUrl) {
       return { kind: 'image', src: posterUrl, alt: '' }
     }
-    // Failed video with no poster — last resort only.
+    // Failed / unsupported video with no poster — last resort only.
     if (bundledImageSrc) {
       return { kind: 'bundled', src: bundledImageSrc, alt: '' }
     }
@@ -98,6 +104,8 @@ export function slideMayUseBundledFallback(slide, options = {}) {
   if (!mediaUrl) return true
   if (slide.mediaType === 'video' && options.videoFailed && !slide.posterUrl) return true
   if (slide.mediaType === 'video' && options.reducedMotion && !slide.posterUrl) return true
+  // AVI without poster may fall back after decode failure in the browser.
+  if (slide.mediaType === 'video' && isAviHeroMediaUrl(mediaUrl) && !slide.posterUrl) return true
   return false
 }
 
