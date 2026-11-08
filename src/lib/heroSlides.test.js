@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   FALLBACK_HERO_SLIDE_CONTENT,
+  HERO_VIDEO_PLAYBACK_RATE,
   buildFallbackHeroSlides,
   buildPublicHeroSlides,
   resolvePublicHeroSlides,
@@ -9,6 +10,10 @@ import {
 } from './heroSlides.js'
 
 const resolveUrl = (path) => `https://cdn.example/${path}`
+
+test('homepage hero video playback rate is 0.75x', () => {
+  assert.equal(HERO_VIDEO_PLAYBACK_RATE, 0.75)
+})
 
 test('preserves exact first-slide fallback wording from legacy hero', () => {
   const [slide] = buildFallbackHeroSlides(null)

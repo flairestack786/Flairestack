@@ -28,7 +28,7 @@
 export const HERO_SLIDE_INTERVAL_MS = 10000
 
 /** Background video playback rate (muted inline hero media). */
-export const HERO_VIDEO_PLAYBACK_RATE = 0.5
+export const HERO_VIDEO_PLAYBACK_RATE = 0.75
 
 export const FALLBACK_HERO_SLIDE_CONTENT = Object.freeze({
   title: 'Building intelligent',
