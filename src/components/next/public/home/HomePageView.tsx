@@ -237,7 +237,13 @@ export default function HomePageView({ home, services, testimonials }: HomePageV
                       <footer className="testimonial-footer">
                         <div className="testimonial-avatar" aria-hidden>
                           {item.photoUrl ? (
-                            <img src={item.photoUrl} alt="" className="testimonial-avatar-img" />
+                            <img
+                              src={item.photoUrl}
+                              alt=""
+                              className="testimonial-avatar-img"
+                              loading="lazy"
+                              decoding="async"
+                            />
                           ) : (
                             item.initials
                           )}

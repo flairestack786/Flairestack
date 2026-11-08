@@ -3,6 +3,7 @@
 import { getSupabaseBrowser } from '@/lib/next/supabaseBrowser'
 import {
   MEDIA_BUCKET,
+  MEDIA_CACHE_CONTROL,
   buildRenamedStoragePath,
   getPathExtension,
   slugifyFilename,
@@ -23,7 +24,7 @@ export async function uploadFile(file: File) {
   const path = slugifyFilename(file.name)
 
   const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
-    cacheControl: '3600',
+    cacheControl: MEDIA_CACHE_CONTROL,
     upsert: false,
     metadata: {
       originalFilename: file.name,
@@ -83,7 +84,7 @@ export async function renameFile(
 
   const { error: uploadError } = await supabase.storage.from(MEDIA_BUCKET).upload(newPath, data, {
     upsert: true,
-    cacheControl: '3600',
+    cacheControl: MEDIA_CACHE_CONTROL,
     metadata: { originalFilename },
   })
 

@@ -10,6 +10,7 @@
     "lint": "next lint",
     "test": "node --test src/lib/*.test.js",
     "optimize:hero": "node scripts/optimize-hero.mjs",
+    "compress:hero-video": "node scripts/compress-hero-video.mjs",
     "generate:service-images": "node scripts/generate-service-image-manifest.mjs",
     "download:service-images": "node scripts/generate-service-image-manifest.mjs && node scripts/download-service-images.mjs",
     "sync:service-image-manifest": "node scripts/generate-service-image-manifest.mjs && node scripts/sync-service-image-manifest.mjs",

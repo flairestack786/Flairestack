@@ -1,7 +1,7 @@
 'use client'
 
 import { getSupabaseBrowser } from '@/lib/next/supabaseBrowser'
-import { MEDIA_BUCKET, slugifyFilename } from '@/lib/mediaFormat'
+import { MEDIA_BUCKET, MEDIA_CACHE_CONTROL, slugifyFilename } from '@/lib/mediaFormat'
 import {
   normalizeMediaType,
   sanitizeCtaUrl,
@@ -238,7 +238,7 @@ export async function uploadHeroMedia(
   const path = `hero/${slugifyFilename(file.name)}`
 
   const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
-    cacheControl: '3600',
+    cacheControl: MEDIA_CACHE_CONTROL,
     upsert: false,
     contentType: validated.contentType,
     metadata: {

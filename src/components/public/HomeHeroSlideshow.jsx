@@ -10,6 +10,7 @@ import {
   isIncomingMediaReady,
   nextSlideIndex,
   resolveHeroSlideVisual,
+  shouldAttachHeroVideoSrc,
   videoHasDisplayFrame,
   videoPreloadForSlot,
 } from '../../lib/heroSlideshowMedia'
@@ -160,18 +161,38 @@ export default function HomeHeroSlideshow({
     }
   }, [index, visibleIndex, active, mediaReady, resolveVisual, reducedMotion])
 
-  // Play only the visible (or soon-to-be-visible target) video; pause all others.
+  // Play only the active video; pause others. After React removes inactive
+  // `<source>` nodes, call load() so the browser aborts leftover range requests.
   useEffect(() => {
     const playId = active?.id
+    const nextId = safeSlides[nextSlideIndex(index, safeSlides.length)]?.id
     safeSlides.forEach((slide) => {
       const el = videoRefs.current[slide.id]
       if (!el) return
       const visual = resolveVisual(slide)
-      const shouldPlay =
+      const isActiveSlide = slide.id === playId
+      const isNextSlide = slide.id === nextId
+      const shouldAttach =
         visual.kind === 'video' &&
-        slide.id === playId &&
+        shouldAttachHeroVideoSrc({ isActive: isActiveSlide, isNext: isNextSlide })
+      const shouldPlay =
+        shouldAttach &&
+        isActiveSlide &&
         !videoFailed[slide.id] &&
         !reducedMotion
+
+      if (!shouldAttach) {
+        el.pause()
+        if (!el.querySelector('source') && el.networkState !== HTMLMediaElement.NETWORK_EMPTY) {
+          try {
+            el.load()
+          } catch {
+            // ignore
+          }
+        }
+        return
+      }
+
       if (shouldPlay) {
         try {
           el.playbackRate = HERO_VIDEO_PLAYBACK_RATE
@@ -184,7 +205,7 @@ export default function HomeHeroSlideshow({
         el.pause()
       }
     })
-  }, [active, safeSlides, videoFailed, reducedMotion, resolveVisual])
+  }, [active, index, safeSlides, videoFailed, reducedMotion, resolveVisual])
 
   // Warm the next slide's image in cache (videos use preload=metadata on the element).
   useEffect(() => {
@@ -252,7 +273,11 @@ export default function HomeHeroSlideshow({
                   muted
                   playsInline
                   loop
-                  autoPlay={isTarget && !reducedMotion}
+                  autoPlay={
+                    isTarget &&
+                    !reducedMotion &&
+                    shouldAttachHeroVideoSrc({ isActive: isTarget, isNext })
+                  }
                   preload={videoPreloadForSlot({ isActive: isTarget, isNext })}
                   poster={visual.poster || undefined}
                   onLoadedData={(event) => {
@@ -271,17 +296,37 @@ export default function HomeHeroSlideshow({
                     }
                     markReady(slide.id, true)
                   }}
-                  onPlaying={() => markReady(slide.id, true)}
+                  onPlaying={(event) => {
+                    try {
+                      event.currentTarget.playbackRate = HERO_VIDEO_PLAYBACK_RATE
+                    } catch {
+                      // ignore
+                    }
+                    markReady(slide.id, true)
+                  }}
+                  onRateChange={(event) => {
+                    // Keep the intended rate if the browser resets it after load/seek.
+                    const el = event.currentTarget
+                    if (el.playbackRate !== HERO_VIDEO_PLAYBACK_RATE) {
+                      try {
+                        el.playbackRate = HERO_VIDEO_PLAYBACK_RATE
+                      } catch {
+                        // ignore
+                      }
+                    }
+                  }}
                   onError={() => {
                     setVideoFailed((current) => ({ ...current, [slide.id]: true }))
                     // Allow crossfade onto poster/bundled fallback for this slide.
                     markReady(slide.id, true)
                   }}
                 >
-                  <source
-                    src={visual.src ?? undefined}
-                    type={videoSourceTypeFromUrl(visual.src)}
-                  />
+                  {shouldAttachHeroVideoSrc({ isActive: isTarget, isNext }) ? (
+                    <source
+                      src={visual.src ?? undefined}
+                      type={videoSourceTypeFromUrl(visual.src)}
+                    />
+                  ) : null}
                 </video>
               ) : null}
 

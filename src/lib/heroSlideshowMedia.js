@@ -136,6 +136,18 @@ export function videoPreloadForSlot({ isActive, isNext }) {
 }
 
 /**
+ * Whether a hero video slot should attach a network-loading media source.
+ * Inactive non-next slides must not have a `<source src>` — many browsers still
+ * fetch when a source URL is present even with preload="none".
+ *
+ * @param {{ isActive: boolean, isNext: boolean }} state
+ * @returns {boolean}
+ */
+export function shouldAttachHeroVideoSrc({ isActive, isNext }) {
+  return Boolean(isActive || isNext)
+}
+
+/**
  * Whether incoming media is ready enough to crossfade onto.
  *
  * @param {HeroSlideVisual} visual

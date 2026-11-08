@@ -3,6 +3,49 @@ const nextConfig = {
   // App Router only. Ignore any residual .jsx under src that is not an App route.
   pageExtensions: ['tsx', 'ts'],
   reactStrictMode: true,
+  /**
+   * Long-lived cache for hashed Next build assets and static public media on this origin.
+   * Supabase `site-media` Cache-Control is set at upload time (MEDIA_CACHE_CONTROL).
+   */
+  async headers() {
+    return [
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
+      {
+        source: '/assets/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store' }],
+      },
+      {
+        source: '/admin/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store' }],
+      },
+    ]
+  },
   // Prefer explicit NEXT_PUBLIC_* (documented in .env.example). Temporary fallbacks
   // to legacy VITE_* keys remain so existing .env.local files keep working during cutover.
   env: {

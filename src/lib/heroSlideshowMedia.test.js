@@ -7,6 +7,7 @@ import {
   resolveHeroSlideVisual,
   slideMayUseBundledFallback,
   videoHasDisplayFrame,
+  shouldAttachHeroVideoSrc,
   videoPreloadForSlot,
 } from './heroSlideshowMedia.js'
 
@@ -153,6 +154,13 @@ test('preload is auto for active, metadata for next, none otherwise', () => {
   assert.equal(videoPreloadForSlot({ isActive: true, isNext: false }), 'auto')
   assert.equal(videoPreloadForSlot({ isActive: false, isNext: true }), 'metadata')
   assert.equal(videoPreloadForSlot({ isActive: false, isNext: false }), 'none')
+})
+
+test('only active and next hero videos attach a downloadable source', () => {
+  assert.equal(shouldAttachHeroVideoSrc({ isActive: true, isNext: false }), true)
+  assert.equal(shouldAttachHeroVideoSrc({ isActive: false, isNext: true }), true)
+  assert.equal(shouldAttachHeroVideoSrc({ isActive: true, isNext: true }), true)
+  assert.equal(shouldAttachHeroVideoSrc({ isActive: false, isNext: false }), false)
 })
 
 test('nextSlideIndex wraps from last to first', () => {

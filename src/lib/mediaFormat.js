@@ -97,3 +97,16 @@ function getExtension(filename) {
 }
 
 export const MEDIA_BUCKET = 'site-media'
+
+/**
+ * Cache-Control stored on new `site-media` uploads.
+ *
+ * supabase-js sends this string as the multipart `cacheControl` field for File/Blob
+ * uploads. Storage persists it and returns it on GET (HEAD is `no-cache` by design).
+ * Do not pass only a number of seconds: that is not the header browsers need.
+ *
+ * Safe because `slugifyFilename()` puts a unique id in every object key.
+ * Replacing media must upload a new key and point CMS at it. Never overwrite an
+ * immutable URL. Existing objects keep whatever header they were uploaded with.
+ */
+export const MEDIA_CACHE_CONTROL = 'public, max-age=31536000, immutable'

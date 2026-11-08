@@ -296,7 +296,7 @@ export default function HeroSlideshowEditor({ api, mediaApi, panelId, labelledBy
       panelId={panelId}
       labelledBy={labelledBy}
       title="Hero Slideshow"
-      description="Manage cinematic homepage slides (video or image). Slide 1 preserves the original hero copy; select a verified Chicago skyline video for its background."
+      description="Manage cinematic homepage slides (video or image). Compress MP4/WebM before upload (npm run compress:hero-video -- file.mp4), always set a poster image, and keep videos under ~15–25 MB when possible to limit Storage bandwidth."
     >
       <div className="hero-slides-layout">
         <div className="hero-slides-list-panel">
