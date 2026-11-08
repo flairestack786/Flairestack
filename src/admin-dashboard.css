@@ -2542,7 +2542,7 @@ html {
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--admin-text-faint);
   cursor: pointer;
   transition:
     color 0.2s ease,
@@ -2551,8 +2551,8 @@ html {
 }
 
 .admin-rename-modal-close:hover:not(:disabled) {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--admin-text);
+  background: var(--admin-hover);
   border-color: var(--admin-border);
 }
 
@@ -2580,7 +2580,7 @@ html {
   font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--admin-text);
 }
 
 .admin-rename-modal-preview {
@@ -2590,7 +2590,7 @@ html {
   margin-bottom: 1rem;
   padding: 0.75rem;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--admin-hover);
   border: 1px solid var(--admin-border);
 }
 
@@ -2614,14 +2614,14 @@ html {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.42);
+  color: var(--admin-text-faint);
 }
 
 .admin-rename-modal-filename {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--admin-text);
   word-break: break-all;
 }
 
@@ -2643,8 +2643,8 @@ html {
   padding: 0.6rem 0.75rem;
   border-radius: 9px;
   border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff;
+  background: var(--admin-input-bg);
+  color: var(--admin-text);
   font-size: 0.875rem;
   font-family: inherit;
   transition:
@@ -2653,7 +2653,7 @@ html {
 }
 
 .admin-rename-modal-input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--admin-text-faint);
 }
 
 .admin-rename-modal-input:focus {
@@ -2675,7 +2675,7 @@ html {
   flex-shrink: 0;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--admin-text-muted);
 }
 
 .admin-rename-modal-error {
@@ -2716,14 +2716,14 @@ html {
 
 .admin-rename-modal-btn--cancel {
   border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.78);
+  background: var(--admin-hover);
+  color: var(--admin-text);
 }
 
 .admin-rename-modal-btn--cancel:hover:not(:disabled) {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.07);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+  background: color-mix(in srgb, var(--admin-hover) 70%, var(--admin-text) 8%);
 }
 
 .admin-rename-modal-btn--submit {
@@ -6869,7 +6869,8 @@ html[data-admin-theme='light'] :is(
   .admin-users-drawer-root,
   .admin-leads-drawer-root,
   .admin-leads-export-dialog,
-  .admin-confirm-dialog
+  .admin-confirm-dialog,
+  .admin-rename-modal
 ) :where(h1, h2, h3, h4, p, span, a, td, th, label, li, strong, small, button, div, code) {
   color: var(--admin-text);
 }
@@ -6905,11 +6906,37 @@ html[data-admin-theme='light'] :is(
   .admin-image-picker-modal-panel,
   .admin-users-modal,
   .admin-leads-drawer,
-  .admin-confirm-dialog-panel
+  .admin-confirm-dialog-panel,
+  .admin-rename-modal-panel
 ) {
   background: var(--admin-surface);
   border-color: var(--admin-border);
   color: var(--admin-text);
+}
+
+.admin-shell[data-theme='light'] .admin-rename-modal-input,
+html[data-admin-theme='light'] .admin-rename-modal-input {
+  background: var(--admin-input-bg);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+  color-scheme: light;
+}
+
+.admin-shell[data-theme='light'] .admin-rename-modal-input::placeholder,
+html[data-admin-theme='light'] .admin-rename-modal-input::placeholder {
+  color: var(--admin-text-faint);
+}
+
+.admin-shell[data-theme='light'] .admin-rename-modal-extension,
+html[data-admin-theme='light'] .admin-rename-modal-extension {
+  color: var(--admin-text-muted);
+}
+
+.admin-shell[data-theme='light'] .admin-rename-modal-btn--cancel,
+html[data-admin-theme='light'] .admin-rename-modal-btn--cancel {
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
 }
 
 .admin-shell[data-theme='light'] .admin-settings-input,
