@@ -2684,6 +2684,13 @@ html {
   color: #fca5a5;
 }
 
+.admin-rename-modal-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--admin-text-muted);
+}
+
 .admin-rename-modal-actions {
   display: flex;
   justify-content: flex-end;

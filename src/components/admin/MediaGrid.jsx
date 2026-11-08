@@ -76,7 +76,6 @@ export default function MediaGrid({
     deleteFile,
     renameFile,
     getPublicUrl,
-    buildRenamedStoragePath,
     getPathExtension,
   } = api
   const [files, setFiles] = useState([])
@@ -168,21 +167,17 @@ export default function MediaGrid({
 
       const extension = getPathExtension(renameTarget.path)
       const originalFilename = `${newStem.trim()}${extension}`
-      const newPath = buildRenamedStoragePath(renameTarget.path, newStem)
 
-      // Display name comes from metadata.originalFilename, which can differ from the
-      // storage object key. Still update metadata when only the display name changes.
-      if (
-        newPath === renameTarget.path &&
-        originalFilename === String(renameTarget.itemName ?? '').trim()
-      ) {
+      // Keep the Storage object key stable so CMS public URLs keep working.
+      // Only the library display name (metadata.originalFilename) changes.
+      if (originalFilename === String(renameTarget.itemName ?? '').trim()) {
         return
       }
 
       setIsRenaming(true)
 
       try {
-        await renameFile(renameTarget.path, newPath, { originalFilename })
+        await renameFile(renameTarget.path, renameTarget.path, { originalFilename })
         setRenameTarget(null)
         await loadFiles()
         success('Image renamed')
@@ -192,15 +187,7 @@ export default function MediaGrid({
         setIsRenaming(false)
       }
     },
-    [
-      renameTarget,
-      loadFiles,
-      success,
-      error,
-      buildRenamedStoragePath,
-      getPathExtension,
-      renameFile,
-    ]
+    [renameTarget, loadFiles, success, error, getPathExtension, renameFile]
   )
 
   const rootClassName = ['admin-media-grid', className].filter(Boolean).join(' ')

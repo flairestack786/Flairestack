@@ -61,30 +61,34 @@ export async function deleteFile(path: string) {
   if (error) throw error
 }
 
+/**
+ * Rename a Media Library item's display name only.
+ *
+ * Intentionally does NOT move/rename the Storage object key. CMS pages store
+ * those paths (hero media_path, section image_path, logos, etc.), and moving
+ * the object would break the public site until every reference was rewritten.
+ * The library UI shows `metadata.originalFilename` when present.
+ *
+ * `newPath` is accepted for API compatibility with the shared MediaGrid but
+ * is ignored — the storage key stays `path`.
+ */
 export async function renameFile(
-  oldPath: string,
-  newPath: string,
+  path: string,
+  _newPath: string,
   options: { originalFilename?: string } = {}
 ) {
-  if (!oldPath || !newPath) {
-    throw new Error('renameFile requires both oldPath and newPath.')
-  }
-
-  const supabase = getSupabaseBrowser()
-  let path = oldPath
-
-  // Move only when the storage key changes. Display names can change without a move.
-  if (oldPath !== newPath) {
-    const { error } = await supabase.storage.from(MEDIA_BUCKET).move(oldPath, newPath)
-    if (error) throw error
-    path = newPath
+  if (!path) {
+    throw new Error('renameFile requires a storage path.')
   }
 
   const { originalFilename } = options
-  if (!originalFilename) return
+  if (!originalFilename || !String(originalFilename).trim()) {
+    throw new Error('renameFile requires a new display filename.')
+  }
 
-  // Storage move preserves prior custom metadata. Re-upload in place so
-  // metadata.originalFilename (the Media Library display name) is written.
+  const supabase = getSupabaseBrowser()
+  const nextName = String(originalFilename).trim()
+
   const { data, error: downloadError } = await supabase.storage.from(MEDIA_BUCKET).download(path)
   if (downloadError) throw downloadError
 
@@ -95,7 +99,7 @@ export async function renameFile(
     upsert: true,
     cacheControl: MEDIA_CACHE_CONTROL,
     ...(contentType ? { contentType } : {}),
-    metadata: { originalFilename },
+    metadata: { originalFilename: nextName },
   })
 
   if (uploadError) throw uploadError

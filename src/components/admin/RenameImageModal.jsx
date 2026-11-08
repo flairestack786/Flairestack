@@ -161,6 +161,10 @@ export default function RenameImageModal({
               {error || validationError}
             </p>
           )}
+          <p className="admin-rename-modal-hint">
+            Updates the library display name only. The public media URL stays the same so
+            pages already using this image keep working.
+          </p>
 
           <div className="admin-rename-modal-actions">
             <button
