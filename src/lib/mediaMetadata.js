@@ -1,17 +1,63 @@
 /**
  * Shared formatters and caches for admin media library metadata.
+ * Sources: Storage FileObject name/path, metadata.mimetype, metadata.size, created_at.
  */
 
 /** @type {Map<string, { width: number, height: number }>} */
 const dimensionCache = new Map()
 
-const IMAGE_TYPE_BY_EXTENSION = {
+const FORMAT_BY_EXTENSION = Object.freeze({
   '.png': 'PNG',
   '.jpg': 'JPG',
   '.jpeg': 'JPG',
-  '.webp': 'WebP',
+  '.webp': 'WEBP',
   '.svg': 'SVG',
   '.gif': 'GIF',
+  '.avif': 'AVIF',
+  '.mp4': 'MP4',
+  '.webm': 'WEBM',
+  '.mov': 'MOV',
+  '.avi': 'AVI',
+})
+
+const FORMAT_BY_MIME = Object.freeze({
+  'image/png': 'PNG',
+  'image/jpeg': 'JPG',
+  'image/jpg': 'JPG',
+  'image/webp': 'WEBP',
+  'image/svg+xml': 'SVG',
+  'image/gif': 'GIF',
+  'image/avif': 'AVIF',
+  'video/mp4': 'MP4',
+  'video/webm': 'WEBM',
+  'video/quicktime': 'MOV',
+  'video/x-msvideo': 'AVI',
+  'video/avi': 'AVI',
+})
+
+const VIDEO_FORMATS = new Set(['MP4', 'WEBM', 'MOV', 'AVI'])
+const IMAGE_FORMATS = new Set(['PNG', 'JPG', 'WEBP', 'GIF', 'AVIF'])
+
+/**
+ * @param {string} pathOrFilename
+ * @returns {string}
+ */
+function getExtension(pathOrFilename) {
+  const basename = String(pathOrFilename ?? '').split('/').pop() ?? ''
+  const lastDot = basename.lastIndexOf('.')
+  if (lastDot <= 0) return ''
+  return basename.slice(lastDot).toLowerCase()
+}
+
+/**
+ * @param {number} value
+ * @param {string} unit
+ * @returns {string}
+ */
+function formatSizeUnit(value, unit) {
+  const text =
+    value >= 100 ? String(Math.round(value)) : value.toFixed(1).replace(/\.0$/, '')
+  return `${text} ${unit}`
 }
 
 /**
@@ -21,13 +67,17 @@ const IMAGE_TYPE_BY_EXTENSION = {
 export function formatMediaFileSize(bytes) {
   if (bytes == null || Number.isNaN(Number(bytes))) return null
   const size = Number(bytes)
-  if (size < 1024) return `${size} B`
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`
+  if (size < 0) return null
+  if (size < 1024) return `${Math.round(size)} B`
+  if (size < 1024 * 1024) return formatSizeUnit(size / 1024, 'KB')
+  if (size < 1024 * 1024 * 1024) return formatSizeUnit(size / (1024 * 1024), 'MB')
+  return formatSizeUnit(size / (1024 * 1024 * 1024), 'GB')
 }
 
 /**
- * @param {string | undefined} value
+ * Format an original upload timestamp. Returns null when missing/invalid.
+ * Callers must pass Storage `created_at` — never `updated_at`.
+ * @param {string | undefined | null} value
  * @returns {string | null}
  */
 export function formatMediaUploadDate(value) {
@@ -42,29 +92,90 @@ export function formatMediaUploadDate(value) {
 }
 
 /**
+ * Resolve display format from extension, with MIME as fallback.
+ * @param {string} pathOrFilename
+ * @param {string | null | undefined} [mimeType]
+ * @returns {string | null}
+ */
+export function getMediaFileFormat(pathOrFilename, mimeType) {
+  const extension = getExtension(pathOrFilename)
+  if (extension && FORMAT_BY_EXTENSION[extension]) {
+    return FORMAT_BY_EXTENSION[extension]
+  }
+
+  const mime = String(mimeType ?? '')
+    .trim()
+    .toLowerCase()
+  if (mime && FORMAT_BY_MIME[mime]) {
+    return FORMAT_BY_MIME[mime]
+  }
+
+  if (extension) {
+    return extension.slice(1).toUpperCase()
+  }
+
+  if (mime.startsWith('image/')) {
+    const subtype = mime.slice('image/'.length).split('+')[0]
+    return subtype ? subtype.toUpperCase() : null
+  }
+  if (mime.startsWith('video/')) {
+    const subtype = mime.slice('video/'.length).split('+')[0]
+    return subtype ? subtype.toUpperCase() : null
+  }
+
+  return null
+}
+
+/**
+ * @deprecated Prefer getMediaFileFormat. Kept for existing call sites.
  * @param {string} pathOrFilename
  * @returns {string | null}
  */
 export function getMediaImageType(pathOrFilename) {
-  const basename = pathOrFilename.split('/').pop() ?? pathOrFilename
-  const lastDot = basename.lastIndexOf('.')
-  if (lastDot <= 0) return null
-  const extension = basename.slice(lastDot).toLowerCase()
-  return IMAGE_TYPE_BY_EXTENSION[extension] ?? extension.slice(1).toUpperCase()
+  return getMediaFileFormat(pathOrFilename)
 }
 
 /**
- * @param {import('@supabase/storage-js').FileObject} file
+ * @param {import('@supabase/storage-js').FileObject | { metadata?: Record<string, unknown> } | null | undefined} file
+ * @returns {string | null}
+ */
+export function resolveStorageMimeType(file) {
+  const metadata = file?.metadata ?? {}
+  const raw =
+    metadata.mimetype ??
+    metadata.contentType ??
+    metadata.content_type ??
+    metadata.type
+  if (typeof raw !== 'string') return null
+  const trimmed = raw.trim()
+  return trimmed || null
+}
+
+/**
+ * @param {import('@supabase/storage-js').FileObject | { metadata?: Record<string, unknown> } | null | undefined} file
  * @returns {number | null}
  */
 export function resolveStorageFileSize(file) {
-  const metadata = file.metadata ?? {}
+  const metadata = file?.metadata ?? {}
   const raw = metadata.size ?? metadata.contentLength ?? metadata.content_length
-  return raw != null ? Number(raw) : null
+  if (raw == null || raw === '') return null
+  const size = Number(raw)
+  return Number.isFinite(size) ? size : null
 }
 
 /**
- * @param {import('@supabase/storage-js').FileObject} file
+ * Original upload timestamp from Storage. Do not fall back to updated_at.
+ * @param {import('@supabase/storage-js').FileObject | { created_at?: string } | null | undefined} file
+ * @returns {string | null}
+ */
+export function resolveStorageCreatedAt(file) {
+  const value = file?.created_at
+  if (typeof value !== 'string' || !value.trim()) return null
+  return value
+}
+
+/**
+ * @param {import('@supabase/storage-js').FileObject | { name?: string, metadata?: Record<string, unknown> } | null | undefined} file
  * @returns {string}
  */
 export function getMediaDisplayFilename(file) {
@@ -73,6 +184,24 @@ export function getMediaDisplayFilename(file) {
     return original.trim()
   }
   return String(file?.name ?? '').trim()
+}
+
+/**
+ * Coarse kind for compact library filters.
+ * @param {string} pathOrFilename
+ * @param {string | null | undefined} [mimeType]
+ * @returns {'image' | 'video' | 'svg' | 'other'}
+ */
+export function getMediaKind(pathOrFilename, mimeType) {
+  const format = getMediaFileFormat(pathOrFilename, mimeType)
+  const mime = String(mimeType ?? '')
+    .trim()
+    .toLowerCase()
+
+  if (format === 'SVG' || mime === 'image/svg+xml') return 'svg'
+  if ((format && VIDEO_FORMATS.has(format)) || mime.startsWith('video/')) return 'video'
+  if ((format && IMAGE_FORMATS.has(format)) || mime.startsWith('image/')) return 'image'
+  return 'other'
 }
 
 /**

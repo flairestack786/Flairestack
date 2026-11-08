@@ -1,27 +1,31 @@
 import React, { memo, useCallback, useState } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Calendar, FileType2, HardDrive, Pencil, Trash2 } from 'lucide-react'
 import MediaCopyUrlButton from './MediaCopyUrlButton'
 import {
-  cacheImageDimensions,
-  formatImageDimensions,
   formatMediaFileSize,
   formatMediaUploadDate,
-  getCachedImageDimensions,
   getMediaDisplayFilename,
-  getMediaImageType,
+  getMediaFileFormat,
+  resolveStorageCreatedAt,
   resolveStorageFileSize,
+  resolveStorageMimeType,
 } from '../../lib/mediaMetadata'
 
 /**
- * @param {{ label: string, value: string | null, loading?: boolean }} props
+ * @param {{
+ *   icon?: import('lucide-react').LucideIcon,
+ *   label: string,
+ *   value: string | null,
+ * }} props
  */
-function MetaRow({ label, value, loading = false }) {
+function MetaRow({ icon: Icon, label, value }) {
   return (
     <div className="admin-media-grid-meta-row">
-      <dt>{label}</dt>
-      <dd className={loading ? 'admin-media-grid-meta-value--loading' : undefined}>
-        {value ?? '—'}
-      </dd>
+      <dt>
+        {Icon ? <Icon size={12} strokeWidth={1.75} aria-hidden className="admin-media-grid-meta-icon" /> : null}
+        <span>{label}</span>
+      </dt>
+      <dd>{value ?? '—'}</dd>
     </div>
   )
 }
@@ -48,52 +52,16 @@ function MediaGridCard({
 }) {
   const path = file.name
   const displayName = getMediaDisplayFilename(file)
-  const cacheKey = path
+  const mimeType = resolveStorageMimeType(file)
+  const fileSize = resolveStorageFileSize(file)
+  const uploadDate = formatMediaUploadDate(resolveStorageCreatedAt(file))
+  const fileFormat = getMediaFileFormat(path, mimeType)
 
-  const [dimensions, setDimensions] = useState(() => getCachedImageDimensions(cacheKey))
-  const [dimensionsFailed, setDimensionsFailed] = useState(false)
-
-  const applyDimensions = useCallback(
-    (width, height) => {
-      if (!width || !height) {
-        setDimensionsFailed(true)
-        return
-      }
-      cacheImageDimensions(cacheKey, width, height)
-      setDimensions({ width, height })
-      setDimensionsFailed(false)
-    },
-    [cacheKey]
-  )
-
-  const handleImageLoad = useCallback(
-    (event) => {
-      const { naturalWidth, naturalHeight } = event.currentTarget
-      applyDimensions(naturalWidth, naturalHeight)
-    },
-    [applyDimensions]
-  )
-
-  const setImageRef = useCallback(
-    (node) => {
-      if (node?.complete && node.naturalWidth > 0) {
-        applyDimensions(node.naturalWidth, node.naturalHeight)
-      }
-    },
-    [applyDimensions]
-  )
+  const [previewFailed, setPreviewFailed] = useState(false)
 
   const handleImageError = useCallback(() => {
-    setDimensionsFailed(true)
+    setPreviewFailed(true)
   }, [])
-
-  const fileSize = resolveStorageFileSize(file)
-  const uploadDate = formatMediaUploadDate(file.created_at ?? file.updated_at)
-  const imageType = getMediaImageType(path)
-  const dimensionsLabel = dimensionsFailed
-    ? null
-    : formatImageDimensions(dimensions?.width, dimensions?.height)
-  const dimensionsLoading = !dimensions && !dimensionsFailed
 
   const cardClassName = [
     'admin-media-grid-card',
@@ -105,16 +73,21 @@ function MediaGridCard({
 
   const preview = (
     <div className="admin-media-grid-preview">
-      <img
-        ref={setImageRef}
-        src={publicUrl}
-        alt={displayName}
-        className="admin-media-grid-image"
-        loading="lazy"
-        decoding="async"
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-      />
+      {!previewFailed ? (
+        <img
+          src={publicUrl}
+          alt={displayName}
+          className="admin-media-grid-image"
+          loading="lazy"
+          decoding="async"
+          onError={handleImageError}
+        />
+      ) : (
+        <div className="admin-media-grid-preview-fallback" aria-hidden>
+          <FileType2 size={28} strokeWidth={1.5} />
+          <span>{fileFormat ?? 'FILE'}</span>
+        </div>
+      )}
       {selectable && isSelected && (
         <span className="admin-media-grid-selected-badge" aria-hidden>
           Selected
@@ -127,6 +100,18 @@ function MediaGridCard({
     <h3 className="admin-media-grid-filename" title={displayName}>
       {displayName}
     </h3>
+  )
+
+  const meta = (
+    <dl className="admin-media-grid-meta" aria-label={`File details for ${displayName}`}>
+      <MetaRow icon={FileType2} label="Format" value={fileFormat} />
+      <MetaRow
+        icon={HardDrive}
+        label="File size"
+        value={fileSize != null ? formatMediaFileSize(fileSize) : null}
+      />
+      <MetaRow icon={Calendar} label="Uploaded" value={uploadDate} />
+    </dl>
   )
 
   if (selectable) {
@@ -152,21 +137,7 @@ function MediaGridCard({
 
       <div className="admin-media-grid-body">
         {filename}
-
-        <dl className="admin-media-grid-meta">
-          <MetaRow label="Filename" value={displayName} />
-          <MetaRow
-            label="Size"
-            value={fileSize != null ? formatMediaFileSize(fileSize) : null}
-          />
-          <MetaRow
-            label="Dimensions"
-            value={dimensionsLabel}
-            loading={dimensionsLoading}
-          />
-          <MetaRow label="Type" value={imageType} />
-          <MetaRow label="Uploaded" value={uploadDate} />
-        </dl>
+        {meta}
 
         <div className="admin-media-grid-actions">
           <MediaCopyUrlButton publicUrl={publicUrl} label={displayName} />

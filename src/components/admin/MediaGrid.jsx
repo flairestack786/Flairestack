@@ -10,7 +10,11 @@ import ConfirmationModal from './ConfirmationModal'
 import RenameImageModal from './RenameImageModal'
 import MediaGridCard from './MediaGridCard'
 import { useToast } from '../common/ToastProvider'
-import { getMediaDisplayFilename } from '../../lib/mediaMetadata'
+import {
+  getMediaDisplayFilename,
+  getMediaKind,
+  resolveStorageMimeType,
+} from '../../lib/mediaMetadata'
 
 /**
  * Case-insensitive substring match against the card filename.
@@ -24,12 +28,23 @@ function matchesSearchQuery(file, normalizedQuery) {
 }
 
 /**
+ * @param {import('@supabase/storage-js').FileObject} file
+ * @param {'all' | 'image' | 'video' | 'svg' | 'other'} typeFilter
+ * @returns {boolean}
+ */
+function matchesTypeFilter(file, typeFilter) {
+  if (!typeFilter || typeFilter === 'all') return true
+  return getMediaKind(file.name, resolveStorageMimeType(file)) === typeFilter
+}
+
+/**
  * Responsive media gallery grid for the admin media library.
  * `api` injects storage operations so Vite and Next can share this UI.
  * @param {{
  *   className?: string,
  *   refreshKey?: number,
  *   searchQuery?: string,
+ *   typeFilter?: 'all' | 'image' | 'video' | 'svg' | 'other',
  *   selectable?: boolean,
  *   selectedPath?: string | null,
  *   onItemSelect?: (image: { path: string, publicUrl: string, filename: string }) => void,
@@ -48,6 +63,7 @@ export default function MediaGrid({
   className = '',
   refreshKey = 0,
   searchQuery = '',
+  typeFilter = 'all',
   selectable = false,
   selectedPath = null,
   onItemSelect,
@@ -99,11 +115,14 @@ export default function MediaGrid({
   )
 
   const filteredFiles = useMemo(() => {
-    if (!normalizedSearchQuery) return files
-    return files.filter((file) => matchesSearchQuery(file, normalizedSearchQuery))
-  }, [files, normalizedSearchQuery])
+    return files.filter(
+      (file) =>
+        matchesSearchQuery(file, normalizedSearchQuery) && matchesTypeFilter(file, typeFilter)
+    )
+  }, [files, normalizedSearchQuery, typeFilter])
 
   const hasSearchQuery = normalizedSearchQuery.length > 0
+  const hasActiveFilters = hasSearchQuery || (typeFilter !== 'all' && typeFilter != null)
 
   const handleDeleteRequest = useCallback((path, publicUrl, itemName) => {
     setDeleteTarget({ path, publicUrl, itemName })
@@ -147,11 +166,18 @@ export default function MediaGrid({
     async (newStem) => {
       if (!renameTarget) return
 
-      const newPath = buildRenamedStoragePath(renameTarget.path, newStem)
-      if (newPath === renameTarget.path) return
-
       const extension = getPathExtension(renameTarget.path)
       const originalFilename = `${newStem.trim()}${extension}`
+      const newPath = buildRenamedStoragePath(renameTarget.path, newStem)
+
+      // Display name comes from metadata.originalFilename, which can differ from the
+      // storage object key. Still update metadata when only the display name changes.
+      if (
+        newPath === renameTarget.path &&
+        originalFilename === String(renameTarget.itemName ?? '').trim()
+      ) {
+        return
+      }
 
       setIsRenaming(true)
 
@@ -215,12 +241,12 @@ export default function MediaGrid({
         </div>
       </div>
     )
-  } else if (files.length > 0 && hasSearchQuery && filteredFiles.length === 0) {
+  } else if (files.length > 0 && hasActiveFilters && filteredFiles.length === 0) {
     content = (
       <div className={`${rootClassName} admin-media-grid--no-results`}>
         <div className="admin-media-grid-state">
           <Search size={24} strokeWidth={1.75} aria-hidden />
-          <p>No images match your search.</p>
+          <p>No media matches your filters.</p>
         </div>
       </div>
     )

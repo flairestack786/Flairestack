@@ -71,20 +71,30 @@ export async function renameFile(
   }
 
   const supabase = getSupabaseBrowser()
-  const { error } = await supabase.storage.from(MEDIA_BUCKET).move(oldPath, newPath)
-  if (error) throw error
+  let path = oldPath
+
+  // Move only when the storage key changes. Display names can change without a move.
+  if (oldPath !== newPath) {
+    const { error } = await supabase.storage.from(MEDIA_BUCKET).move(oldPath, newPath)
+    if (error) throw error
+    path = newPath
+  }
 
   const { originalFilename } = options
   if (!originalFilename) return
 
-  const { data, error: downloadError } = await supabase.storage
-    .from(MEDIA_BUCKET)
-    .download(newPath)
+  // Storage move preserves prior custom metadata. Re-upload in place so
+  // metadata.originalFilename (the Media Library display name) is written.
+  const { data, error: downloadError } = await supabase.storage.from(MEDIA_BUCKET).download(path)
   if (downloadError) throw downloadError
 
-  const { error: uploadError } = await supabase.storage.from(MEDIA_BUCKET).upload(newPath, data, {
+  const contentType =
+    data && typeof data.type === 'string' && data.type.trim() ? data.type : undefined
+
+  const { error: uploadError } = await supabase.storage.from(MEDIA_BUCKET).upload(path, data, {
     upsert: true,
     cacheControl: MEDIA_CACHE_CONTROL,
+    ...(contentType ? { contentType } : {}),
     metadata: { originalFilename },
   })
 
