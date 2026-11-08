@@ -58,6 +58,7 @@
     "src/lib/mediaMetadata.js",
     "src/lib/serviceMediaSlots.js",
     "src/lib/serviceSlug.js",
+    "src/lib/publicSitemap.js",
     "src/lib/serviceUrlFlow.js",
     "src/lib/serviceDefaults.js",
     "src/lib/serviceCatalogAssets.js",
