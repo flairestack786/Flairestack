@@ -43,9 +43,6 @@ export default function BlogArticleView({
         </div>
         <h1 className="blog-article-title">{article.title}</h1>
         {article.excerpt ? <p className="blog-article-excerpt">{article.excerpt}</p> : null}
-        {article.authorName ? (
-          <p className="blog-article-author">By {article.authorName}</p>
-        ) : null}
       </header>
 
       {article.featuredImageUrl ? (
@@ -64,6 +61,10 @@ export default function BlogArticleView({
         className="blog-article-prose"
         dangerouslySetInnerHTML={{ __html: article.bodyHtml }}
       />
+
+      {article.authorName ? (
+        <p className="blog-article-author">By {article.authorName}</p>
+      ) : null}
 
       <div className="blog-article-share">
         <p>Share</p>
