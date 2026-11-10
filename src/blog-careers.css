@@ -417,35 +417,13 @@
   font-size: 1.08rem;
 }
 
-.blog-article-byline {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-top: 2.75rem;
-  padding: 1.25rem 1.35rem;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background:
-    linear-gradient(135deg, rgba(255, 122, 0, 0.08), transparent 42%),
-    rgba(255, 255, 255, 0.025);
-}
-
-.blog-article-byline-label {
-  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
-}
-
 .blog-article-author {
-  margin: 0;
+  margin: 0.9rem 0 0;
   font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: 0.98rem;
+  font-weight: 500;
   letter-spacing: -0.01em;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .blog-article-share,
