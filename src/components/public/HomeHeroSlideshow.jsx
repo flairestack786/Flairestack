@@ -14,7 +14,14 @@ import {
   videoHasDisplayFrame,
   videoPreloadForSlot,
 } from '../../lib/heroSlideshowMedia'
+import { recordMediaEgressEvent } from '../../lib/mediaEgressDebug'
+import { cmsResponsiveImgProps } from '@/lib/publicMediaDelivery'
+import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
 import TrustedBy from '../TrustedBy'
+
+function heroMediaProps(src) {
+  return cmsResponsiveImgProps(src, 'hero', getPublicMediaUrl)
+}
 
 /**
  * @typedef {import('../../lib/heroSlides').PublicHeroSlide & { useBundledBackground?: boolean }} HeroSlideView
@@ -165,21 +172,15 @@ export default function HomeHeroSlideshow({
   // `<source>` nodes, call load() so the browser aborts leftover range requests.
   useEffect(() => {
     const playId = active?.id
-    const nextId = safeSlides[nextSlideIndex(index, safeSlides.length)]?.id
     safeSlides.forEach((slide) => {
       const el = videoRefs.current[slide.id]
       if (!el) return
       const visual = resolveVisual(slide)
       const isActiveSlide = slide.id === playId
-      const isNextSlide = slide.id === nextId
       const shouldAttach =
-        visual.kind === 'video' &&
-        shouldAttachHeroVideoSrc({ isActive: isActiveSlide, isNext: isNextSlide })
+        visual.kind === 'video' && shouldAttachHeroVideoSrc({ isActive: isActiveSlide })
       const shouldPlay =
-        shouldAttach &&
-        isActiveSlide &&
-        !videoFailed[slide.id] &&
-        !reducedMotion
+        shouldAttach && isActiveSlide && !videoFailed[slide.id] && !reducedMotion
 
       if (!shouldAttach) {
         el.pause()
@@ -207,24 +208,53 @@ export default function HomeHeroSlideshow({
     })
   }, [active, index, safeSlides, videoFailed, reducedMotion, resolveVisual])
 
-  // Warm the next slide's image in cache (videos use preload=metadata on the element).
+  // Diagnostics: record when the active hero video source is attached.
+  useEffect(() => {
+    if (!active) return
+    const visual = resolveVisual(active)
+    if (visual.kind !== 'video' || !visual.src) return
+    if (!shouldAttachHeroVideoSrc({ isActive: true })) return
+    recordMediaEgressEvent({
+      url: visual.src,
+      kind: 'video',
+      component: 'HomeHeroSlideshow',
+      note: 'active-source-attach',
+    })
+  }, [active, resolveVisual])
+
+  // Warm the next slide with image/poster only — never attach the next video source
+  // (that was a major Supabase Storage egress source).
   useEffect(() => {
     if (!multi || typeof window === 'undefined') return undefined
     const next = safeSlides[nextSlideIndex(index, safeSlides.length)]
     if (!next) return undefined
     const visual = resolveVisual(next)
-    if (visual.kind !== 'image' && visual.kind !== 'bundled') return undefined
-    if (!visual.src) return undefined
+    let warmUrl = null
+    if (visual.kind === 'image' || visual.kind === 'bundled') {
+      warmUrl = visual.src
+    } else if (visual.kind === 'video') {
+      warmUrl = visual.poster || next.posterUrl || null
+    }
+    if (!warmUrl) return undefined
+    const optimized = heroMediaProps(warmUrl)
+    const egressUrl = optimized.src || warmUrl
+    recordMediaEgressEvent({
+      url: egressUrl,
+      kind: 'image-warm',
+      component: 'HomeHeroSlideshow',
+      note: 'next-slide-poster-or-image',
+    })
     const img = new window.Image()
     img.decoding = 'async'
-    img.src = visual.src
+    if (optimized.srcSet) img.srcset = optimized.srcSet
+    if (optimized.sizes) img.sizes = optimized.sizes
+    img.src = egressUrl
     return undefined
   }, [index, multi, safeSlides, resolveVisual])
 
   if (!active || !visible) return null
 
   const showControls = multi
-  const nextIndex = nextSlideIndex(index, safeSlides.length)
 
   return (
     <section
@@ -236,7 +266,6 @@ export default function HomeHeroSlideshow({
         {safeSlides.map((slide, i) => {
           const isVisible = i === visibleIndex
           const isTarget = i === index
-          const isNext = i === nextIndex
           const visual = resolveVisual(slide)
           // Keep video elements mounted whenever this slide owns CMS video media.
           // Unmounting inactive videos was the root cause of the bundled-image flash.
@@ -286,10 +315,12 @@ export default function HomeHeroSlideshow({
                   autoPlay={
                     isTarget &&
                     !reducedMotion &&
-                    shouldAttachHeroVideoSrc({ isActive: isTarget, isNext })
+                    shouldAttachHeroVideoSrc({ isActive: isTarget })
                   }
-                  preload={videoPreloadForSlot({ isActive: isTarget, isNext })}
-                  poster={visual.poster || undefined}
+                  preload={videoPreloadForSlot({ isActive: isTarget })}
+                  poster={
+                    visual.poster ? heroMediaProps(visual.poster).src || visual.poster : undefined
+                  }
                   onLoadedData={(event) => {
                     try {
                       event.currentTarget.playbackRate = HERO_VIDEO_PLAYBACK_RATE
@@ -331,7 +362,7 @@ export default function HomeHeroSlideshow({
                     markReady(slide.id, true)
                   }}
                 >
-                  {shouldAttachHeroVideoSrc({ isActive: isTarget, isNext }) ? (
+                  {shouldAttachHeroVideoSrc({ isActive: isTarget }) ? (
                     <source
                       src={visual.src ?? undefined}
                       type={videoSourceTypeFromUrl(visual.src)}
@@ -364,12 +395,11 @@ export default function HomeHeroSlideshow({
 
               {showStaticImage && !useBundledPicture ? (
                 <img
-                  src={visual.src ?? undefined}
+                  {...heroMediaProps(visual.src)}
                   alt={visual.alt || ''}
                   className="hero-bg-img"
                   decoding="async"
                   fetchPriority={isTarget || isVisible ? 'high' : 'low'}
-                  sizes="100vw"
                   onLoad={() => markReady(slide.id, true)}
                   onError={() => markReady(slide.id, true)}
                 />

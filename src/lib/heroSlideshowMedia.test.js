@@ -179,15 +179,15 @@ test('stale readiness events do not overwrite current generation', () => {
   assert.equal(fresh.s1, true)
 })
 
-test('preload is auto for active, metadata for next, none otherwise', () => {
+test('preload is auto for active only; next does not warm video bytes', () => {
   assert.equal(videoPreloadForSlot({ isActive: true, isNext: false }), 'auto')
-  assert.equal(videoPreloadForSlot({ isActive: false, isNext: true }), 'metadata')
+  assert.equal(videoPreloadForSlot({ isActive: false, isNext: true }), 'none')
   assert.equal(videoPreloadForSlot({ isActive: false, isNext: false }), 'none')
 })
 
-test('only active and next hero videos attach a downloadable source', () => {
+test('only the active hero video attaches a downloadable source', () => {
   assert.equal(shouldAttachHeroVideoSrc({ isActive: true, isNext: false }), true)
-  assert.equal(shouldAttachHeroVideoSrc({ isActive: false, isNext: true }), true)
+  assert.equal(shouldAttachHeroVideoSrc({ isActive: false, isNext: true }), false)
   assert.equal(shouldAttachHeroVideoSrc({ isActive: true, isNext: true }), true)
   assert.equal(shouldAttachHeroVideoSrc({ isActive: false, isNext: false }), false)
 })

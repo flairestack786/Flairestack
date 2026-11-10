@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import CmsOptimizedImage from '@/components/next/public/CmsOptimizedImage'
 import { usePublicSite } from './PublicSiteProvider'
 
 type PublicSiteLogoProps = {
@@ -19,7 +20,13 @@ export default function PublicSiteLogo({
 
   const content = logo_url ? (
     <>
-      <img src={logo_url} alt={company_name} className="site-logo-image" />
+      <CmsOptimizedImage
+        src={logo_url}
+        alt={company_name}
+        className="site-logo-image"
+        preset="logo"
+        priority
+      />
       <span className="sr-only">{company_name}</span>
     </>
   ) : (

@@ -23,6 +23,8 @@ import {
   FloatingOrb,
   staggerContainer,
 } from './ServiceMotion'
+import { cmsResponsiveImgProps } from '@/lib/publicMediaDelivery'
+import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
 import ServiceTestimonialsSlider from './ServiceTestimonialsSlider'
 import CompanyStatsView from '../CompanyStatsView'
 import {
@@ -83,7 +85,12 @@ function SectionBackground({ image, className = '' }) {
   if (!image?.src) return null
   return (
     <div className={`sp-section-bg ${className}`} aria-hidden>
-      <img src={image.src} alt="" loading="lazy" className="sp-section-bg-img" />
+      <img
+        {...cmsResponsiveImgProps(image.src, 'banner', getPublicMediaUrl)}
+        alt=""
+        loading="lazy"
+        className="sp-section-bg-img"
+      />
       <div className="sp-section-bg-overlay" />
       <div className="sp-section-bg-grain hero-grain" />
     </div>
@@ -465,7 +472,7 @@ export default function ServicePageLayout({
                   {step.image?.src && (
                     <div className="sp-process-step-media">
                       <img
-                        src={step.image.src}
+                        {...cmsResponsiveImgProps(step.image.src, 'card', getPublicMediaUrl)}
                         alt={step.image.alt || step.title || ''}
                         loading="lazy"
                         decoding="async"

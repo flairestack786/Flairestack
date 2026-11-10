@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { cmsResponsiveImgProps } from '@/lib/publicMediaDelivery'
+import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
 
 const FADE = { duration: 1.35, ease: [0.4, 0, 0.2, 1] }
 
+function heroImgProps(src) {
+  return cmsResponsiveImgProps(src, 'hero', getPublicMediaUrl)
+}
+
 function CarouselSlide({ slide, variant, isFirst }) {
+  const img = heroImgProps(slide.src)
+
   if (variant === 'frame') {
     return (
       <motion.img
         key={slide.src}
-        src={slide.src}
+        {...img}
         alt={slide.alt ?? ''}
         loading={isFirst ? 'eager' : 'lazy'}
         decoding="async"
@@ -24,9 +32,11 @@ function CarouselSlide({ slide, variant, isFirst }) {
   return (
     <motion.img
       key={slide.src}
-      src={slide.src}
+      {...img}
       alt=""
       aria-hidden
+      loading={isFirst ? 'eager' : 'lazy'}
+      decoding="async"
       className="sp-hero-bg-img sp-hero-carousel-img"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -58,9 +68,12 @@ function CarouselDots({ slides, index, onSelect, className = 'sp-hero-carousel-d
 
 function preloadSlide(src) {
   if (!src || typeof src !== 'string') return
+  const optimized = heroImgProps(src)
   const img = new Image()
   img.decoding = 'async'
-  img.src = src
+  if (optimized.srcSet) img.srcset = optimized.srcSet
+  if (optimized.sizes) img.sizes = optimized.sizes
+  img.src = optimized.src || src
 }
 
 /** Shared slideshow state for hero background + frame (stays in sync). */
@@ -69,14 +82,14 @@ export function useHeroSlideshow(images, intervalMs = 5500) {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
 
+  // Warm only the next slide. Depend on the next src string so React rerenders
+  // of the slides array identity do not re-fire preloads.
+  const nextSrc =
+    slides.length > 1 ? slides[(index + 1) % slides.length]?.src : null
   useEffect(() => {
-    slides.forEach((slide) => preloadSlide(slide.src))
-  }, [slides])
-
-  useEffect(() => {
-    if (slides.length < 2) return
-    preloadSlide(slides[(index + 1) % slides.length].src)
-  }, [index, slides])
+    if (!nextSrc) return
+    preloadSlide(nextSrc)
+  }, [nextSrc])
 
   useEffect(() => {
     if (slides.length < 2 || paused) return undefined

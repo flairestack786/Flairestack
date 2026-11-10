@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { aboutFadeUp } from './aboutMotion'
+import CmsOptimizedImage from '@/components/next/public/CmsOptimizedImage'
 
 /**
  * @param {{
@@ -43,14 +44,12 @@ export default function AboutTeam({ team }) {
               whileHover={{ y: -6 }}
             >
               <div className="about-founder-photo-wrap">
-                <img
+                <CmsOptimizedImage
                   src={founder.imageUrl}
                   alt={founder.imageAlt}
                   className="about-founder-photo"
                   style={{ objectPosition: founder.imagePosition }}
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                  fetchPriority={i === 0 ? 'high' : undefined}
+                  preset="portrait"
                 />
                 <div className="about-founder-photo-shine" aria-hidden />
               </div>

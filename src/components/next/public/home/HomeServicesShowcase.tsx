@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import { publicServicePath } from '@/lib/serviceSlug'
 import type { HomeServiceCard } from '@/lib/next/publicHomeServer'
+import CmsOptimizedImage from '@/components/next/public/CmsOptimizedImage'
 
 const easeOut = [0.22, 1, 0.36, 1] as const
 const DESKTOP_FEATURE_MQ = '(min-width: 900px)'
@@ -130,12 +131,11 @@ export default function HomeServicesShowcase({ services, header }: HomeServicesS
                   transition={mediaMotion.transition}
                 >
                   {service.imageUrl ? (
-                    <img
+                    <CmsOptimizedImage
                       src={service.imageUrl}
                       alt={service.imageAlt || service.title}
                       className="svc-feature-img"
-                      loading="lazy"
-                      decoding="async"
+                      preset="card"
                       width={960}
                       height={640}
                     />

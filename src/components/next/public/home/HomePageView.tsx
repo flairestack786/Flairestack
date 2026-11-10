@@ -11,6 +11,7 @@ import HomeHeroSlideshow from '@/components/public/HomeHeroSlideshow'
 import { AnimatedCounter, fadeUp, staggerContainer } from '@/components/service/ServiceMotion'
 import heroJpg from '@/assets/hero-4k.jpg'
 import heroWebp from '@/assets/hero-4k.webp'
+import CmsOptimizedImage from '@/components/next/public/CmsOptimizedImage'
 import HomeInquiryForm from './HomeInquiryForm'
 import HomeProcessSection from './HomeProcessSection'
 import HomeServicesShowcase from './HomeServicesShowcase'
@@ -237,12 +238,11 @@ export default function HomePageView({ home, services, testimonials }: HomePageV
                       <footer className="testimonial-footer">
                         <div className="testimonial-avatar" aria-hidden>
                           {item.photoUrl ? (
-                            <img
+                            <CmsOptimizedImage
                               src={item.photoUrl}
                               alt=""
                               className="testimonial-avatar-img"
-                              loading="lazy"
-                              decoding="async"
+                              preset="avatar"
                             />
                           ) : (
                             item.initials

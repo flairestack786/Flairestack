@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { motion, useInView, useScroll, useTransform } from 'framer-motion'
+import { cmsResponsiveImgProps } from '@/lib/publicMediaDelivery'
+import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
+
+function mediaProps(src, preset) {
+  return cmsResponsiveImgProps(src, preset, getPublicMediaUrl)
+}
 
 export function AnimatedCounter({ value, suffix = '' }) {
   const ref = useRef(null)
@@ -45,7 +51,7 @@ export function ParallaxHeroImage({ src, alt }) {
   return (
     <div ref={ref} className="service-detail-hero-parallax">
       <motion.img
-        src={src}
+        {...mediaProps(src, 'hero')}
         alt={alt}
         style={{ y, scale, opacity }}
         initial={{ scale: 1.2, opacity: 0 }}
@@ -89,7 +95,7 @@ export function CinematicImage({
       whileHover={{ y: -4 }}
     >
       <motion.img
-        src={src}
+        {...mediaProps(src, 'card')}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
@@ -125,7 +131,7 @@ export function RevealImage({ src, alt, variant = 'split' }) {
       transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.img
-        src={src}
+        {...mediaProps(src, 'card')}
         alt={alt}
         loading="lazy"
         className={imgClass}
@@ -157,7 +163,7 @@ export function VisualBanner({ image }) {
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.img
-        src={src}
+        {...mediaProps(src, 'banner')}
         alt={image?.alt ?? ''}
         loading="lazy"
         style={{ y }}

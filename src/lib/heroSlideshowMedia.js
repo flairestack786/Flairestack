@@ -132,27 +132,28 @@ export function videoHasDisplayFrame(video) {
 
 /**
  * Decide preload attribute for a video slide slot.
- * Active: auto. Next (warmup): metadata. Others: none.
+ * Active only: auto. All others: none — attaching a next-slide source caused
+ * browsers to download significant video bytes (Supabase Storage egress).
  *
- * @param {{ isActive: boolean, isNext: boolean }} state
+ * @param {{ isActive: boolean, isNext?: boolean }} state
  * @returns {'auto' | 'metadata' | 'none'}
  */
-export function videoPreloadForSlot({ isActive, isNext }) {
+export function videoPreloadForSlot({ isActive }) {
   if (isActive) return 'auto'
-  if (isNext) return 'metadata'
   return 'none'
 }
 
 /**
  * Whether a hero video slot should attach a network-loading media source.
- * Inactive non-next slides must not have a `<source src>` — many browsers still
- * fetch when a source URL is present even with preload="none".
+ * Only the active slide may attach `<source src>`. Warm the next slide with its
+ * poster/image instead — many browsers fetch large ranges once a source URL exists,
+ * even with preload="metadata" or preload="none".
  *
- * @param {{ isActive: boolean, isNext: boolean }} state
+ * @param {{ isActive: boolean, isNext?: boolean }} state
  * @returns {boolean}
  */
-export function shouldAttachHeroVideoSrc({ isActive, isNext }) {
-  return Boolean(isActive || isNext)
+export function shouldAttachHeroVideoSrc({ isActive }) {
+  return Boolean(isActive)
 }
 
 /**

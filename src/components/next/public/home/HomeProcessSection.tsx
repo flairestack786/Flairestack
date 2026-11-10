@@ -4,6 +4,7 @@ import { motion, useMotionValue, useReducedMotion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { resolveLucideIcon } from '@/lib/lucideIcons'
+import CmsOptimizedImage from '@/components/next/public/CmsOptimizedImage'
 
 const easeOut = [0.22, 1, 0.36, 1] as const
 
@@ -179,14 +180,13 @@ export default function HomeProcessSection({
                       </div>
                       {item.imageUrl ? (
                         <div className="process-story-media">
-                          <img
+                          <CmsOptimizedImage
                             src={item.imageUrl}
                             alt={item.imageAlt || item.title}
                             className="process-story-img"
+                            preset="process"
                             width={1200}
                             height={800}
-                            loading={index === 0 ? 'eager' : 'lazy'}
-                            decoding="async"
                           />
                         </div>
                       ) : (

@@ -4,6 +4,8 @@ import { ArrowUpRight } from 'lucide-react'
 import { PHONE_DISPLAY, PHONE_TEL } from '../../config/contact'
 import { fadeUp, staggerContainer } from './ServiceMotion'
 import { resolveOptionalMedia } from '../../lib/optionalMedia'
+import { cmsResponsiveImgProps } from '@/lib/publicMediaDelivery'
+import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
 
 const itemReveal = {
   hidden: { opacity: 0 },
@@ -50,7 +52,7 @@ function FrameworkVisual({ src, alt }) {
       <div className="sp-fw-visual-shell">
         <figure className="sp-fw-visual-frame">
           <img
-            src={src}
+            {...cmsResponsiveImgProps(src, 'card', getPublicMediaUrl)}
             alt={alt}
             loading="lazy"
             decoding="async"
