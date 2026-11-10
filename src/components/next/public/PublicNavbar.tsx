@@ -10,9 +10,25 @@ import PublicSiteLogo from './PublicSiteLogo'
 import { usePublicNavActive } from './usePublicNavActive'
 import { usePublicHomeNavigation } from './usePublicHomeNavigation'
 
-const navItems = [
-  { id: 'about', label: 'About', type: 'page' as const, href: '/about' },
-  { id: 'blog', label: 'Blog', type: 'page' as const, href: '/blog' },
+type NavPageItem = {
+  id: string
+  label: string
+  type: 'page'
+  href: string
+}
+
+type NavSectionItem = {
+  id: string
+  label: string
+  type: 'section'
+  section: string
+}
+
+type NavItem = NavPageItem | NavSectionItem
+
+const navItems: NavItem[] = [
+  { id: 'about', label: 'About', type: 'page', href: '/about' },
+  { id: 'blog', label: 'Blog', type: 'page', href: '/blog' },
 ]
 
 export default function PublicNavbar() {
