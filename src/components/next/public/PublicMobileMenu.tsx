@@ -261,10 +261,10 @@ export default function PublicMobileMenu({
                 <motion.li className="mmenu-item" {...itemMotion(4)}>
                   <a
                     href="/#contact"
-                    className={`mmenu-row ${isNavItemActive('contact') ? 'mmenu-row--active' : ''}`}
+                    className="mmenu-row"
                     onClick={(e) => handleSectionClick(e, 'contact')}
                   >
-                    <span className="mmenu-row-label">Contact</span>
+                    <span className="mmenu-row-label">Contact Us</span>
                   </a>
                 </motion.li>
               </ul>

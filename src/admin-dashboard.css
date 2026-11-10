@@ -2872,6 +2872,19 @@ html {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.admin-settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Stacked editors (Blogs / Careers) are not wrapped in a panel — card each section. */
+.admin-settings-stack > .admin-settings-section {
+  border-radius: 14px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .admin-settings-section {
   padding: 1.5rem;
 }
@@ -3959,10 +3972,10 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
 }
 
 .admin-rte {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--admin-border);
   border-radius: 14px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--admin-input-bg);
 }
 
 .admin-rte.is-disabled {
@@ -3975,7 +3988,8 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
   flex-wrap: wrap;
   gap: 0.35rem;
   padding: 0.55rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .admin-rte-btn {
@@ -3987,21 +4001,21 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
   border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--admin-text-muted);
   cursor: pointer;
 }
 
 .admin-rte-btn:hover,
 .admin-rte-btn.is-active {
   border-color: rgba(255, 122, 0, 0.35);
-  color: #fff;
+  color: var(--admin-text);
   background: rgba(255, 122, 0, 0.12);
 }
 
 .admin-rte-sep {
   width: 1px;
   margin: 0 0.2rem;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--admin-border);
 }
 
 .admin-rte-body {
@@ -4011,7 +4025,7 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
 .admin-rte-content {
   outline: none;
   min-height: 160px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--admin-text);
   line-height: 1.6;
 }
 
@@ -4024,7 +4038,7 @@ html[data-admin-theme='light'] .admin-leads-export-dialog .admin-confirm-dialog-
 .admin-rte-content h2,
 .admin-rte-content h3 {
   margin: 0 0 0.65rem;
-  color: #fff;
+  color: var(--admin-text);
 }
 
 .admin-services-table-actions {
@@ -6933,9 +6947,9 @@ html[data-admin-theme='light'] .admin-users-modal .admin-select-trigger {
 */
 .admin-shell[data-theme='light'],
 html[data-admin-theme='light'] {
-  --admin-bg: #f3f4f6;
+  --admin-bg: #eef0f3;
   --admin-surface: #ffffff;
-  --admin-border: rgba(15, 18, 28, 0.1);
+  --admin-border: rgba(15, 18, 28, 0.16);
   --admin-text: #171717;
   --admin-text-muted: rgba(23, 23, 23, 0.58);
   --admin-text-faint: rgba(23, 23, 23, 0.42);
@@ -6955,9 +6969,10 @@ html[data-admin-theme='light'] {
 }
 
 .admin-shell[data-theme='light'] .admin-sidebar {
-  background: #f6f6f7;
-  border-right-color: rgba(0, 0, 0, 0.08);
+  background: #f7f8fa;
+  border-right: 1px solid rgba(15, 18, 28, 0.14);
   color: #171717;
+  box-shadow: 1px 0 0 rgba(15, 18, 28, 0.03);
 }
 
 .admin-shell[data-theme='light'] .admin-sidebar-section-label,
@@ -6980,14 +6995,15 @@ html[data-admin-theme='light'] {
 
 .admin-shell[data-theme='light'] .admin-main,
 .admin-shell[data-theme='light'] .admin-content {
-  background: #f3f4f6;
+  background: var(--admin-bg);
   color: #171717;
 }
 
 .admin-shell[data-theme='light'] .admin-topnav {
-  background: rgba(255, 255, 255, 0.94);
-  border-bottom-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid rgba(15, 18, 28, 0.14);
   color: #171717;
+  box-shadow: 0 1px 0 rgba(15, 18, 28, 0.03);
 }
 
 .admin-shell[data-theme='light'] .admin-main :where(
@@ -7022,7 +7038,7 @@ html[data-admin-theme='light'] :is(
   .admin-dashboard-stats-card,
   .admin-leads-summary-card,
   .admin-settings-panel,
-  .admin-settings-section,
+  .admin-settings-stack > .admin-settings-section,
   .admin-settings-tabs-list,
   .admin-media-grid-card,
   .admin-profile-menu-dropdown,
@@ -7030,7 +7046,10 @@ html[data-admin-theme='light'] :is(
   .admin-dashboard-quick-card,
   .admin-forbidden-card,
   .hero-slides-list-panel,
-  .hero-slides-editor-panel
+  .hero-slides-editor-panel,
+  .admin-rte,
+  .admin-services-action-btn,
+  .admin-theme-toggle
 ),
 html[data-admin-theme='light'] :is(
   .admin-select-menu,
@@ -7041,8 +7060,43 @@ html[data-admin-theme='light'] :is(
   .admin-rename-modal-panel
 ) {
   background: var(--admin-surface);
-  border-color: var(--admin-border);
+  border: 1px solid var(--admin-border);
   color: var(--admin-text);
+  box-shadow: 0 1px 2px rgba(15, 18, 28, 0.04);
+}
+
+.admin-shell[data-theme='light'] .admin-settings-panel .admin-settings-section {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.admin-shell[data-theme='light'] .admin-settings-section-header {
+  border-bottom-color: rgba(15, 18, 28, 0.12);
+}
+
+.admin-shell[data-theme='light'] .admin-rte-toolbar {
+  background: #f7f8fa;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-shell[data-theme='light'] .admin-rte-btn {
+  color: rgba(23, 23, 23, 0.68);
+}
+
+.admin-shell[data-theme='light'] .admin-rte-btn:hover,
+.admin-shell[data-theme='light'] .admin-rte-btn.is-active {
+  color: #171717;
+  background: rgba(255, 122, 0, 0.12);
+  border-color: rgba(255, 122, 0, 0.35);
+}
+
+.admin-shell[data-theme='light'] .admin-settings-input,
+.admin-shell[data-theme='light'] .admin-settings-textarea,
+.admin-shell[data-theme='light'] .admin-select-trigger {
+  border: 1px solid rgba(15, 18, 28, 0.16);
+  background: #fff;
+  box-shadow: inset 0 1px 1px rgba(15, 18, 28, 0.03);
 }
 
 .admin-shell[data-theme='light'] .admin-rename-modal-input,
@@ -7123,13 +7177,13 @@ html[data-admin-theme='light'] .admin-settings-input::placeholder {
 }
 
 html[data-admin-theme='light'] {
-  background: #f3f4f6;
+  background: #eef0f3;
   color-scheme: light;
   scrollbar-color: #ff7a00 #e6e7ea;
 }
 
 html[data-admin-theme='light'] body {
-  background: #f3f4f6;
+  background: #eef0f3;
 }
 
 /* Window scrollbar sits outside the shell, so style it for the active theme directly. */

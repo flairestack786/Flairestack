@@ -13,7 +13,6 @@ import { usePublicHomeNavigation } from './usePublicHomeNavigation'
 const navItems = [
   { id: 'about', label: 'About', type: 'page' as const, href: '/about' },
   { id: 'blog', label: 'Blog', type: 'page' as const, href: '/blog' },
-  { id: 'contact', label: 'Contact', type: 'section' as const, section: 'contact' },
 ]
 
 export default function PublicNavbar() {
@@ -73,7 +72,7 @@ export default function PublicNavbar() {
             className="nav-cta hidden lg:inline-flex"
             onClick={(e) => scrollToHomeSection('contact', e)}
           >
-            Get Started
+            Contact Us
             <span className="cta-arrow" aria-hidden>
               →
             </span>
