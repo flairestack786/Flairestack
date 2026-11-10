@@ -21,12 +21,14 @@ test('sitemap origin is non-www production canonical', () => {
   )
 })
 
-test('static public routes include home, about, and services listing', () => {
+test('static public routes include home, about, services, blog, and careers', () => {
   const paths = SITEMAP_STATIC_ROUTES.map((route) => route.path)
-  assert.deepEqual(paths, ['/', '/about', '/services'])
+  assert.deepEqual(paths, ['/', '/about', '/services', '/blog', '/careers'])
   assert.equal(SITEMAP_STATIC_ROUTES[0].priority, 1)
   assert.ok(INDEXABLE_CMS_PAGE_PATHS.has('/'))
   assert.ok(INDEXABLE_CMS_PAGE_PATHS.has('/about'))
+  assert.ok(INDEXABLE_CMS_PAGE_PATHS.has('/blog'))
+  assert.ok(INDEXABLE_CMS_PAGE_PATHS.has('/careers'))
 })
 
 test('buildPublicSitemapEntries merges CMS lastModified and published services', () => {
@@ -67,6 +69,24 @@ test('buildPublicSitemapEntries merges CMS lastModified and published services',
         robots: 'noindex,nofollow',
       },
     ],
+    blogPosts: [
+      {
+        slug: 'shipping-faster',
+        updated_at: '2026-03-20T10:00:00.000Z',
+        robots: 'index,follow',
+      },
+      {
+        slug: 'draft-like',
+        robots: 'noindex,nofollow',
+      },
+    ],
+    jobPostings: [
+      {
+        slug: 'senior-engineer',
+        published_at: '2026-03-18T10:00:00.000Z',
+        robots: 'index,follow',
+      },
+    ],
   })
 
   const urls = entries.map((entry) => entry.url)
@@ -74,6 +94,10 @@ test('buildPublicSitemapEntries merges CMS lastModified and published services',
     'https://flairestack.com/',
     'https://flairestack.com/about',
     'https://flairestack.com/services',
+    'https://flairestack.com/blog',
+    'https://flairestack.com/careers',
+    'https://flairestack.com/blog/shipping-faster',
+    'https://flairestack.com/careers/senior-engineer',
     'https://flairestack.com/services/ai-development',
     'https://flairestack.com/services/web-development',
   ])

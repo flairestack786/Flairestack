@@ -4,6 +4,8 @@ import {
   Layers,
   Info,
   MessageSquareQuote,
+  Newspaper,
+  Briefcase,
   Image,
   Inbox,
   Search,
@@ -22,6 +24,8 @@ export const adminNavItems = [
   { id: 'services', module: 'services', label: 'Services', path: '/admin/services', icon: Layers },
   { id: 'about', module: 'about', label: 'About', path: '/admin/about', icon: Info },
   { id: 'testimonials', module: 'testimonials', label: 'Testimonials', path: '/admin/testimonials', icon: MessageSquareQuote },
+  { id: 'blogs', module: 'blogs', label: 'Blogs', path: '/admin/blogs', icon: Newspaper },
+  { id: 'careers', module: 'careers', label: 'Careers', path: '/admin/careers', icon: Briefcase },
   { id: 'media', module: 'media', label: 'Media Library', path: '/admin/media', icon: Image },
   { id: 'leads', module: 'leads', label: 'Leads', path: '/admin/leads', icon: Inbox },
   { id: 'users', module: 'users', label: 'Users', path: '/admin/users', icon: Users },
@@ -44,6 +48,7 @@ export const adminNavSections = [
       adminNavItems.find((item) => item.id === 'services'),
       adminNavItems.find((item) => item.id === 'about'),
       adminNavItems.find((item) => item.id === 'testimonials'),
+      adminNavItems.find((item) => item.id === 'blogs'),
       adminNavItems.find((item) => item.id === 'media'),
       adminNavItems.find((item) => item.id === 'seo'),
     ].filter(Boolean),
@@ -51,7 +56,10 @@ export const adminNavSections = [
   {
     id: 'business',
     label: 'Business',
-    items: [adminNavItems.find((item) => item.id === 'leads')].filter(Boolean),
+    items: [
+      adminNavItems.find((item) => item.id === 'leads'),
+      adminNavItems.find((item) => item.id === 'careers'),
+    ].filter(Boolean),
   },
   {
     id: 'system',

@@ -19,6 +19,16 @@ export function usePublicNavActive() {
       return
     }
 
+    if (pathname === '/blog' || pathname.startsWith('/blog/')) {
+      setActiveId('blog')
+      return
+    }
+
+    if (pathname === '/careers' || pathname.startsWith('/careers/')) {
+      setActiveId('careers')
+      return
+    }
+
     if (pathname !== '/') {
       setActiveId(null)
       return
@@ -54,6 +64,8 @@ export function usePublicNavActive() {
   const isNavItemActive = (id: string) => {
     if (id === 'home') return pathname === '/' && activeId === null
     if (id === 'about') return pathname === '/about'
+    if (id === 'blog') return pathname === '/blog' || pathname.startsWith('/blog/')
+    if (id === 'careers') return pathname === '/careers' || pathname.startsWith('/careers/')
     if (id === 'services') {
       return activeId === 'services' || pathname.startsWith('/services/')
     }

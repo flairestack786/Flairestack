@@ -1,0 +1,488 @@
+/* Blog + Careers public surfaces — extends FlaireStack theme tokens */
+
+.blog-page,
+.careers-page,
+.blog-article,
+.career-detail {
+  width: min(1120px, calc(100% - 2.5rem));
+  margin: 0 auto;
+  padding: 7.5rem 0 5rem;
+}
+
+.blog-eyebrow,
+.careers-eyebrow {
+  margin: 0 0 0.85rem;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.blog-hero-title,
+.careers-hero-title,
+.blog-article-title,
+.career-detail-title {
+  margin: 0;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #fff;
+  line-height: 1.08;
+}
+
+.blog-hero-title,
+.careers-hero-title {
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  max-width: 14ch;
+}
+
+.blog-hero-lead,
+.careers-hero-lead,
+.blog-article-excerpt,
+.career-detail-lead {
+  margin: 1rem 0 0;
+  max-width: 42rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.blog-featured {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 2rem;
+  margin-top: 3.5rem;
+  align-items: stretch;
+}
+
+.blog-featured-media,
+.blog-card-media,
+.blog-article-hero-media {
+  overflow: hidden;
+  border-radius: 24px;
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.blog-featured-img,
+.blog-card-img,
+.blog-article-hero-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  min-height: 280px;
+}
+
+.blog-featured-fallback,
+.blog-card-media-fallback {
+  min-height: 240px;
+  background:
+    linear-gradient(145deg, rgba(255, 122, 0, 0.18), transparent 45%),
+    linear-gradient(225deg, rgba(30, 40, 70, 0.45), #121212 70%);
+}
+
+.blog-featured-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.85rem;
+}
+
+.blog-featured-title,
+.blog-card-title {
+  margin: 0;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.blog-featured-title {
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  line-height: 1.15;
+}
+
+.blog-featured-title a,
+.blog-card-title a,
+.blog-related-card h3 a,
+.careers-job-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.blog-featured-title a:hover,
+.blog-card-title a:hover,
+.blog-related-card h3 a:hover,
+.careers-job-title a:hover {
+  color: var(--accent);
+}
+
+.blog-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.875rem;
+}
+
+.blog-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 122, 0, 0.35);
+  background: rgba(255, 122, 0, 0.1);
+  color: #ffb366;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.blog-featured-cta,
+.blog-load-more-btn,
+.careers-job-cta,
+.careers-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #0a0a0a;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.blog-featured-cta:hover,
+.blog-load-more-btn:hover,
+.careers-job-cta:hover,
+.careers-empty-cta:hover {
+  background: #ff8514;
+  transform: translateY(-1px);
+}
+
+.blog-grid-section {
+  margin-top: 4rem;
+}
+
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.blog-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.blog-card:hover {
+  border-color: rgba(255, 122, 0, 0.35);
+  transform: translateY(-3px);
+}
+
+.blog-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.25rem 1.25rem 1.4rem;
+}
+
+.blog-card-title {
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.blog-card-excerpt,
+.blog-featured-excerpt,
+.blog-card-author,
+.blog-article-author {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.6;
+}
+
+.blog-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.blog-empty,
+.careers-empty {
+  margin-top: 3rem;
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.blog-empty h2,
+.careers-empty h3 {
+  margin: 0 0 0.75rem;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  color: #fff;
+}
+
+.blog-empty p,
+.careers-empty p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.65;
+}
+
+.blog-article-header,
+.career-detail-header {
+  max-width: 46rem;
+}
+
+.blog-back-link {
+  display: inline-flex;
+  margin-bottom: 1.25rem;
+  color: rgba(255, 255, 255, 0.62);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.blog-back-link:hover {
+  color: var(--accent);
+}
+
+.blog-article-title,
+.career-detail-title {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  margin-top: 0.75rem;
+}
+
+.blog-article-hero-media {
+  margin: 2rem 0 2.5rem;
+}
+
+.blog-article-hero-img {
+  max-height: 520px;
+}
+
+.blog-article-prose {
+  max-width: 46rem;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.blog-article-prose h2,
+.blog-article-prose h3 {
+  margin: 2rem 0 0.75rem;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.blog-article-prose p,
+.blog-article-prose ul,
+.blog-article-prose ol,
+.blog-article-prose blockquote {
+  margin: 0 0 1.15rem;
+}
+
+.blog-article-prose a {
+  color: var(--accent);
+}
+
+.blog-article-prose blockquote {
+  padding-left: 1rem;
+  border-left: 3px solid var(--accent);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.blog-article-share,
+.blog-related,
+.career-detail-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.blog-article-share p,
+.blog-related h2,
+.career-detail-section h2,
+.careers-section-copy h2 {
+  margin: 0 0 1rem;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  color: #fff;
+}
+
+.blog-article-share-actions,
+.blog-related-grid,
+.careers-culture-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.blog-share-btn {
+  display: inline-flex;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+}
+
+.blog-share-btn:hover {
+  border-color: rgba(255, 122, 0, 0.45);
+  color: #fff;
+}
+
+.blog-related-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.blog-related-card {
+  padding: 1.2rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.blog-related-card h3 {
+  margin: 0 0 0.55rem;
+  font-size: 1.05rem;
+  color: #fff;
+}
+
+.blog-related-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.55;
+}
+
+.careers-section-copy {
+  margin: 3.5rem 0 1.5rem;
+  max-width: 40rem;
+}
+
+.careers-section-copy p {
+  margin: 0.75rem 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.65;
+}
+
+.careers-culture-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.careers-culture-card,
+.careers-job-card {
+  padding: 1.4rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.careers-culture-card h3 {
+  margin: 0 0 0.65rem;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  color: #fff;
+}
+
+.careers-culture-card p,
+.careers-job-desc,
+.career-detail-instructions {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.6;
+}
+
+.careers-job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.careers-job-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: center;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.careers-job-card:hover {
+  border-color: rgba(255, 122, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+.careers-job-department {
+  margin: 0 0 0.35rem;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.careers-job-title {
+  margin: 0;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.35rem;
+  color: #fff;
+}
+
+.careers-job-meta,
+.career-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  margin: 0.65rem 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+}
+
+.careers-job-desc {
+  margin-top: 0.75rem;
+}
+
+.career-detail-apply {
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 960px) {
+  .blog-featured,
+  .blog-grid,
+  .blog-related-grid,
+  .careers-culture-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .careers-job-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .blog-page,
+  .careers-page,
+  .blog-article,
+  .career-detail {
+    width: min(100% - 1.5rem, 1120px);
+    padding-top: 6.5rem;
+  }
+}

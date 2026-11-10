@@ -3,6 +3,7 @@
  * Keeps URL assembly testable without Next.js or Supabase.
  */
 
+import { canonicalizeContentSlug, publicBlogPath, publicCareerPath } from './contentSlug.js'
 import { canonicalizeServiceSlug, publicServicePath } from './serviceSlug.js'
 
 /** Canonical production origin for sitemap / robots (never www). */
@@ -16,10 +17,14 @@ export const SITEMAP_STATIC_ROUTES = Object.freeze([
   Object.freeze({ path: '/', changeFrequency: 'weekly', priority: 1 }),
   Object.freeze({ path: '/about', changeFrequency: 'monthly', priority: 0.8 }),
   Object.freeze({ path: '/services', changeFrequency: 'weekly', priority: 0.9 }),
+  Object.freeze({ path: '/blog', changeFrequency: 'weekly', priority: 0.8 }),
+  Object.freeze({ path: '/careers', changeFrequency: 'weekly', priority: 0.7 }),
 ])
 
 /** CMS page route_paths that map to real Next.js public pages. */
-export const INDEXABLE_CMS_PAGE_PATHS = Object.freeze(new Set(['/', '/about']))
+export const INDEXABLE_CMS_PAGE_PATHS = Object.freeze(
+  new Set(['/', '/about', '/blog', '/careers'])
+)
 
 /**
  * Absolute sitemap URL. Home keeps a trailing slash; other paths do not.
@@ -104,6 +109,18 @@ export function resolveSitemapLastModified(row) {
  *     published_at?: unknown,
  *     robots?: unknown,
  *   }>,
+ *   blogPosts?: Array<{
+ *     slug?: unknown,
+ *     updated_at?: unknown,
+ *     published_at?: unknown,
+ *     robots?: unknown,
+ *   }>,
+ *   jobPostings?: Array<{
+ *     slug?: unknown,
+ *     updated_at?: unknown,
+ *     published_at?: unknown,
+ *     robots?: unknown,
+ *   }>,
  * }} [input]
  * @returns {Array<{
  *   url: string,
@@ -159,12 +176,40 @@ export function buildPublicSitemapEntries(input = {}) {
     })
   }
 
+  for (const post of input.blogPosts ?? []) {
+    if (!isRobotsIndexable(post?.robots)) continue
+    const slug = canonicalizeContentSlug(post?.slug)
+    const path = publicBlogPath(slug)
+    if (!path) continue
+    const lastModified = resolveSitemapLastModified(post)
+    byPath.set(path, {
+      url: buildSitemapAbsoluteUrl(origin, path),
+      changeFrequency: 'weekly',
+      priority: 0.65,
+      ...(lastModified ? { lastModified } : {}),
+    })
+  }
+
+  for (const job of input.jobPostings ?? []) {
+    if (!isRobotsIndexable(job?.robots)) continue
+    const slug = canonicalizeContentSlug(job?.slug)
+    const path = publicCareerPath(slug)
+    if (!path) continue
+    const lastModified = resolveSitemapLastModified(job)
+    byPath.set(path, {
+      url: buildSitemapAbsoluteUrl(origin, path),
+      changeFrequency: 'weekly',
+      priority: 0.6,
+      ...(lastModified ? { lastModified } : {}),
+    })
+  }
+
   const staticPaths = SITEMAP_STATIC_ROUTES.map((route) => route.path)
   const staticEntries = staticPaths.map((path) => byPath.get(path)).filter(Boolean)
-  const serviceEntries = [...byPath.entries()]
+  const dynamicEntries = [...byPath.entries()]
     .filter(([path]) => !staticPaths.includes(path))
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([, entry]) => entry)
 
-  return [...staticEntries, ...serviceEntries]
+  return [...staticEntries, ...dynamicEntries]
 }

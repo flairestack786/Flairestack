@@ -30,6 +30,8 @@ const navLinks = [
   { label: 'Home', type: 'home' as const },
   { label: 'About', type: 'page' as const, href: '/about' },
   { label: 'Services', type: 'section' as const, section: 'services' },
+  { label: 'Blog', type: 'page' as const, href: '/blog' },
+  { label: 'Careers', type: 'page' as const, href: '/careers' },
   { label: 'Contact', type: 'section' as const, section: 'contact' },
 ]
 

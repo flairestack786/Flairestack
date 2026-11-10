@@ -1,5 +1,5 @@
 /** @typedef {'administrator' | 'editor' | 'sales'} CmsRole */
-/** @typedef {'dashboard' | 'home' | 'about' | 'services' | 'testimonials' | 'media' | 'leads' | 'users' | 'seo' | 'settings'} CmsModuleId */
+/** @typedef {'dashboard' | 'home' | 'about' | 'services' | 'testimonials' | 'blogs' | 'careers' | 'media' | 'leads' | 'users' | 'seo' | 'settings'} CmsModuleId */
 
 /** @type {readonly CmsModuleId[]} */
 export const CMS_MODULE_IDS = Object.freeze([
@@ -8,6 +8,8 @@ export const CMS_MODULE_IDS = Object.freeze([
   'about',
   'services',
   'testimonials',
+  'blogs',
+  'careers',
   'media',
   'leads',
   'users',
@@ -27,6 +29,8 @@ export const CMS_ROLE_MODULES = Object.freeze({
     'about',
     'services',
     'testimonials',
+    'blogs',
+    'careers',
     'media',
     'leads',
     'users',
@@ -39,6 +43,7 @@ export const CMS_ROLE_MODULES = Object.freeze({
     'about',
     'services',
     'testimonials',
+    'blogs',
     'media',
     'seo',
   ]),
@@ -87,6 +92,7 @@ export function canManageContent(role) {
     canAccessModule(role, 'about') ||
     canAccessModule(role, 'services') ||
     canAccessModule(role, 'testimonials') ||
+    canAccessModule(role, 'blogs') ||
     canAccessModule(role, 'media') ||
     canAccessModule(role, 'seo')
   )
@@ -139,6 +145,8 @@ export const CMS_MODULE_ROUTES = Object.freeze({
   about: { path: '/admin/about', navId: 'about' },
   services: { path: '/admin/services', navId: 'services' },
   testimonials: { path: '/admin/testimonials', navId: 'testimonials' },
+  blogs: { path: '/admin/blogs', navId: 'blogs' },
+  careers: { path: '/admin/careers', navId: 'careers' },
   media: { path: '/admin/media', navId: 'media' },
   leads: { path: '/admin/leads', navId: 'leads' },
   users: { path: '/admin/users', navId: 'users' },

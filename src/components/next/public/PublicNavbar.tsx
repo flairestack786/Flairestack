@@ -12,6 +12,7 @@ import { usePublicHomeNavigation } from './usePublicHomeNavigation'
 
 const navItems = [
   { id: 'about', label: 'About', type: 'page' as const, href: '/about' },
+  { id: 'blog', label: 'Blog', type: 'page' as const, href: '/blog' },
   { id: 'contact', label: 'Contact', type: 'section' as const, section: 'contact' },
 ]
 

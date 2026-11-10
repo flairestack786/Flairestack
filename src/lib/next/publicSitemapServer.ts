@@ -5,6 +5,7 @@ import {
   normalizeSitemapPath,
   SITEMAP_SITE_ORIGIN,
 } from '@/lib/publicSitemap'
+import { canonicalizeContentSlug } from '@/lib/contentSlug'
 import { canonicalizeServiceSlug } from '@/lib/serviceSlug'
 
 type CmsPageRow = {
@@ -41,7 +42,7 @@ function throwQueryError(label: string, error: { message?: string } | null): nev
 export async function fetchPublicSitemapSource() {
   const supabase = getSupabasePublicServer()
 
-  const [pagesResult, servicesResult, seoResult] = await Promise.all([
+  const [pagesResult, servicesResult, blogResult, jobsResult, seoResult] = await Promise.all([
     supabase
       .from('pages')
       .select('id, slug, route_path, updated_at, published_at')
@@ -51,6 +52,14 @@ export async function fetchPublicSitemapSource() {
       .select('id, slug, updated_at, published_at')
       .eq('status', 'published')
       .order('sort_order', { ascending: true }),
+    supabase
+      .from('blog_posts')
+      .select('id, slug, updated_at, published_at')
+      .eq('status', 'published'),
+    supabase
+      .from('job_postings')
+      .select('id, slug, updated_at, published_at, closing_date')
+      .eq('status', 'published'),
     supabase.from('seo_metadata').select('page_id, service_id, robots, entity_type'),
   ])
 
@@ -58,8 +67,39 @@ export async function fetchPublicSitemapSource() {
   if (servicesResult.error) throwQueryError('services', servicesResult.error)
   if (seoResult.error) throwQueryError('seo_metadata', seoResult.error)
 
+  const blogMissing =
+    blogResult.error &&
+    (blogResult.error.code === 'PGRST205' ||
+      blogResult.error.code === '42P01' ||
+      /could not find the table|relation .* does not exist/i.test(
+        String(blogResult.error.message ?? '')
+      ))
+  const jobsMissing =
+    jobsResult.error &&
+    (jobsResult.error.code === 'PGRST205' ||
+      jobsResult.error.code === '42P01' ||
+      /could not find the table|relation .* does not exist/i.test(
+        String(jobsResult.error.message ?? '')
+      ))
+
+  if (blogResult.error && !blogMissing) throwQueryError('blog_posts', blogResult.error)
+  if (jobsResult.error && !jobsMissing) throwQueryError('job_postings', jobsResult.error)
+
   const pages = (pagesResult.data ?? []) as CmsPageRow[]
   const services = (servicesResult.data ?? []) as ServiceRow[]
+  const blogRows = (blogMissing ? [] : blogResult.data ?? []) as Array<{
+    id: string
+    slug: string
+    updated_at: string | null
+    published_at: string | null
+  }>
+  const jobRows = (jobsMissing ? [] : jobsResult.data ?? []) as Array<{
+    id: string
+    slug: string
+    updated_at: string | null
+    published_at: string | null
+    closing_date: string | null
+  }>
   const seoRows = (seoResult.data ?? []) as SeoRow[]
 
   const robotsByPageId = new Map<string, string>()
@@ -97,9 +137,39 @@ export async function fetchPublicSitemapSource() {
     })
     .filter((row): row is NonNullable<typeof row> => Boolean(row))
 
+  const blogPosts = blogRows
+    .map((post) => {
+      const slug = canonicalizeContentSlug(post.slug)
+      if (!slug) return null
+      return {
+        slug,
+        updated_at: post.updated_at,
+        published_at: post.published_at,
+        robots: 'index,follow',
+      }
+    })
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
+
+  const today = new Date().toISOString().slice(0, 10)
+  const jobPostings = jobRows
+    .map((job) => {
+      const slug = canonicalizeContentSlug(job.slug)
+      if (!slug) return null
+      if (job.closing_date && String(job.closing_date) < today) return null
+      return {
+        slug,
+        updated_at: job.updated_at,
+        published_at: job.published_at,
+        robots: 'index,follow',
+      }
+    })
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
+
   return {
     cmsPages,
     services: serviceEntries,
+    blogPosts,
+    jobPostings,
   }
 }
 
@@ -113,5 +183,7 @@ export async function getPublicSitemapEntries() {
     origin: SITEMAP_SITE_ORIGIN,
     cmsPages: source.cmsPages,
     services: source.services,
+    blogPosts: source.blogPosts,
+    jobPostings: source.jobPostings,
   })
 }
