@@ -29,20 +29,28 @@ export default function BlogArticleView({
   related: PublicBlogCard[]
 }) {
   const path = publicBlogPath(article.slug)
+  const publishedLabel = formatDate(article.publishedAt)
 
   return (
     <article className="blog-article">
+      <div className="blog-article-glow" aria-hidden />
+
       <header className="blog-article-header">
         <Link href="/blog" className="blog-back-link">
           ← Back to Blog
         </Link>
-        <div className="blog-card-meta">
+
+        <div className="blog-article-meta">
           {article.category ? <span className="blog-chip">{article.category}</span> : null}
-          <span>{formatDate(article.publishedAt)}</span>
-          <span>{article.readingTimeMinutes} min read</span>
+          {publishedLabel ? <span className="blog-article-meta-item">{publishedLabel}</span> : null}
+          <span className="blog-article-meta-item">{article.readingTimeMinutes} min read</span>
         </div>
+
         <h1 className="blog-article-title">{article.title}</h1>
-        {article.excerpt ? <p className="blog-article-excerpt">{article.excerpt}</p> : null}
+
+        {article.excerpt ? (
+          <p className="blog-article-excerpt">{article.excerpt}</p>
+        ) : null}
       </header>
 
       {article.featuredImageUrl ? (
@@ -54,50 +62,62 @@ export default function BlogArticleView({
             preset="banner"
             priority
           />
+          <div className="blog-article-hero-fade" aria-hidden />
         </div>
       ) : null}
 
-      <div
-        className="blog-article-prose"
-        dangerouslySetInnerHTML={{ __html: article.bodyHtml }}
-      />
+      <div className="blog-article-body">
+        <div
+          className="blog-article-prose"
+          dangerouslySetInnerHTML={{ __html: article.bodyHtml }}
+        />
 
-      {article.authorName ? (
-        <p className="blog-article-author">By {article.authorName}</p>
-      ) : null}
+        {article.authorName ? (
+          <footer className="blog-article-byline">
+            <span className="blog-article-byline-label">Written by</span>
+            <p className="blog-article-author">{article.authorName}</p>
+          </footer>
+        ) : null}
 
-      <div className="blog-article-share">
-        <p>Share</p>
-        <div className="blog-article-share-actions">
-          <a
-            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl(path))}`}
-            target="_blank"
-            rel="noreferrer"
-            className="blog-share-btn"
-          >
-            LinkedIn
-          </a>
-          <a
-            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl(path))}&text=${encodeURIComponent(article.title)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="blog-share-btn"
-          >
-            X
-          </a>
+        <div className="blog-article-share">
+          <p className="blog-article-share-label">Share this article</p>
+          <div className="blog-article-share-actions">
+            <a
+              href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl(path))}`}
+              target="_blank"
+              rel="noreferrer"
+              className="blog-share-btn"
+            >
+              LinkedIn
+            </a>
+            <a
+              href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl(path))}&text=${encodeURIComponent(article.title)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="blog-share-btn"
+            >
+              X
+            </a>
+          </div>
         </div>
       </div>
 
       {related.length > 0 ? (
         <section className="blog-related" aria-labelledby="blog-related-heading">
-          <h2 id="blog-related-heading">Related articles</h2>
+          <div className="blog-related-heading-row">
+            <p className="blog-eyebrow">Keep reading</p>
+            <h2 id="blog-related-heading">Related articles</h2>
+          </div>
           <div className="blog-related-grid">
             {related.map((post) => (
               <article key={post.id} className="blog-related-card">
                 <h3>
                   <Link href={publicBlogPath(post.slug)}>{post.title}</Link>
                 </h3>
-                <p>{post.excerpt}</p>
+                {post.excerpt ? <p>{post.excerpt}</p> : null}
+                <Link href={publicBlogPath(post.slug)} className="blog-related-link">
+                  Read article →
+                </Link>
               </article>
             ))}
           </div>
