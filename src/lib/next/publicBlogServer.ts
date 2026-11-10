@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { isPubliclyVisibleBlogPost } from '@/lib/blogPublicVisibility'
 import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
 import { getSupabasePublicServer } from '@/lib/next/supabasePublicServer'
 import { sanitizeCmsHtml } from '@/lib/sanitizeCmsHtml'
@@ -60,16 +61,33 @@ export const listPublishedBlogPosts = cache(async function listPublishedBlogPost
   const { data, error } = await supabase
     .from('blog_posts')
     .select(
-      'id, title, slug, excerpt, author_name, category, tags, reading_time_minutes, published_at, is_featured, featured_image_path'
+      'id, title, slug, excerpt, author_name, category, tags, reading_time_minutes, published_at, is_featured, featured_image_path, status'
     )
     .eq('status', 'published')
     .order('published_at', { ascending: false })
 
   if (error) {
+    // #region agent log
+    const __dbgErr = {sessionId:'e489f1',runId:'post-fix',hypothesisId:'B',location:'publicBlogServer.ts:listPublishedBlogPosts:error',message:'Public blog list query error',data:{errorCode:error?.code??null,errorMessage:error?.message??null,missingRelation:isMissingRelationError(error)},timestamp:Date.now()}
+    fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify(__dbgErr)}).catch(()=>{});
+    try { const { appendFileSync } = await import('fs'); appendFileSync('c:\\\\Users\\\\m_sal\\\\FlaireStack\\\\.cursor\\\\debug-e489f1.log', JSON.stringify(__dbgErr) + '\n') } catch {}
+    // #endregion
     if (isMissingRelationError(error)) return []
     throw error
   }
-  return (data ?? []).map((row) => mapCard(row as Record<string, unknown>))
+
+  const now = new Date()
+  const visible = (data ?? []).filter((row) =>
+    isPubliclyVisibleBlogPost(row as Record<string, unknown>, now)
+  )
+
+  // #region agent log
+  const __dbgOk = {sessionId:'e489f1',runId:'post-fix',hypothesisId:'B',location:'publicBlogServer.ts:listPublishedBlogPosts',message:'Public blog list query result',data:{queriedCount:(data??[]).length,visibleCount:visible.length,errorCode:null,sample:visible.slice(0,3).map((row)=>({id:(row as{id?:unknown}).id,slug:(row as{slug?:unknown}).slug,status:(row as{status?:unknown}).status,published_at:(row as{published_at?:unknown}).published_at}))},timestamp:Date.now()}
+  fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify(__dbgOk)}).catch(()=>{});
+  try { const { appendFileSync } = await import('fs'); appendFileSync('c:\\\\Users\\\\m_sal\\\\FlaireStack\\\\.cursor\\\\debug-e489f1.log', JSON.stringify(__dbgOk) + '\n') } catch {}
+  // #endregion
+
+  return visible.map((row) => mapCard(row as Record<string, unknown>))
 })
 
 export const getPublishedBlogPostBySlug = cache(async function getPublishedBlogPostBySlug(
@@ -91,6 +109,7 @@ export const getPublishedBlogPostBySlug = cache(async function getPublishedBlogP
     throw error
   }
   if (!data) return null
+  if (!isPubliclyVisibleBlogPost(data as Record<string, unknown>)) return null
 
   const card = mapCard(data as Record<string, unknown>)
   const ogPath = typeof data.og_image_path === 'string' ? data.og_image_path : ''

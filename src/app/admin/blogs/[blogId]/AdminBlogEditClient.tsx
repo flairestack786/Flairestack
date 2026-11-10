@@ -170,24 +170,30 @@ export default function AdminBlogEditClient() {
 
   const handleToggleStatus = useCallback(async () => {
     if (!blogId || statusBusy) return
-    if (dirty) {
-      error('Save your changes before publishing or unpublishing.')
-      return
-    }
     const nextStatus = form.status === 'published' ? 'draft' : 'published'
+    // #region agent log
+    fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'A',location:'AdminBlogEditClient.tsx:handleToggleStatus',message:'Edit page publish button clicked',data:{blogId,fromStatus:form.status,nextStatus,dirty},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     setStatusBusy(true)
     try {
+      // Persist edits first so Publish cannot be blocked by unsaved form state.
+      if (dirty) {
+        await updateBlogPost(blogId, formToPayload(form))
+      }
       const updated = await setBlogPostStatus(blogId, nextStatus)
       const next = rowToForm(updated)
       setForm(structuredClone(next))
       setSaved(structuredClone(next))
       success(nextStatus === 'published' ? 'Article published' : 'Article moved to draft')
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'A',location:'AdminBlogEditClient.tsx:handleToggleStatus:error',message:'Edit page publish failed',data:{blogId,nextStatus,errorMessage:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       error(err instanceof Error ? err.message : 'Failed to update status')
     } finally {
       setStatusBusy(false)
     }
-  }, [blogId, dirty, error, form.status, statusBusy, success])
+  }, [blogId, dirty, error, form, statusBusy, success])
 
   if (status === 'loading') {
     return (
@@ -248,7 +254,7 @@ export default function AdminBlogEditClient() {
             type="button"
             className="admin-services-action-btn"
             onClick={() => void handleToggleStatus()}
-            disabled={statusBusy || dirty}
+            disabled={statusBusy}
           >
             {statusBusy ? '…' : form.status === 'published' ? 'Unpublish' : 'Publish'}
           </button>

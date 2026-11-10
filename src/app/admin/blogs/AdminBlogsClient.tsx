@@ -113,11 +113,17 @@ export default function AdminBlogsClient() {
       if (busyId) return
       const nextStatus = row.status === 'published' ? 'draft' : 'published'
       setBusyId(String(row.id))
+      // #region agent log
+      fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'A',location:'AdminBlogsClient.tsx:handleToggleStatus',message:'List page publish button clicked',data:{id:String(row.id),fromStatus:row.status,nextStatus},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       try {
         await setBlogPostStatus(String(row.id), nextStatus)
         setRows(await listBlogPosts())
         success(nextStatus === 'published' ? 'Article published' : 'Article moved to draft')
       } catch (err) {
+        // #region agent log
+        fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'A',location:'AdminBlogsClient.tsx:handleToggleStatus:error',message:'List page publish failed',data:{id:String(row.id),nextStatus,errorMessage:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         error(err instanceof Error ? err.message : 'Failed to update status')
       } finally {
         setBusyId('')

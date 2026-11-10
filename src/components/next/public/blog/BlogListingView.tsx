@@ -52,6 +52,9 @@ function ArticleCard({ post }: { post: PublicBlogCard }) {
 
 export default function BlogListingView({ posts }: { posts: PublicBlogCard[] }) {
   const [visible, setVisible] = useState(PAGE_SIZE)
+  // #region agent log
+  fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'D',location:'BlogListingView.tsx:render',message:'BlogListingView render props',data:{postCount:posts.length,ids:posts.map((p)=>p.id),titles:posts.map((p)=>p.title)},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   const featured = useMemo(
     () => posts.find((post) => post.isFeatured) ?? posts[0] ?? null,
     [posts]

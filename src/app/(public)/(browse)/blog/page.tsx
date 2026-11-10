@@ -30,6 +30,10 @@ export default async function PublicBlogPage() {
     getPublicSiteSettings(),
   ])
 
+  // #region agent log
+  fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'C',location:'blog/page.tsx:PublicBlogPage',message:'Public /blog page received posts',data:{postCount:posts.length,slugs:posts.map((p)=>p.slug),revalidate:60},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
   const { canonical } = buildPublicPageMetadataWithCanonical({
     seoRow: null,
     settings,
