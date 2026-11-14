@@ -7,17 +7,19 @@ import { Turnstile } from '@marsidev/react-turnstile'
 import emailjs from '@emailjs/browser'
 import { inquiryServiceOptions } from '@/data/inquiryServices'
 import ServiceSelect from '@/components/inquiry/ServiceSelect'
+import {
+  buildInquiryEmailJsTemplateParams,
+  formatInquiryEmailJsFailure,
+  isInquiryEmailJsSuccess,
+  resolveInquiryEmailConfig,
+} from '@/lib/inquiryEmailConfig'
 import { createPublicLead } from '@/lib/next/createPublicLead'
 
 type HomeInquiryFormProps = {
   serviceOptions?: string[]
 }
 
-const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || ''
-const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || ''
-const EMAILJS_PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || ''
-const EMAILJS_TO_EMAIL =
-  process.env.NEXT_PUBLIC_EMAILJS_TO_EMAIL || 'info@flairestack.com'
+const INQUIRY_EMAIL = resolveInquiryEmailConfig()
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
 
 const initial = {
@@ -130,7 +132,11 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
       return
     }
 
-    if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+    if (!INQUIRY_EMAIL.configured) {
+      console.error(
+        '[HomeInquiryForm] EmailJS inquiry config incomplete',
+        INQUIRY_EMAIL.missing.join(', ')
+      )
       setSubmitError('Inquiry service is temporarily unavailable. Please try again in a moment.')
       return
     }
@@ -168,26 +174,43 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
         )
       }
 
-      const templateParams = {
-        name: values.fullName,
+      const templateParams = buildInquiryEmailJsTemplateParams({
+        fullName: values.fullName,
         email: values.email,
         company: values.company,
         phone: values.phone,
         service: values.service,
         message: values.message,
-        to_email: EMAILJS_TO_EMAIL,
-        turnstile_token: turnstileToken || '',
-        submitted_at: new Date().toISOString(),
+        toEmail: INQUIRY_EMAIL.toEmail,
+        turnstileToken,
+      })
+
+      let result: { status?: number; text?: string }
+      try {
+        result = await emailjs.send(
+          INQUIRY_EMAIL.serviceId,
+          INQUIRY_EMAIL.templateId,
+          templateParams,
+          { publicKey: INQUIRY_EMAIL.publicKey }
+        )
+      } catch (emailErr) {
+        const details = formatInquiryEmailJsFailure(emailErr)
+        console.error('[HomeInquiryForm] EmailJS inquiry send failed', {
+          serviceId: INQUIRY_EMAIL.serviceId,
+          templateId: INQUIRY_EMAIL.templateId,
+          status: details.status,
+          text: details.text,
+        })
+        throw new Error('Unable to send your inquiry. Please try again.')
       }
 
-      const result = await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        templateParams,
-        EMAILJS_PUBLIC_KEY
-      )
-
-      if (result?.status !== 200) {
+      if (!isInquiryEmailJsSuccess(result)) {
+        console.error('[HomeInquiryForm] EmailJS inquiry send rejected', {
+          serviceId: INQUIRY_EMAIL.serviceId,
+          templateId: INQUIRY_EMAIL.templateId,
+          status: result?.status ?? null,
+          text: String(result?.text || '').slice(0, 240),
+        })
         throw new Error('Unable to send your inquiry. Please try again.')
       }
 
