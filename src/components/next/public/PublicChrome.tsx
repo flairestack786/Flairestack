@@ -4,6 +4,7 @@ import { Phone } from 'lucide-react'
 import ScrollToTopButton from '@/components/ScrollToTopButton'
 import PublicFooter from './PublicFooter'
 import PublicNavbar from './PublicNavbar'
+import PublicScrollToTop from './PublicScrollToTop'
 import { usePublicSite } from './PublicSiteProvider'
 
 function PublicFloatingCallButton() {
@@ -26,6 +27,7 @@ function PublicFloatingCallButton() {
 export default function PublicChrome({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell app-shell--visible">
+      <PublicScrollToTop />
       <PublicNavbar />
       {children}
       <PublicFooter />

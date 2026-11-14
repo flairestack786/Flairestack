@@ -20,41 +20,44 @@ function formatDate(value: string | null) {
 }
 
 function ArticleCard({ post }: { post: PublicBlogCard }) {
+  const href = publicBlogPath(post.slug)
+
   return (
     <article className="blog-card">
-      <Link href={publicBlogPath(post.slug)} className="blog-card-media">
-        {post.featuredImageUrl ? (
-          <CmsOptimizedImage
-            src={post.featuredImageUrl}
-            alt={post.featuredImageAlt}
-            className="blog-card-img"
-            preset="card"
-          />
-        ) : (
-          <div className="blog-card-media-fallback" aria-hidden />
-        )}
-      </Link>
-      <div className="blog-card-body">
-        <div className="blog-card-meta">
-          {post.category ? <span className="blog-chip">{post.category}</span> : null}
-          <span>{formatDate(post.publishedAt)}</span>
-          <span>{post.readingTimeMinutes} min read</span>
+      <Link href={href} className="blog-card-link">
+        <div className="blog-card-media">
+          {post.featuredImageUrl ? (
+            <CmsOptimizedImage
+              src={post.featuredImageUrl}
+              alt={post.featuredImageAlt}
+              className="blog-card-img"
+              preset="card"
+            />
+          ) : (
+            <div className="blog-card-media-fallback" aria-hidden />
+          )}
         </div>
-        <h2 className="blog-card-title">
-          <Link href={publicBlogPath(post.slug)}>{post.title}</Link>
-        </h2>
-        {post.excerpt ? <p className="blog-card-excerpt">{post.excerpt}</p> : null}
-        {post.authorName ? <p className="blog-card-author">By {post.authorName}</p> : null}
-      </div>
+        <div className="blog-card-body">
+          <div className="blog-card-meta">
+            {post.category ? <span className="blog-chip">{post.category}</span> : null}
+            <span>{formatDate(post.publishedAt)}</span>
+            <span>{post.readingTimeMinutes} min read</span>
+          </div>
+          <h2 className="blog-card-title">{post.title}</h2>
+          {post.excerpt ? <p className="blog-card-excerpt">{post.excerpt}</p> : null}
+          {post.authorName ? <p className="blog-card-author">By {post.authorName}</p> : null}
+          <span className="blog-card-cta">
+            Read article
+            <span aria-hidden>→</span>
+          </span>
+        </div>
+      </Link>
     </article>
   )
 }
 
 export default function BlogListingView({ posts }: { posts: PublicBlogCard[] }) {
   const [visible, setVisible] = useState(PAGE_SIZE)
-  // #region agent log
-  fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'D',location:'BlogListingView.tsx:render',message:'BlogListingView render props',data:{postCount:posts.length,ids:posts.map((p)=>p.id),titles:posts.map((p)=>p.title)},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const featured = useMemo(
     () => posts.find((post) => post.isFeatured) ?? posts[0] ?? null,
     [posts]

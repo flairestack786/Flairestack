@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import type { ComponentProps, ReactNode } from 'react'
 import ServicePageLayout from '@/components/service/ServicePageLayout'
-import ServicePageScrollReset from '@/components/next/public/services/ServicePageScrollReset'
 import { usePublicSite } from '@/components/next/public/PublicSiteProvider'
 import type { CompanyStatItem, ServiceTestimonialItem } from '@/lib/next/publicServiceServer'
 
@@ -47,7 +46,6 @@ export default function NextServicePageView({
 
   return (
     <article className="service-detail sp-page antialiased">
-      <ServicePageScrollReset />
       <ServicePageLayout
         service={service}
         page={page}
