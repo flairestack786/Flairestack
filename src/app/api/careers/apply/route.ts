@@ -178,7 +178,11 @@ export async function POST(request: Request) {
         .update({ confirmation_email_status: 'sent', confirmation_email_error: '' })
         .eq('id', application.id)
     } else {
-      console.error('[careers/apply] confirmation email failed', emailResult.error)
+      const statusBit =
+        emailResult.httpStatus != null ? `http=${emailResult.httpStatus}` : 'http=n/a'
+      console.error(
+        `[careers/apply] confirmation email ${emailResult.skipped ? 'skipped' : 'failed'} ${statusBit}`
+      )
       await supabase
         .from('job_applications')
         .update({
@@ -192,7 +196,8 @@ export async function POST(request: Request) {
       ok: true,
       jobTitle: job.title,
       jobSlug: job.slug,
-      emailQueued: emailResult.ok,
+      emailSent: emailResult.ok,
+      emailStatus: emailResult.ok ? 'sent' : emailResult.skipped ? 'skipped' : 'failed',
     })
   } catch (error) {
     console.error('[careers/apply] unexpected failure', error)

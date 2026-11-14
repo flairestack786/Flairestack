@@ -5,22 +5,17 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Turnstile } from '@marsidev/react-turnstile'
 import { Loader2, Plus, Trash2, Upload } from 'lucide-react'
-import { JOB_PROFILE_LINK_TYPES, JOB_RESUME_MAX_BYTES } from '@/lib/jobApplicationValidation'
+import {
+  JOB_PROFILE_LINK_LABELS,
+  JOB_PROFILE_LINK_TYPES,
+  JOB_RESUME_MAX_BYTES,
+  validateProfileLinksInput,
+} from '@/lib/jobApplicationValidation'
 import { publicCareerPath } from '@/lib/contentSlug'
 
-type ProfileLink = { platform: string; url: string }
+type ProfileLink = { platform: string; url: string; label?: string }
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
-
-const PLATFORM_LABELS: Record<string, string> = {
-  linkedin: 'LinkedIn',
-  github: 'GitHub',
-  website: 'Personal website',
-  portfolio: 'Portfolio',
-  behance: 'Behance',
-  dribbble: 'Dribbble',
-  other: 'Other',
-}
 
 type JobApplicationFormProps = {
   job: {
@@ -101,10 +96,16 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         throw new Error('Please upload your resume.')
       }
 
+      const profileCheck = validateProfileLinksInput(profileLinks)
+      if (!profileCheck.ok) {
+        setFieldErrors({ profile_links: profileCheck.error })
+        throw new Error(profileCheck.error)
+      }
+
       const form = new FormData()
       form.set('job_slug', job.slug)
       Object.entries(values).forEach(([key, value]) => form.set(key, value))
-      form.set('profile_links', JSON.stringify(profileLinks))
+      form.set('profile_links', JSON.stringify(profileCheck.links))
       form.set('resume', resume)
       if (turnstileToken) form.set('turnstile_token', turnstileToken)
 
@@ -142,7 +143,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field">
           <span>First name *</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             value={values.first_name}
             onChange={update('first_name')}
             autoComplete="given-name"
@@ -153,7 +154,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field">
           <span>Last name *</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             value={values.last_name}
             onChange={update('last_name')}
             autoComplete="family-name"
@@ -164,7 +165,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field">
           <span>Email *</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             type="email"
             value={values.email}
             onChange={update('email')}
@@ -176,7 +177,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field">
           <span>Phone *</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             type="tel"
             value={values.phone}
             onChange={update('phone')}
@@ -188,7 +189,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field">
           <span>Professional headline / current title</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             value={values.current_job_title}
             onChange={update('current_job_title')}
           />
@@ -196,7 +197,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field">
           <span>Current company</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             value={values.current_company}
             onChange={update('current_company')}
           />
@@ -204,7 +205,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field">
           <span>Location</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             value={values.location}
             onChange={update('location')}
             autoComplete="address-level2"
@@ -213,7 +214,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field">
           <span>Years of professional experience</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             value={values.years_experience}
             onChange={update('years_experience')}
             placeholder="e.g. 5"
@@ -222,7 +223,7 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field job-apply-field--full">
           <span>Notice period / availability</span>
           <input
-            className="admin-settings-input"
+            className="job-apply-input"
             value={values.notice_period}
             onChange={update('notice_period')}
             placeholder="e.g. 2 weeks, immediately available"
@@ -231,8 +232,8 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <label className="job-apply-field job-apply-field--full">
           <span>Cover letter / additional message</span>
           <textarea
-            className="admin-settings-textarea"
-            rows={6}
+            className="job-apply-textarea"
+            rows={8}
             value={values.cover_letter}
             onChange={update('cover_letter')}
           />
@@ -269,14 +270,16 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         <div className="job-apply-section-head">
           <div>
             <h2>Professional Profiles &amp; Links</h2>
-            <p className="job-apply-hint">Optional. Add LinkedIn, GitHub, portfolio, or other HTTPS links.</p>
+            <p className="job-apply-hint">
+              Optional. Add LinkedIn, GitHub, portfolio, Stack Overflow, or other HTTPS links.
+            </p>
           </div>
           <button
             type="button"
             className="job-apply-add-link"
             onClick={() =>
               setProfileLinks((prev) =>
-                prev.length >= 8 ? prev : [...prev, { platform: 'linkedin', url: '' }]
+                prev.length >= 8 ? prev : [...prev, { platform: 'linkedin', url: '', label: '' }]
               )
             }
           >
@@ -286,47 +289,74 @@ export default function JobApplicationForm({ job }: JobApplicationFormProps) {
         </div>
 
         {profileLinks.map((link, index) => (
-          <div key={`link-${index}`} className="job-apply-link-row">
-            <select
-              className="admin-settings-input"
-              value={link.platform}
-              onChange={(e) =>
-                setProfileLinks((prev) =>
-                  prev.map((item, i) =>
-                    i === index ? { ...item, platform: e.target.value } : item
+          <div key={`link-${index}`} className="job-apply-link-block">
+            <div className="job-apply-link-row">
+              <select
+                className="job-apply-input job-apply-select"
+                value={link.platform}
+                onChange={(e) =>
+                  setProfileLinks((prev) =>
+                    prev.map((item, i) =>
+                      i === index
+                        ? {
+                            ...item,
+                            platform: e.target.value,
+                            label: e.target.value === 'other' ? item.label || '' : '',
+                          }
+                        : item
+                    )
                   )
-                )
-              }
-              aria-label={`Platform ${index + 1}`}
-            >
-              {JOB_PROFILE_LINK_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {PLATFORM_LABELS[type] || type}
-                </option>
-              ))}
-            </select>
-            <input
-              className="admin-settings-input"
-              type="url"
-              placeholder="https://"
-              value={link.url}
-              onChange={(e) =>
-                setProfileLinks((prev) =>
-                  prev.map((item, i) => (i === index ? { ...item, url: e.target.value } : item))
-                )
-              }
-              aria-label={`URL ${index + 1}`}
-            />
-            <button
-              type="button"
-              className="job-apply-remove-link"
-              onClick={() => setProfileLinks((prev) => prev.filter((_, i) => i !== index))}
-              aria-label={`Remove link ${index + 1}`}
-            >
-              <Trash2 size={16} />
-            </button>
+                }
+                aria-label={`Platform ${index + 1}`}
+              >
+                {JOB_PROFILE_LINK_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {(JOB_PROFILE_LINK_LABELS as Record<string, string>)[type] || type}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="job-apply-input"
+                type="url"
+                placeholder="https://"
+                value={link.url}
+                onChange={(e) =>
+                  setProfileLinks((prev) =>
+                    prev.map((item, i) => (i === index ? { ...item, url: e.target.value } : item))
+                  )
+                }
+                aria-label={`URL ${index + 1}`}
+              />
+              <button
+                type="button"
+                className="job-apply-remove-link"
+                onClick={() => setProfileLinks((prev) => prev.filter((_, i) => i !== index))}
+                aria-label={`Remove link ${index + 1}`}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+            {link.platform === 'other' ? (
+              <input
+                className="job-apply-input job-apply-other-label"
+                type="text"
+                placeholder="Custom platform name (e.g. Personal blog)"
+                value={link.label || ''}
+                onChange={(e) =>
+                  setProfileLinks((prev) =>
+                    prev.map((item, i) =>
+                      i === index ? { ...item, label: e.target.value } : item
+                    )
+                  )
+                }
+                aria-label={`Custom platform name ${index + 1}`}
+              />
+            ) : null}
           </div>
         ))}
+        {fieldErrors.profile_links ? (
+          <em className="job-apply-error">{fieldErrors.profile_links}</em>
+        ) : null}
       </section>
 
       {TURNSTILE_SITE_KEY ? (

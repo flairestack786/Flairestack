@@ -196,6 +196,7 @@ export default function AdminApplicationsClient() {
               <th scope="col">Applicant</th>
               <th scope="col">Position</th>
               <th scope="col">Status</th>
+              <th scope="col">Email</th>
               <th scope="col">Submitted</th>
               <th scope="col">Actions</th>
             </tr>
@@ -203,7 +204,7 @@ export default function AdminApplicationsClient() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={5}>
+                <td colSpan={6}>
                   <div className="admin-page-placeholder">No applications match these filters.</div>
                 </td>
               </tr>
@@ -221,6 +222,9 @@ export default function AdminApplicationsClient() {
                   </td>
                   <td>{jobTitle(row)}</td>
                   <td>{labelJobApplicationStatus(String(row.application_status))}</td>
+                  <td title={String(row.confirmation_email_error || '')}>
+                    {String(row.confirmation_email_status || 'pending')}
+                  </td>
                   <td>{formatDate(row.created_at)}</td>
                   <td>
                     <Link

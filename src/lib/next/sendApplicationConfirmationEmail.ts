@@ -3,115 +3,78 @@
  * Never expose EMAILJS_PRIVATE_KEY to the browser.
  */
 
+import {
+  CAREERS_EMAIL_FROM,
+  EMAILJS_SEND_URL,
+  buildApplicationConfirmationHtml,
+  buildApplicationEmailJsPayload,
+  isEmailJsSuccessResponse,
+  resolveApplicationEmailConfig,
+  sanitizeEmailJsErrorSnippet,
+} from '../applicationConfirmationEmail.js'
+
+export {
+  CAREERS_EMAIL_FROM,
+  EMAILJS_SEND_URL,
+  buildApplicationConfirmationHtml,
+  buildApplicationEmailJsPayload,
+  isEmailJsSuccessResponse,
+  resolveApplicationEmailConfig,
+  sanitizeEmailJsErrorSnippet,
+}
+
 type SendResult =
-  | { ok: true }
-  | { ok: false; error: string; skipped?: boolean }
-
-function env(name: string, fallback = '') {
-  return String(process.env[name] ?? fallback).trim()
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
-/**
- * Build a simple branded HTML body (also usable as EmailJS template fallback).
- */
-export function buildApplicationConfirmationHtml(input: {
-  firstName: string
-  jobTitle: string
-}) {
-  const firstName = escapeHtml(input.firstName || 'there')
-  const jobTitle = escapeHtml(input.jobTitle || 'the open role')
-  return `<!DOCTYPE html>
-<html>
-  <body style="margin:0;padding:0;background:#0a0a0a;color:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0a0a0a;padding:32px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" style="max-width:560px;background:#121212;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px;">
-            <tr><td style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:#ff7a00;font-weight:700;">FlaireStack</td></tr>
-            <tr><td style="padding-top:18px;font-size:22px;font-weight:700;color:#ffffff;">Application received</td></tr>
-            <tr><td style="padding-top:14px;font-size:15px;line-height:1.7;color:rgba(255,255,255,0.78);">
-              Hello ${firstName},<br/><br/>
-              Thank you for applying to the <strong style="color:#fff;">${jobTitle}</strong> position at FlaireStack.<br/><br/>
-              We have successfully received your application and resume. Our team will review your application and contact you if your qualifications and experience align with the position.<br/><br/>
-              We appreciate your interest in joining FlaireStack.
-            </td></tr>
-            <tr><td style="padding-top:22px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.7);">
-              Best regards,<br/>
-              FlaireStack Hiring Team<br/>
-              <a href="mailto:hello@flairestack.com" style="color:#ff7a00;text-decoration:none;">hello@flairestack.com</a>
-            </td></tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`
-}
+  | { ok: true; httpStatus: number; responseBody: string }
+  | { ok: false; error: string; skipped?: boolean; httpStatus?: number; responseBody?: string }
 
 export async function sendApplicationConfirmationEmail(input: {
   toEmail: string
   firstName: string
   jobTitle: string
 }): Promise<SendResult> {
-  // Careers confirmation must use its own EmailJS service — never the inquiry service.
-  const serviceId = env('EMAILJS_APPLICATION_SERVICE_ID')
-  const templateId = env('EMAILJS_APPLICATION_TEMPLATE_ID')
-  const publicKey = env('EMAILJS_PUBLIC_KEY') || env('NEXT_PUBLIC_EMAILJS_PUBLIC_KEY')
-  const privateKey = env('EMAILJS_PRIVATE_KEY')
+  const config = resolveApplicationEmailConfig()
 
-  if (!serviceId || !templateId || !publicKey) {
+  if (!config.configured) {
     return {
       ok: false,
       skipped: true,
-      error:
-        'Applicant confirmation email is not configured. Set EMAILJS_APPLICATION_SERVICE_ID (production: service_qbexphi), EMAILJS_APPLICATION_TEMPLATE_ID, and EMAILJS_PUBLIC_KEY.',
+      error: `Applicant confirmation email is not configured. Missing: ${config.missing.join(', ')}.`,
     }
   }
 
-  const subject = `Application Received — ${input.jobTitle} at FlaireStack`
-  const html = buildApplicationConfirmationHtml({
+  const payload = buildApplicationEmailJsPayload({
+    serviceId: config.serviceId,
+    templateId: config.templateId,
+    publicKey: config.publicKey,
+    privateKey: config.privateKey || undefined,
+    toEmail: input.toEmail,
     firstName: input.firstName,
     jobTitle: input.jobTitle,
   })
 
-  const payload: Record<string, unknown> = {
-    service_id: serviceId,
-    template_id: templateId,
-    user_id: publicKey,
-    template_params: {
-      to_email: input.toEmail,
-      email: input.toEmail,
-      first_name: input.firstName,
-      job_title: input.jobTitle,
-      subject,
-      message_html: html,
-      reply_to: 'hello@flairestack.com',
-    },
-  }
-  if (privateKey) payload.accessToken = privateKey
-
   try {
-    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    const response = await fetch(EMAILJS_SEND_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-    if (!response.ok) {
-      const text = await response.text().catch(() => '')
+    const text = await response.text().catch(() => '')
+    const safeBody = sanitizeEmailJsErrorSnippet(text)
+
+    if (!isEmailJsSuccessResponse(response.status, text)) {
+      const hint =
+        /non-browser|accessToken|private key|disabled/i.test(text) && !config.privateKey
+          ? ' Hint: enable EmailJS Account → Security “Allow EmailJS API for non-browser applications” and set EMAILJS_PRIVATE_KEY.'
+          : ''
       return {
         ok: false,
-        error: `EmailJS send failed (${response.status})${text ? `: ${text.slice(0, 200)}` : ''}`,
+        httpStatus: response.status,
+        responseBody: safeBody,
+        error: `EmailJS send failed (${response.status})${safeBody ? `: ${safeBody}` : ''}${hint}`,
       }
     }
-    return { ok: true }
+
+    return { ok: true, httpStatus: response.status, responseBody: safeBody || 'OK' }
   } catch (error) {
     return {
       ok: false,

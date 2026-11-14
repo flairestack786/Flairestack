@@ -718,7 +718,7 @@
 
 .job-apply-page,
 .job-apply-success {
-  max-width: 760px;
+  max-width: 820px;
 }
 
 .job-apply-form {
@@ -731,27 +731,98 @@
 .job-apply-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.1rem 1.15rem;
 }
 
 .job-apply-field {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.9rem;
+  gap: 0.55rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .job-apply-field--full {
   grid-column: 1 / -1;
 }
 
-.job-apply-field .admin-settings-input,
-.job-apply-field .admin-settings-textarea,
-.job-apply-link-row .admin-settings-input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+.job-apply-input,
+.job-apply-textarea,
+.job-apply-select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: 3rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(12, 12, 12, 0.92);
   color: #fff;
+  font-size: 1rem;
+  line-height: 1.45;
+  font-family: inherit;
+  color-scheme: dark;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.job-apply-textarea {
+  min-height: 11rem;
+  resize: vertical;
+  padding-top: 0.95rem;
+  padding-bottom: 0.95rem;
+}
+
+.job-apply-input::placeholder,
+.job-apply-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.job-apply-input:hover,
+.job-apply-textarea:hover,
+.job-apply-select:hover {
+  border-color: rgba(255, 122, 0, 0.35);
+}
+
+.job-apply-input:focus,
+.job-apply-textarea:focus,
+.job-apply-select:focus {
+  outline: none;
+  border-color: rgba(255, 122, 0, 0.7);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.18);
+  background: rgba(18, 18, 18, 0.98);
+}
+
+.job-apply-field:has(em) .job-apply-input,
+.job-apply-field:has(em) .job-apply-textarea {
+  border-color: rgba(252, 165, 165, 0.55);
+}
+
+.job-apply-select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.7) 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.7) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.15rem) calc(50% - 0.18rem),
+    calc(100% - 0.8rem) calc(50% - 0.18rem);
+  background-size: 0.35rem 0.35rem, 0.35rem 0.35rem;
+  background-repeat: no-repeat;
+  padding-right: 2.4rem;
+  cursor: pointer;
+}
+
+.job-apply-select option {
+  background-color: #121212;
+  color: #f5f5f5;
+}
+
+.job-apply-select option:checked,
+.job-apply-select option:hover {
+  background-color: #ff7a00;
+  color: #0a0a0a;
 }
 
 .job-apply-field em,
@@ -794,7 +865,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.15rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 122, 0, 0.4);
   background: rgba(255, 122, 0, 0.1);
@@ -813,7 +884,7 @@
   gap: 1rem;
   align-items: center;
   margin-top: 0.85rem;
-  padding: 0.85rem 1rem;
+  padding: 0.95rem 1.1rem;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.03);
@@ -849,22 +920,36 @@
 }
 
 .job-apply-add-link {
-  padding: 0.55rem 0.9rem;
+  padding: 0.65rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
 }
 
+.job-apply-add-link:hover,
+.job-apply-remove-link:hover {
+  border-color: rgba(255, 122, 0, 0.45);
+  color: #ffb366;
+}
+
 .job-apply-remove-link {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 3rem;
+  height: 3rem;
   justify-content: center;
+}
+
+.job-apply-link-block {
+  margin-bottom: 0.85rem;
 }
 
 .job-apply-link-row {
   display: grid;
-  grid-template-columns: 10rem minmax(0, 1fr) 2.4rem;
-  gap: 0.65rem;
-  margin-bottom: 0.65rem;
+  grid-template-columns: minmax(11rem, 13rem) minmax(0, 1fr) 3rem;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.job-apply-other-label {
+  margin-top: 0.65rem;
 }
 
 .job-apply-privacy {
@@ -895,6 +980,11 @@
   .job-apply-grid,
   .job-apply-link-row {
     grid-template-columns: 1fr;
+  }
+
+  .job-apply-remove-link {
+    width: 100%;
+    height: 2.75rem;
   }
 }
 

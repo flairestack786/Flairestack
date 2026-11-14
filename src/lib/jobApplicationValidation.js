@@ -25,8 +25,20 @@ export const JOB_PROFILE_LINK_TYPES = Object.freeze([
   'portfolio',
   'behance',
   'dribbble',
+  'stackoverflow',
   'other',
 ])
+
+export const JOB_PROFILE_LINK_LABELS = Object.freeze({
+  linkedin: 'LinkedIn',
+  github: 'GitHub',
+  website: 'Personal website',
+  portfolio: 'Portfolio',
+  behance: 'Behance',
+  dribbble: 'Dribbble',
+  stackoverflow: 'Stack Overflow',
+  other: 'Other',
+})
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -119,22 +131,71 @@ export function looksLikeResumeBytes(bytes, ext) {
 
 /**
  * @param {unknown} input
- * @returns {{ platform: string, url: string }[]}
+ * @returns {{ platform: string, url: string, label?: string }[]}
  */
 export function sanitizeProfileLinks(input) {
   const list = Array.isArray(input) ? input : []
   const out = []
   for (const item of list) {
     if (!item || typeof item !== 'object') continue
-    const platformRaw = trimText(/** @type {{ platform?: unknown }} */ (item).platform).toLowerCase()
+    const row = /** @type {{ platform?: unknown, url?: unknown, label?: unknown }} */ (item)
+    const platformRaw = trimText(row.platform).toLowerCase()
     const platform = JOB_PROFILE_LINK_TYPES.includes(platformRaw) ? platformRaw : 'other'
-    const url = trimText(/** @type {{ url?: unknown }} */ (item).url)
+    const url = trimText(row.url)
     if (!url) continue
     if (!isValidHttpsUrl(url)) continue
-    out.push({ platform, url })
+    /** @type {{ platform: string, url: string, label?: string }} */
+    const entry = { platform, url }
+    if (platform === 'other') {
+      const label = trimText(row.label).slice(0, 80)
+      if (label) entry.label = label
+    }
+    out.push(entry)
     if (out.length >= 8) break
   }
   return out
+}
+
+/**
+ * Client-side validation for profile link rows before submit.
+ * @param {unknown} input
+ * @returns {{ ok: true, links: { platform: string, url: string, label?: string }[] } | { ok: false, error: string }}
+ */
+export function validateProfileLinksInput(input) {
+  const list = Array.isArray(input) ? input : []
+  if (list.length === 0) return { ok: true, links: [] }
+
+  /** @type {{ platform: string, url: string, label?: string }[]} */
+  const links = []
+  for (let i = 0; i < list.length; i += 1) {
+    const item = list[i]
+    if (!item || typeof item !== 'object') continue
+    const row = /** @type {{ platform?: unknown, url?: unknown, label?: unknown }} */ (item)
+    const platformRaw = trimText(row.platform).toLowerCase()
+    const platform = JOB_PROFILE_LINK_TYPES.includes(platformRaw) ? platformRaw : 'other'
+    const url = trimText(row.url)
+    const label = trimText(row.label).slice(0, 80)
+
+    if (!url && !label) continue
+    if (!url) {
+      return { ok: false, error: `Enter an HTTPS URL for profile link ${i + 1}.` }
+    }
+    if (!isValidHttpsUrl(url)) {
+      return {
+        ok: false,
+        error: `Profile link ${i + 1} must be a valid HTTPS URL (https://…).`,
+      }
+    }
+    if (platform === 'other' && !label) {
+      return { ok: false, error: `Enter a custom platform name for profile link ${i + 1}.` }
+    }
+    /** @type {{ platform: string, url: string, label?: string }} */
+    const entry = { platform, url }
+    if (platform === 'other' && label) entry.label = label
+    links.push(entry)
+    if (links.length >= 8) break
+  }
+  return { ok: true, links }
 }
 
 /**

@@ -204,11 +204,16 @@ export default function AdminApplicationDetailClient() {
             <ul>
               {links.map((item, index) => {
                 const link = item as { platform?: string; url?: string }
+                const typed = link as { platform?: string; url?: string; label?: string }
+                const platformLabel =
+                  typed.platform === 'other' && typed.label
+                    ? typed.label
+                    : typed.platform || 'link'
                 return (
-                  <li key={`${link.url}-${index}`}>
-                    <strong>{link.platform}:</strong>{' '}
-                    <a href={link.url} target="_blank" rel="noreferrer">
-                      {link.url}
+                  <li key={`${typed.url}-${index}`}>
+                    <strong>{platformLabel}:</strong>{' '}
+                    <a href={typed.url} target="_blank" rel="noreferrer">
+                      {typed.url}
                     </a>
                   </li>
                 )
@@ -221,12 +226,26 @@ export default function AdminApplicationDetailClient() {
           <header className="admin-settings-section-header">
             <h2 className="admin-settings-section-title">Admin workflow</h2>
             <p className="admin-settings-section-desc">
-              Internal notes are never shown to applicants. Confirmation email status:{' '}
-              {String(row.confirmation_email_status || 'pending')}
-              {row.confirmation_email_error
-                ? ` (${String(row.confirmation_email_error)})`
-                : ''}
+              Internal notes are never shown to applicants.
             </p>
+            <div
+              className={
+                row.confirmation_email_status === 'sent'
+                  ? 'admin-page-desc'
+                  : 'admin-settings-state admin-settings-state--error'
+              }
+              role="status"
+              style={{ marginBottom: '1rem' }}
+            >
+              <strong>Confirmation email:</strong>{' '}
+              {String(row.confirmation_email_status || 'pending')}
+              {row.confirmation_email_error ? (
+                <>
+                  <br />
+                  <span>{String(row.confirmation_email_error)}</span>
+                </>
+              ) : null}
+            </div>
           </header>
           <div className="admin-settings-fields">
             <label className="admin-settings-field">
