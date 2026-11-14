@@ -132,15 +132,6 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
       return
     }
 
-    if (!INQUIRY_EMAIL.configured) {
-      console.error(
-        '[HomeInquiryForm] EmailJS inquiry config incomplete',
-        INQUIRY_EMAIL.missing.join(', ')
-      )
-      setSubmitError('Inquiry service is temporarily unavailable. Please try again in a moment.')
-      return
-    }
-
     if (TURNSTILE_SITE_KEY && !turnstileToken) {
       setSubmitError('Please complete the security verification before sending.')
       return
@@ -154,6 +145,7 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
         await verifyTurnstileWithServer(turnstileToken)
       }
 
+      // Persist first — CMS Leads is the system of record for the team.
       try {
         await createPublicLead({
           full_name: values.fullName,
@@ -174,44 +166,46 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
         )
       }
 
-      const templateParams = buildInquiryEmailJsTemplateParams({
-        fullName: values.fullName,
-        email: values.email,
-        company: values.company,
-        phone: values.phone,
-        service: values.service,
-        message: values.message,
-        toEmail: INQUIRY_EMAIL.toEmail,
-        turnstileToken,
-      })
-
-      let result: { status?: number; text?: string }
-      try {
-        result = await emailjs.send(
-          INQUIRY_EMAIL.serviceId,
-          INQUIRY_EMAIL.templateId,
-          templateParams,
-          { publicKey: INQUIRY_EMAIL.publicKey }
+      // Exactly one customer confirmation (non-blocking). No business notification.
+      if (INQUIRY_EMAIL.configured) {
+        const templateParams = buildInquiryEmailJsTemplateParams({
+          fullName: values.fullName,
+          email: values.email,
+          company: values.company,
+          phone: values.phone,
+          service: values.service,
+          message: values.message,
+          turnstileToken,
+        })
+        try {
+          const result = await emailjs.send(
+            INQUIRY_EMAIL.serviceId,
+            INQUIRY_EMAIL.templateId,
+            templateParams,
+            { publicKey: INQUIRY_EMAIL.publicKey }
+          )
+          if (!isInquiryEmailJsSuccess(result)) {
+            console.error('[HomeInquiryForm] EmailJS customer confirmation rejected', {
+              serviceId: INQUIRY_EMAIL.serviceId,
+              templateId: INQUIRY_EMAIL.templateId,
+              status: result?.status ?? null,
+              text: String(result?.text || '').slice(0, 240),
+            })
+          }
+        } catch (emailErr) {
+          const details = formatInquiryEmailJsFailure(emailErr)
+          console.error('[HomeInquiryForm] EmailJS customer confirmation failed', {
+            serviceId: INQUIRY_EMAIL.serviceId,
+            templateId: INQUIRY_EMAIL.templateId,
+            status: details.status,
+            text: details.text,
+          })
+        }
+      } else {
+        console.error(
+          '[HomeInquiryForm] EmailJS customer confirmation skipped — missing',
+          INQUIRY_EMAIL.missing.join(', ')
         )
-      } catch (emailErr) {
-        const details = formatInquiryEmailJsFailure(emailErr)
-        console.error('[HomeInquiryForm] EmailJS inquiry send failed', {
-          serviceId: INQUIRY_EMAIL.serviceId,
-          templateId: INQUIRY_EMAIL.templateId,
-          status: details.status,
-          text: details.text,
-        })
-        throw new Error('Unable to send your inquiry. Please try again.')
-      }
-
-      if (!isInquiryEmailJsSuccess(result)) {
-        console.error('[HomeInquiryForm] EmailJS inquiry send rejected', {
-          serviceId: INQUIRY_EMAIL.serviceId,
-          templateId: INQUIRY_EMAIL.templateId,
-          status: result?.status ?? null,
-          text: String(result?.text || '').slice(0, 240),
-        })
-        throw new Error('Unable to send your inquiry. Please try again.')
       }
 
       setStatus('success')

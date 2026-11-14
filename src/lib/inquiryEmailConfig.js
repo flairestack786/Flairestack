@@ -1,13 +1,20 @@
 /**
  * Public inquiry / contact form EmailJS configuration.
  * Completely independent of Careers application confirmation email.
+ *
+ * Flow: save lead → send exactly one customer confirmation via the inquiry
+ * template (template_5jo1wed). Team reviews inquiries in CMS — no separate
+ * business notification email.
+ *
+ * EmailJS template recipient field: {{email}} (visitor address).
+ * From / Reply-To mailbox: hello@flairestack.com
  */
 
 /** Expected production EmailJS SMTP service for inquiries. */
 export const INQUIRY_EMAILJS_SERVICE_ID = 'service_mqjkoth'
 
-/** Canonical inquiry mailbox (SMTP From + notification To). */
-export const INQUIRY_TO_EMAIL = 'info@flairestack.com'
+/** Inquiry SMTP From / Reply-To mailbox (EmailJS service + template). */
+export const INQUIRY_FROM_EMAIL = 'hello@flairestack.com'
 
 /**
  * @param {NodeJS.ProcessEnv | Record<string, string | undefined>} [envSource]
@@ -15,17 +22,10 @@ export const INQUIRY_TO_EMAIL = 'info@flairestack.com'
 export function resolveInquiryEmailConfig(envSource = process.env) {
   const read = (name) => String(envSource[name] ?? '').trim()
 
-  // Inquiry uses browser NEXT_PUBLIC_* only. Never read Careers APPLICATION_* IDs.
+  // Inquiry uses browser NEXT_PUBLIC_* (with legacy VITE_* fallback). Never Careers APPLICATION_*.
   const serviceId = read('NEXT_PUBLIC_EMAILJS_SERVICE_ID') || read('VITE_EMAILJS_SERVICE_ID')
   const templateId = read('NEXT_PUBLIC_EMAILJS_TEMPLATE_ID') || read('VITE_EMAILJS_TEMPLATE_ID')
   const publicKey = read('NEXT_PUBLIC_EMAILJS_PUBLIC_KEY') || read('VITE_EMAILJS_PUBLIC_KEY')
-  // Env may still carry a legacy mailbox (e.g. hello@). Notifications always go to info@.
-  const configuredToEmail = (
-    read('NEXT_PUBLIC_EMAILJS_TO_EMAIL') ||
-    read('VITE_EMAILJS_TO_EMAIL') ||
-    INQUIRY_TO_EMAIL
-  ).toLowerCase()
-  const toEmail = INQUIRY_TO_EMAIL
 
   /** @type {string[]} */
   const missing = []
@@ -37,20 +37,21 @@ export function resolveInquiryEmailConfig(envSource = process.env) {
     serviceId,
     templateId,
     publicKey,
-    toEmail,
-    configuredToEmail,
+    fromEmail: INQUIRY_FROM_EMAIL,
     missing,
     configured: missing.length === 0,
     usesExpectedService: serviceId === INQUIRY_EMAILJS_SERVICE_ID,
-    usesCanonicalInbox: toEmail === INQUIRY_TO_EMAIL,
-    envInboxMismatch: configuredToEmail !== INQUIRY_TO_EMAIL,
-    // Explicitly unused by inquiry — documented for isolation checks.
+    // Explicitly unused — isolation from Careers / removed dual-template flow.
     careersServiceIdIgnored: read('EMAILJS_APPLICATION_SERVICE_ID'),
     careersTemplateIdIgnored: read('EMAILJS_APPLICATION_TEMPLATE_ID'),
+    confirmationTemplateIdIgnored: read('NEXT_PUBLIC_EMAILJS_CONFIRMATION_TEMPLATE_ID'),
   }
 }
 
 /**
+ * Exactly one customer confirmation email.
+ * Template To Email uses {{email}} → visitor address.
+ *
  * @param {{
  *   fullName: string,
  *   email: string,
@@ -58,23 +59,53 @@ export function resolveInquiryEmailConfig(envSource = process.env) {
  *   phone?: string,
  *   service?: string,
  *   message: string,
- *   toEmail: string,
  *   turnstileToken?: string,
  * }} input
  */
 export function buildInquiryEmailJsTemplateParams(input) {
+  const customerEmail = String(input.email || '').trim().toLowerCase()
   return {
     name: String(input.fullName || '').trim(),
-    email: String(input.email || '').trim(),
+    // Recipient for EmailJS template field {{email}}
+    email: customerEmail,
     company: String(input.company || '').trim(),
     phone: String(input.phone || '').trim(),
     service: String(input.service || '').trim(),
     message: String(input.message || '').trim(),
-    to_email: String(input.toEmail || INQUIRY_TO_EMAIL).trim().toLowerCase() || INQUIRY_TO_EMAIL,
-    reply_to: String(input.email || '').trim(),
-    from_name: 'FlaireStack Website',
+    // Kept for templates that still reference {{to_email}} — must be the customer.
+    to_email: customerEmail,
+    reply_to: INQUIRY_FROM_EMAIL,
+    from_name: 'FlaireStack',
+    from_email: INQUIRY_FROM_EMAIL,
     turnstile_token: String(input.turnstileToken || ''),
     submitted_at: new Date().toISOString(),
+  }
+}
+
+/**
+ * Plan the single confirmation send (no business notification).
+ * @param {ReturnType<typeof resolveInquiryEmailConfig>} config
+ * @param {{ email: string }} input
+ */
+export function planInquiryEmailSends(config, input) {
+  const customerEmail = String(input.email || '').trim().toLowerCase()
+  if (!config.configured || !customerEmail) {
+    return {
+      customer: null,
+      business: null,
+      skippedReason: !config.configured ? 'email_not_configured' : 'missing_customer_email',
+    }
+  }
+  return {
+    business: null,
+    customer: {
+      serviceId: config.serviceId,
+      templateId: config.templateId,
+      toEmail: customerEmail,
+      fromEmail: INQUIRY_FROM_EMAIL,
+      replyTo: INQUIRY_FROM_EMAIL,
+    },
+    skippedReason: null,
   }
 }
 

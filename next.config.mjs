@@ -62,7 +62,7 @@ const nextConfig = {
     NEXT_PUBLIC_EMAILJS_TO_EMAIL:
       process.env.NEXT_PUBLIC_EMAILJS_TO_EMAIL ||
       process.env.VITE_EMAILJS_TO_EMAIL ||
-      'info@flairestack.com',
+      'hello@flairestack.com',
     NEXT_PUBLIC_TURNSTILE_SITE_KEY:
       process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || '',
   },
