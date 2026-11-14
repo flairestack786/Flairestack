@@ -656,7 +656,6 @@
 }
 
 .careers-culture-card p,
-.careers-job-desc,
 .career-detail-instructions {
   margin: 0;
   color: rgba(255, 255, 255, 0.68);
@@ -672,8 +671,9 @@
 .careers-job-card {
   display: flex;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1.25rem 1.5rem;
   align-items: center;
+  padding: 1.15rem 1.35rem;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -682,8 +682,17 @@
   transform: translateY(-2px);
 }
 
+.careers-job-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.careers-job-actions {
+  flex: 0 0 auto;
+}
+
 .careers-job-department {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.3rem;
   color: var(--accent);
   font-size: 0.8rem;
   font-weight: 600;
@@ -695,6 +704,7 @@
   margin: 0;
   font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   font-size: 1.35rem;
+  line-height: 1.25;
   color: #fff;
 }
 
@@ -702,14 +712,10 @@
 .career-detail-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem 1rem;
-  margin: 0.65rem 0 0;
+  gap: 0.45rem 1rem;
+  margin: 0.5rem 0 0;
   color: rgba(255, 255, 255, 0.55);
   font-size: 0.9rem;
-}
-
-.careers-job-desc {
-  margin-top: 0.75rem;
 }
 
 .career-detail-apply {

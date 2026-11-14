@@ -86,9 +86,6 @@ export default function CareersLandingView({ jobs }: { jobs: PublicJobCard[] }) 
                     <span>{labelWorkArrangement(job.workArrangement)}</span>
                     {job.location ? <span>{job.location}</span> : null}
                   </p>
-                  {job.shortDescription ? (
-                    <p className="careers-job-desc">{job.shortDescription}</p>
-                  ) : null}
                 </div>
                 <div className="careers-job-actions">
                   <Link href={publicCareerPath(job.slug)} className="careers-job-cta">
