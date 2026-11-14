@@ -17,15 +17,32 @@ export const INQUIRY_EMAILJS_SERVICE_ID = 'service_mqjkoth'
 export const INQUIRY_FROM_EMAIL = 'hello@flairestack.com'
 
 /**
+ * Resolve inquiry EmailJS config.
+ *
+ * IMPORTANT: Next.js only inlines `process.env.NEXT_PUBLIC_*` for the browser when
+ * accessed with static property names. Dynamic `env[name]` reads are empty on the
+ * client and silently skip EmailJS — keep the default path static.
+ *
  * @param {NodeJS.ProcessEnv | Record<string, string | undefined>} [envSource]
+ *        Optional override for tests. Omit in app code so Next can inline public env.
  */
-export function resolveInquiryEmailConfig(envSource = process.env) {
-  const read = (name) => String(envSource[name] ?? '').trim()
+export function resolveInquiryEmailConfig(envSource) {
+  const read = (name, staticValue) => {
+    if (envSource) return String(envSource[name] ?? '').trim()
+    return String(staticValue ?? '').trim()
+  }
 
   // Inquiry uses browser NEXT_PUBLIC_* (with legacy VITE_* fallback). Never Careers APPLICATION_*.
-  const serviceId = read('NEXT_PUBLIC_EMAILJS_SERVICE_ID') || read('VITE_EMAILJS_SERVICE_ID')
-  const templateId = read('NEXT_PUBLIC_EMAILJS_TEMPLATE_ID') || read('VITE_EMAILJS_TEMPLATE_ID')
-  const publicKey = read('NEXT_PUBLIC_EMAILJS_PUBLIC_KEY') || read('VITE_EMAILJS_PUBLIC_KEY')
+  // Static process.env.* references are required for client-bundle inlining.
+  const serviceId =
+    read('NEXT_PUBLIC_EMAILJS_SERVICE_ID', process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID) ||
+    read('VITE_EMAILJS_SERVICE_ID', process.env.VITE_EMAILJS_SERVICE_ID)
+  const templateId =
+    read('NEXT_PUBLIC_EMAILJS_TEMPLATE_ID', process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID) ||
+    read('VITE_EMAILJS_TEMPLATE_ID', process.env.VITE_EMAILJS_TEMPLATE_ID)
+  const publicKey =
+    read('NEXT_PUBLIC_EMAILJS_PUBLIC_KEY', process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY) ||
+    read('VITE_EMAILJS_PUBLIC_KEY', process.env.VITE_EMAILJS_PUBLIC_KEY)
 
   /** @type {string[]} */
   const missing = []
@@ -42,9 +59,18 @@ export function resolveInquiryEmailConfig(envSource = process.env) {
     configured: missing.length === 0,
     usesExpectedService: serviceId === INQUIRY_EMAILJS_SERVICE_ID,
     // Explicitly unused — isolation from Careers / removed dual-template flow.
-    careersServiceIdIgnored: read('EMAILJS_APPLICATION_SERVICE_ID'),
-    careersTemplateIdIgnored: read('EMAILJS_APPLICATION_TEMPLATE_ID'),
-    confirmationTemplateIdIgnored: read('NEXT_PUBLIC_EMAILJS_CONFIRMATION_TEMPLATE_ID'),
+    careersServiceIdIgnored: read(
+      'EMAILJS_APPLICATION_SERVICE_ID',
+      process.env.EMAILJS_APPLICATION_SERVICE_ID
+    ),
+    careersTemplateIdIgnored: read(
+      'EMAILJS_APPLICATION_TEMPLATE_ID',
+      process.env.EMAILJS_APPLICATION_TEMPLATE_ID
+    ),
+    confirmationTemplateIdIgnored: read(
+      'NEXT_PUBLIC_EMAILJS_CONFIRMATION_TEMPLATE_ID',
+      process.env.NEXT_PUBLIC_EMAILJS_CONFIRMATION_TEMPLATE_ID
+    ),
   }
 }
 
