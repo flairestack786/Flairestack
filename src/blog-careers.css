@@ -716,6 +716,188 @@
   margin-top: 1.25rem;
 }
 
+.job-apply-page,
+.job-apply-success {
+  max-width: 760px;
+}
+
+.job-apply-form {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.job-apply-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.job-apply-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+}
+
+.job-apply-field--full {
+  grid-column: 1 / -1;
+}
+
+.job-apply-field .admin-settings-input,
+.job-apply-field .admin-settings-textarea,
+.job-apply-link-row .admin-settings-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.job-apply-field em,
+.job-apply-error {
+  color: #fca5a5;
+  font-style: normal;
+  font-size: 0.85rem;
+}
+
+.job-apply-section {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.job-apply-section h2,
+.job-apply-section-head h2 {
+  margin: 0 0 0.45rem;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.15rem;
+  color: #fff;
+}
+
+.job-apply-hint {
+  margin: 0 0 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.job-apply-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.85rem;
+}
+
+.job-apply-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 122, 0, 0.4);
+  background: rgba(255, 122, 0, 0.1);
+  color: #ffb366;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.job-apply-upload input {
+  display: none;
+}
+
+.job-apply-file {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.job-apply-file strong {
+  display: block;
+  color: #fff;
+}
+
+.job-apply-file span,
+.job-apply-file button {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.875rem;
+}
+
+.job-apply-file button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.job-apply-add-link,
+.job-apply-remove-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+
+.job-apply-add-link {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.job-apply-remove-link {
+  width: 2.4rem;
+  height: 2.4rem;
+  justify-content: center;
+}
+
+.job-apply-link-row {
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr) 2.4rem;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.job-apply-privacy {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.job-apply-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.job-apply-turnstile {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.job-apply-success .career-detail-lead strong {
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .job-apply-grid,
+  .job-apply-link-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 960px) {
   .blog-featured,
   .blog-related-grid,

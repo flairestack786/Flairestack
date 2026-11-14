@@ -151,15 +151,20 @@ export default function AdminCareersClient() {
             Administrator-only management of FlaireStack open roles.
           </p>
         </div>
-        <button
-          type="button"
-          className="admin-services-create-btn"
-          onClick={() => void handleCreate()}
-          disabled={isCreating}
-        >
-          <Plus size={16} strokeWidth={1.75} aria-hidden />
-          {isCreating ? 'Creating…' : 'Create Job'}
-        </button>
+        <div className="admin-page-header-actions">
+          <Link href="/admin/careers/applications" className="admin-services-action-btn">
+            Applications
+          </Link>
+          <button
+            type="button"
+            className="admin-services-create-btn"
+            onClick={() => void handleCreate()}
+            disabled={isCreating}
+          >
+            <Plus size={16} strokeWidth={1.75} aria-hidden />
+            {isCreating ? 'Creating…' : 'Create Job'}
+          </button>
+        </div>
       </header>
 
       {status === 'ready' && (

@@ -33,3 +33,12 @@ export function publicCareerPath(value) {
   const slug = canonicalizeContentSlug(value)
   return slug ? `/careers/${slug}` : ''
 }
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function publicCareerApplyPath(value) {
+  const path = publicCareerPath(value)
+  return path ? `${path}/apply` : ''
+}

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { estimateReadingTimeMinutes } from './blogReadingTime.js'
 import { sanitizeCmsHtml } from './sanitizeCmsHtml.js'
-import { publicBlogPath, publicCareerPath } from './contentSlug.js'
+import { publicBlogPath, publicCareerApplyPath, publicCareerPath } from './contentSlug.js'
 
 test('estimateReadingTimeMinutes counts words from HTML', () => {
   assert.equal(estimateReadingTimeMinutes(''), 1)
@@ -23,4 +23,8 @@ test('sanitizeCmsHtml strips scripts and event handlers', () => {
 test('public blog and career paths use kebab slugs', () => {
   assert.equal(publicBlogPath('Hello World'), '/blog/hello-world')
   assert.equal(publicCareerPath('Senior Engineer'), '/careers/senior-engineer')
+  assert.equal(
+    publicCareerApplyPath('Senior Engineer'),
+    '/careers/senior-engineer/apply'
+  )
 })

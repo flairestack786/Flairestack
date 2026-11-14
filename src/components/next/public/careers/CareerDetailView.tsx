@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { publicCareerApplyPath } from '@/lib/contentSlug'
 import {
   labelEmploymentType,
   labelWorkArrangement,
@@ -8,9 +9,7 @@ import {
 } from '@/lib/next/publicCareersServer'
 
 export default function CareerDetailView({ job }: { job: PublicJobDetail }) {
-  const applyHref =
-    job.applicationUrl ||
-    (job.applicationEmail ? `mailto:${job.applicationEmail}` : '/#contact')
+  const applyHref = publicCareerApplyPath(job.slug)
 
   return (
     <article className="career-detail">
@@ -28,9 +27,9 @@ export default function CareerDetailView({ job }: { job: PublicJobDetail }) {
         {job.shortDescription ? (
           <p className="career-detail-lead">{job.shortDescription}</p>
         ) : null}
-        <a href={applyHref} className="careers-job-cta career-detail-apply">
+        <Link href={applyHref} className="careers-job-cta career-detail-apply">
           Apply now
-        </a>
+        </Link>
       </header>
 
       {job.descriptionHtml ? (
@@ -72,9 +71,9 @@ export default function CareerDetailView({ job }: { job: PublicJobDetail }) {
             Send your resume and a short note about why you are a fit for this role.
           </p>
         )}
-        <a href={applyHref} className="careers-job-cta">
+        <Link href={applyHref} className="careers-job-cta">
           Apply now
-        </a>
+        </Link>
       </section>
     </article>
   )
