@@ -41,6 +41,7 @@ import { useMediaPublicUrl } from '@/components/admin/MediaUrlContext'
 import { useToast } from '@/components/common/ToastProvider'
 import {
   getServiceWithContent,
+  revalidatePublicServicePaths,
   saveServiceMedia,
   saveServiceSections,
   setServiceStatus,
@@ -310,9 +311,11 @@ export default function AdminServiceEditClient() {
       delete servicePayload.published_at
       servicePayload.slug = assertValidServiceSlug(servicePayload.slug)
 
-      await updateService(serviceId, servicePayload)
+      const previousSlug = baseline.service.slug
+      const updated = await updateService(serviceId, servicePayload, { revalidate: false })
       await saveServiceSections(formToSectionPayloads(form))
       await saveServiceMedia(serviceId, formToMediaPayloads(form))
+      await revalidatePublicServicePaths(previousSlug, updated.slug)
 
       const reloaded = await getServiceWithContent(serviceId)
       const nextForm = serviceDataToForm(
@@ -338,7 +341,7 @@ export default function AdminServiceEditClient() {
     } finally {
       setIsSaving(false)
     }
-  }, [form, publishStatus, serviceId, success, error])
+  }, [baseline.service.slug, form, publishStatus, serviceId, success, error])
 
   const handleToggleStatus = useCallback(async () => {
     if (!serviceId || isTogglingStatus) return

@@ -21,51 +21,6 @@ type HomeInquiryFormProps = {
 
 const INQUIRY_EMAIL = resolveInquiryEmailConfig()
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
-// #region agent log
-/** Local debug-only: `?debugInquiry=1` skips Turnstile so submit instrumentation can run. */
-const DEBUG_INQUIRY_BYPASS =
-  typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).get('debugInquiry') === '1'
-// #endregion
-
-// #region agent log
-function agentDebugLog(
-  hypothesisId: string,
-  location: string,
-  message: string,
-  data: Record<string, unknown>
-) {
-  const payload = {
-    sessionId: 'e489f1',
-    runId: 'post-fix',
-    hypothesisId,
-    location,
-    message,
-    data,
-    timestamp: Date.now(),
-  }
-  fetch('/api/debug-session-log', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  }).catch(() => {})
-  fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'e489f1' },
-    body: JSON.stringify(payload),
-  }).catch(() => {})
-}
-agentDebugLog('A', 'HomeInquiryForm.tsx:module', 'Inquiry EmailJS config at module load', {
-  configured: INQUIRY_EMAIL.configured,
-  missing: INQUIRY_EMAIL.missing,
-  serviceId: INQUIRY_EMAIL.serviceId || null,
-  templateId: INQUIRY_EMAIL.templateId || null,
-  usesExpectedService: INQUIRY_EMAIL.usesExpectedService,
-  publicKeyLen: (INQUIRY_EMAIL.publicKey || '').length,
-  fromEmail: INQUIRY_EMAIL.fromEmail,
-  pageHost: typeof window !== 'undefined' ? window.location.host : 'ssr',
-})
-// #endregion
 
 const initial = {
   fullName: '',
@@ -177,7 +132,7 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
       return
     }
 
-    if (TURNSTILE_SITE_KEY && !turnstileToken && !DEBUG_INQUIRY_BYPASS) {
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
       setSubmitError('Please complete the security verification before sending.')
       return
     }
@@ -186,15 +141,7 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
     setSubmitError('')
 
     try {
-      // #region agent log
-      agentDebugLog('E', 'HomeInquiryForm.tsx:submit-start', 'Inquiry submit started', {
-        pageHost: typeof window !== 'undefined' ? window.location.host : 'ssr',
-        debugBypass: DEBUG_INQUIRY_BYPASS,
-        turnstileRequired: Boolean(TURNSTILE_SITE_KEY) && !DEBUG_INQUIRY_BYPASS,
-        hasTurnstileToken: Boolean(turnstileToken),
-      })
-      // #endregion
-      if (TURNSTILE_SITE_KEY && !DEBUG_INQUIRY_BYPASS) {
+      if (TURNSTILE_SITE_KEY) {
         await verifyTurnstileWithServer(turnstileToken)
       }
 
@@ -212,12 +159,6 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
             submitted_at: new Date().toISOString(),
           },
         })
-        // #region agent log
-        agentDebugLog('E', 'HomeInquiryForm.tsx:lead-saved', 'Lead persisted before EmailJS', {
-          pageHost: typeof window !== 'undefined' ? window.location.host : 'ssr',
-          configured: INQUIRY_EMAIL.configured,
-        })
-        // #endregion
       } catch (leadErr) {
         console.error('[HomeInquiryForm] lead creation failed', leadErr)
         throw new Error(
@@ -236,27 +177,6 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
           message: values.message,
           turnstileToken,
         })
-        // #region agent log
-        {
-          const recipient = String(templateParams.email || '')
-          const at = recipient.lastIndexOf('@')
-          agentDebugLog('B', 'HomeInquiryForm.tsx:before-send', 'EmailJS params before send (no PII body)', {
-            serviceId: INQUIRY_EMAIL.serviceId,
-            templateId: INQUIRY_EMAIL.templateId,
-            paramKeys: Object.keys(templateParams),
-            emailPresent: Boolean(recipient),
-            emailDomain: at >= 0 ? recipient.slice(at + 1) : null,
-            emailIsInfo: recipient === 'info@flairestack.com',
-            emailIsHello: recipient === 'hello@flairestack.com',
-            toEmailEqualsEmail: templateParams.to_email === templateParams.email,
-            replyTo: templateParams.reply_to,
-            fromEmail: templateParams.from_email,
-            fromName: templateParams.from_name,
-            namePresent: Boolean(templateParams.name),
-            pageHost: typeof window !== 'undefined' ? window.location.host : 'ssr',
-          })
-        }
-        // #endregion
         try {
           const result = await emailjs.send(
             INQUIRY_EMAIL.serviceId,
@@ -264,15 +184,6 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
             templateParams,
             { publicKey: INQUIRY_EMAIL.publicKey }
           )
-          // #region agent log
-          agentDebugLog('C', 'HomeInquiryForm.tsx:after-send', 'EmailJS send returned', {
-            ok: isInquiryEmailJsSuccess(result),
-            status: result?.status ?? null,
-            text: String(result?.text || '').slice(0, 240),
-            serviceId: INQUIRY_EMAIL.serviceId,
-            templateId: INQUIRY_EMAIL.templateId,
-          })
-          // #endregion
           if (!isInquiryEmailJsSuccess(result)) {
             console.error('[HomeInquiryForm] EmailJS customer confirmation rejected', {
               serviceId: INQUIRY_EMAIL.serviceId,
@@ -283,14 +194,6 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
           }
         } catch (emailErr) {
           const details = formatInquiryEmailJsFailure(emailErr)
-          // #region agent log
-          agentDebugLog('C', 'HomeInquiryForm.tsx:send-catch', 'EmailJS send threw', {
-            status: details.status,
-            text: details.text,
-            serviceId: INQUIRY_EMAIL.serviceId,
-            templateId: INQUIRY_EMAIL.templateId,
-          })
-          // #endregion
           console.error('[HomeInquiryForm] EmailJS customer confirmation failed', {
             serviceId: INQUIRY_EMAIL.serviceId,
             templateId: INQUIRY_EMAIL.templateId,
@@ -299,12 +202,6 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
           })
         }
       } else {
-        // #region agent log
-        agentDebugLog('A', 'HomeInquiryForm.tsx:skipped', 'EmailJS send skipped — config incomplete', {
-          missing: INQUIRY_EMAIL.missing,
-          configured: false,
-        })
-        // #endregion
         console.error(
           '[HomeInquiryForm] EmailJS customer confirmation skipped — missing',
           INQUIRY_EMAIL.missing.join(', ')

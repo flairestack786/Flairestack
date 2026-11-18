@@ -5,6 +5,7 @@ import {
   type PublicSiteSettings,
 } from '@/lib/next/buildPublicSiteSettings'
 import { getSupabasePublicServer } from '@/lib/next/supabasePublicServer'
+import { getPublishedServiceRows } from '@/lib/next/publishedServicesServer'
 import { normalizeServiceSlug } from '@/lib/serviceSlug'
 
 export type PublicNavService = {
@@ -39,16 +40,9 @@ export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings>
  */
 export const getPublishedNavServices = cache(async (): Promise<PublicNavService[]> => {
   try {
-    const supabase = getSupabasePublicServer()
-    const { data, error } = await supabase
-      .from('services')
-      .select('id, slug, title, sort_order')
-      .eq('status', 'published')
-      .order('sort_order', { ascending: true })
+    const rows = await getPublishedServiceRows()
 
-    if (error) throw error
-
-    return (data ?? [])
+    return rows
       .map((row) => ({
         id: String(row.id ?? ''),
         slug: normalizeServiceSlug(row.slug),

@@ -11,8 +11,18 @@ import {
 import { assertValidServiceSlug } from '@/lib/serviceSlug'
 import { SERVICE_MEDIA_SLOTS } from '@/lib/serviceMediaSlots'
 import { MEDIA_BUCKET } from '@/lib/mediaFormat'
+import { serviceRevalidationPaths } from '@/lib/publicServiceVisibility'
+import { requestPublicRevalidation } from '@/lib/next/cmsRevalidateBrowser'
 
 export { SERVICE_MEDIA_SLOTS }
+
+/**
+ * Refresh only the public routes that list or render this service
+ * (`/`, `/services`, `/sitemap.xml`, `/services/<slug>` for each slug given).
+ */
+export async function revalidatePublicServicePaths(...slugs: unknown[]): Promise<void> {
+  await requestPublicRevalidation(serviceRevalidationPaths(...slugs))
+}
 
 const SECTION_WRITABLE_FIELDS = [
   'eyebrow',
@@ -325,9 +335,14 @@ export function prepareServiceUpdate(serviceId: string, fields: Record<string, u
   }
 }
 
+/**
+ * Pass `{ revalidate: false }` when more writes (sections, media) follow; the caller
+ * must then call `revalidatePublicServicePaths` once the whole save has succeeded.
+ */
 export async function updateService(
   serviceId: string,
-  fields: Record<string, unknown>
+  fields: Record<string, unknown>,
+  options: { revalidate?: boolean } = {}
 ): Promise<Record<string, unknown>> {
   const supabase = getSupabaseBrowser()
   const { payload } = prepareServiceUpdate(serviceId, fields)
@@ -360,16 +375,23 @@ export async function updateService(
     throwServiceMutationError(result.error)
   }
 
-  return result.data as Record<string, unknown>
+  const updated = result.data as Record<string, unknown>
+  if (options.revalidate !== false) {
+    await revalidatePublicServicePaths(existingResult.data?.slug, updated?.slug)
+  }
+  return updated
 }
 
 export async function deleteService(serviceId: string): Promise<void> {
   const supabase = getSupabaseBrowser()
+  const existing = await supabase.from('services').select('slug').eq('id', serviceId).maybeSingle()
   const { error } = await supabase.from('services').delete().eq('id', serviceId)
 
   if (error) {
     throw error
   }
+
+  await revalidatePublicServicePaths(existing.data?.slug)
 }
 
 export async function setServiceStatus(
@@ -406,7 +428,9 @@ export async function setServiceStatus(
     )
   }
 
-  return result.data as Record<string, unknown>
+  const updated = result.data as Record<string, unknown>
+  await revalidatePublicServicePaths(updated.slug)
+  return updated
 }
 
 export async function saveServiceSections(

@@ -1,6 +1,7 @@
 'use client'
 
 import { getSupabaseBrowser } from '@/lib/next/supabaseBrowser'
+import { requestPublicRevalidation } from '@/lib/next/cmsRevalidateBrowser'
 
 const HOME_SLUG = 'home'
 
@@ -113,5 +114,6 @@ export async function saveHomeSections(
     })
   )
 
+  await requestPublicRevalidation(['/'])
   return results
 }

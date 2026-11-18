@@ -4,6 +4,7 @@ import {
 } from '@/lib/buildPublicServicePageCore'
 import { getPublicMediaUrl } from '@/lib/next/publicMediaUrl'
 import { getSupabasePublicServer } from '@/lib/next/supabasePublicServer'
+import { getPublishedServiceRows } from '@/lib/next/publishedServicesServer'
 import { buildPublishedServiceLookup, buildPublishedServicesList } from '@/lib/serviceUrlFlow'
 import { normalizeServiceSlug } from '@/lib/serviceSlug'
 import { companyStats as FALLBACK_COMPANY_STATS } from '@/data/companyStats'
@@ -48,16 +49,9 @@ export type CompanyStatItem = {
  */
 export const getPublishedServicesList = cache(async (): Promise<PublicServiceListItem[]> => {
   try {
-    const supabase = getSupabasePublicServer()
-    const { data, error } = await supabase
-      .from('services')
-      .select('id, slug, title, short_description, description, icon_name, sort_order, status')
-      .eq('status', 'published')
-      .order('sort_order', { ascending: true })
+    const rows = await getPublishedServiceRows()
 
-    if (error) throw error
-
-    const mapped = (data ?? []).map((row) => ({
+    const mapped = rows.map((row) => ({
       id: String(row.id ?? ''),
       slug: normalizeServiceSlug(row.slug),
       title: String(row.title ?? '').trim(),

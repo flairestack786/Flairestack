@@ -64,10 +64,6 @@ export async function POST(request: Request) {
       revalidatePath(path)
     }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'E',location:'api/cms/revalidate/route.ts',message:'CMS revalidate invoked',data:{paths,userId:userData.user.id},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     return NextResponse.json({ ok: true, revalidated: paths })
   } catch (error) {
     return NextResponse.json(

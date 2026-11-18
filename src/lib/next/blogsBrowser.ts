@@ -200,20 +200,12 @@ export async function setBlogPostStatus(
       ? { status, published_at: new Date().toISOString() }
       : { status: 'draft', published_at: null }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'A',location:'blogsBrowser.ts:setBlogPostStatus:entry',message:'CMS publish/unpublish requested',data:{id,requestedStatus:status,payload},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-
   const { data, error } = await supabase
     .from('blog_posts')
     .update(payload)
     .eq('id', id)
     .select()
     .single()
-
-  // #region agent log
-  fetch('http://127.0.0.1:7579/ingest/4918a319-e90a-4720-9b4a-3cee86de2e01',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e489f1'},body:JSON.stringify({sessionId:'e489f1',runId:'post-fix',hypothesisId:'A',location:'blogsBrowser.ts:setBlogPostStatus:result',message:'CMS publish/unpublish result',data:{id,requestedStatus:status,ok:!error&&!!data,errorCode:error?.code??null,errorMessage:error?.message??null,returnedStatus:data?String((data as{status?:unknown}).status??''):null,returnedPublishedAt:data?(data as{published_at?:unknown}).published_at??null:null},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   if (error) throw error
   if (!data) throw new Error('Blog post not found or you do not have permission to update it.')

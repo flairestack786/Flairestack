@@ -17,6 +17,8 @@ import {
 import { resolveLegacyAssetKey } from '@/lib/serviceCatalogAssets'
 import { resolvePublicAssetUrl } from '@/lib/next/publicMediaUrl'
 import { readShowcaseItemsFromConfig } from '@/lib/homeServicesShowcase'
+import { getPublishedServiceRows } from '@/lib/next/publishedServicesServer'
+import { filterVisibleShowcaseItems } from '@/lib/publicServiceVisibility'
 
 const HOME_SLUG = 'home'
 const PUBLIC_SEO_SELECT =
@@ -126,16 +128,8 @@ function cardFromCatalogRow(row: Record<string, unknown>): HomeServiceCard | nul
 }
 
 async function listPublishedCatalogCards(): Promise<HomeServiceCard[]> {
-  const supabase = getSupabasePublicServer()
-  const { data, error } = await supabase
-    .from('services')
-    .select('id, slug, title, short_description, sort_order, legacy_asset_key')
-    .eq('status', 'published')
-    .order('sort_order', { ascending: true })
-
-  if (error) throw error
-
-  return (data ?? [])
+  const rows = await getPublishedServiceRows()
+  return rows
     .map((row) => cardFromCatalogRow(row as Record<string, unknown>))
     .filter((row): row is HomeServiceCard => Boolean(row))
 }
@@ -143,6 +137,7 @@ async function listPublishedCatalogCards(): Promise<HomeServiceCard[]> {
 /**
  * Homepage services rows — CMS `page_sections.services.config.showcase_items`
  * when present; otherwise all published catalog services.
+ * Showcase items linked to a draft or deleted service are never rendered.
  */
 export const getHomeServiceCards = cache(async (): Promise<HomeServiceCard[]> => {
   try {
@@ -174,8 +169,7 @@ export const getHomeServiceCards = cache(async (): Promise<HomeServiceCard[]> =>
       const catalog = await listPublishedCatalogCards()
       const catalogBySlug = new Map(catalog.map((item) => [item.slug, item]))
 
-      return cmsItems
-        .filter((item) => item.enabled)
+      return filterVisibleShowcaseItems(cmsItems, catalogBySlug.keys())
         .map((item, index) => {
           const linked = item.service_slug ? catalogBySlug.get(item.service_slug) : null
           const title = item.title || linked?.title || 'Service'

@@ -1,1 +1,0 @@
-{"sessionId":"e489f1","runId":"post-fix","hypothesisId":"A","location":"HomeInquiryForm.tsx:module","message":"Inquiry EmailJS config at module load","data":{"configured":true,"missing":[],"serviceId":"service_mqjkoth","templateId":"template_5jo1wed","usesExpectedService":true,"publicKeyLen":17,"fromEmail":"hello@flairestack.com","pageHost":"ssr"},"timestamp":1794694512901}
