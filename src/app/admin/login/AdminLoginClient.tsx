@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -21,6 +21,15 @@ export default function AdminLoginClient() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Set by NextProtectedGate after it signs out an account without CMS access.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('reason') === 'unauthorized') {
+      setError(
+        'This account does not have access to the FlaireStack CMS. Contact an administrator if you believe this is a mistake.'
+      )
+    }
+  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()

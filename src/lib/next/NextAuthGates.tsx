@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useNextAuth } from '@/lib/next/NextAuthProvider'
 import { canAccessModule } from '@/lib/cmsPermissions'
@@ -23,7 +23,8 @@ function AuthChecking({ label = 'Checking session…' }: { label?: string }) {
  */
 export function NextGuestGate({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const { session, profile, isPasswordRecovery, loading, profileLoading } = useNextAuth()
+  const { session, profile, accessDenied, isPasswordRecovery, loading, profileLoading } =
+    useNextAuth()
 
   useEffect(() => {
     if (loading || (session && profileLoading)) return
@@ -37,14 +38,16 @@ export function NextGuestGate({ children }: { children: React.ReactNode }) {
       router.replace('/admin/set-password')
       return
     }
+    // A session without CMS access stays on the sign-in page (no dashboard bounce).
+    if (accessDenied) return
     router.replace('/admin/dashboard')
-  }, [loading, profileLoading, session, profile, isPasswordRecovery, router])
+  }, [loading, profileLoading, session, profile, accessDenied, isPasswordRecovery, router])
 
   if (loading || (session && profileLoading)) {
     return <AuthChecking />
   }
 
-  if (session) {
+  if (session && !accessDenied) {
     return <AuthChecking label="Redirecting…" />
   }
 
@@ -72,23 +75,24 @@ export function NextProtectedGate({ children, module }: NextProtectedGateProps) 
     profile,
     cmsRole,
     isActiveCmsUser,
+    accessDenied,
     isPasswordRecovery,
     loading,
     profileLoading,
+    signOut,
   } = useNextAuth()
+  const rejecting = useRef(false)
 
   const missingProfile = Boolean(session) && !profile
+  // isActiveCmsUser already guarantees a valid role; a null role is never "allowed".
   const moduleDenied =
-    Boolean(module) &&
-    Boolean(profile) &&
-    isActiveCmsUser &&
-    cmsRole != null &&
-    !canAccessModule(cmsRole, module as never)
+    Boolean(module) && isActiveCmsUser && !canAccessModule(cmsRole, module as never)
 
   useEffect(() => {
     if (loading || profileLoading) return
 
     if (!session) {
+      if (rejecting.current) return // sign-out in progress; it redirects with the reason
       router.replace('/admin/login')
       return
     }
@@ -100,7 +104,17 @@ export function NextProtectedGate({ children, module }: NextProtectedGateProps) 
       router.replace('/admin/set-password')
       return
     }
-    // Never grant CMS access when profile is missing (no silent administrator fallback).
+    // Missing profile, inactive account or unknown/missing role: end the session and
+    // explain on the sign-in page. Never fall back to any role.
+    if (accessDenied) {
+      if (rejecting.current) return
+      rejecting.current = true
+      void signOut()
+        .catch(() => undefined)
+        .finally(() => router.replace('/admin/login?reason=unauthorized'))
+      return
+    }
+    // Profile could not be loaded (e.g. network): no access, no sign-out.
     if (!profile || !isActiveCmsUser) {
       router.replace('/admin/login')
       return
@@ -114,8 +128,10 @@ export function NextProtectedGate({ children, module }: NextProtectedGateProps) 
     session,
     profile,
     isActiveCmsUser,
+    accessDenied,
     isPasswordRecovery,
     moduleDenied,
+    signOut,
     router,
   ])
 

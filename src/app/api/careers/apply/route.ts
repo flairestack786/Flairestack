@@ -8,7 +8,11 @@ import {
   validateApplicationFields,
   validateResumeIdentity,
 } from '@/lib/jobApplicationValidation'
-import { sendApplicationConfirmationEmail } from '@/lib/next/sendApplicationConfirmationEmail'
+import { hiringNotificationColumns, runApplicationEmails } from '@/lib/careersApplicationEmails'
+import {
+  sendApplicationConfirmationEmail,
+  sendHiringTeamNotificationEmail,
+} from '@/lib/next/sendApplicationConfirmationEmail'
 import { getSupabaseServiceRole } from '@/lib/next/supabaseServiceRole'
 
 export const runtime = 'nodejs'
@@ -166,38 +170,71 @@ export async function POST(request: Request) {
       return jsonError('Unable to save your application. Please try again.', 500)
     }
 
-    const emailResult = await sendApplicationConfirmationEmail({
-      toEmail: fieldResult.data.email,
-      firstName: fieldResult.data.first_name,
-      jobTitle: String(job.title ?? 'Open Role'),
-    })
+    // The application and its resume are now committed; nothing below may remove them.
+    resumePath = null
 
-    if (emailResult.ok) {
-      await supabase
-        .from('job_applications')
-        .update({ confirmation_email_status: 'sent', confirmation_email_error: '' })
-        .eq('id', application.id)
-    } else {
-      const statusBit =
-        emailResult.httpStatus != null ? `http=${emailResult.httpStatus}` : 'http=n/a'
-      console.error(
-        `[careers/apply] confirmation email ${emailResult.skipped ? 'skipped' : 'failed'} ${statusBit}`
-      )
-      await supabase
-        .from('job_applications')
-        .update({
-          confirmation_email_status: emailResult.skipped ? 'skipped' : 'failed',
-          confirmation_email_error: emailResult.error.slice(0, 500),
-        })
-        .eq('id', application.id)
-    }
+    const jobTitle = String(job.title ?? 'Open Role')
+    const { confirmation: emailResult } = await runApplicationEmails({
+      sendConfirmation: () =>
+        sendApplicationConfirmationEmail({
+          toEmail: fieldResult.data.email,
+          firstName: fieldResult.data.first_name,
+          jobTitle,
+        }),
+      sendNotification: () =>
+        sendHiringTeamNotificationEmail({
+          jobTitle,
+          application: {
+            id: String(application.id),
+            firstName: fieldResult.data.first_name,
+            lastName: fieldResult.data.last_name,
+            email: fieldResult.data.email,
+            phone: fieldResult.data.phone,
+            currentJobTitle: fieldResult.data.current_job_title,
+            currentCompany: fieldResult.data.current_company,
+            location: fieldResult.data.location,
+            yearsExperience: fieldResult.data.years_experience,
+            noticePeriod: fieldResult.data.notice_period,
+            profileLinks,
+            resumeFilename: resume.name.slice(0, 240),
+            resumeMime: identity.mime,
+            resumeSize: resume.size,
+          },
+        }),
+      async recordConfirmation(result) {
+        await supabase
+          .from('job_applications')
+          .update(
+            result.ok
+              ? { confirmation_email_status: 'sent', confirmation_email_error: '' }
+              : {
+                  confirmation_email_status: result.skipped ? 'skipped' : 'failed',
+                  confirmation_email_error: result.error.slice(0, 500),
+                }
+          )
+          .eq('id', application.id)
+      },
+      async recordNotification(result) {
+        // Separate best-effort update: works before the optional
+        // hiring_notification_* migration is applied (the error is ignored).
+        await supabase
+          .from('job_applications')
+          .update(hiringNotificationColumns(result))
+          .eq('id', application.id)
+      },
+      log: (message) => console.error(`[careers/apply] ${message}`),
+    })
 
     return NextResponse.json({
       ok: true,
       jobTitle: job.title,
       jobSlug: job.slug,
       emailSent: emailResult.ok,
-      emailStatus: emailResult.ok ? 'sent' : emailResult.skipped ? 'skipped' : 'failed',
+      emailStatus: emailResult.ok
+        ? 'sent'
+        : 'skipped' in emailResult && emailResult.skipped
+          ? 'skipped'
+          : 'failed',
     })
   } catch (error) {
     console.error('[careers/apply] unexpected failure', error)

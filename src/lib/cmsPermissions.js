@@ -62,24 +62,59 @@ export const CMS_ADMIN_ACTIONS = Object.freeze({
   manageGlobalSeo: ['administrator'],
 })
 
+/** Every valid CMS role. Mirrors the `public.cms_role` Postgres enum. */
+export const CMS_ROLES = Object.freeze(/** @type {const} */ (['administrator', 'editor', 'sales']))
+
 /**
- * @param {string | null | undefined} role
- * @returns {CmsRole}
+ * @param {unknown} role
+ * @returns {role is CmsRole}
  */
-export function normalizeCmsRole(role) {
-  if (role === 'editor') return 'editor'
-  if (role === 'sales') return 'sales'
-  return 'administrator'
+export function isCmsRole(role) {
+  return typeof role === 'string' && CMS_ROLES.includes(/** @type {CmsRole} */ (role))
 }
 
 /**
- * @param {string | null | undefined} role
+ * Exact-match role validation. Unknown, missing, empty, mis-cased, padded or
+ * non-string values return `null` — they never fall back to any role, least of
+ * all `administrator`. Callers must treat `null` as "no CMS access".
+ *
+ * @param {unknown} role
+ * @returns {CmsRole | null}
+ */
+export function normalizeCmsRole(role) {
+  return isCmsRole(role) ? role : null
+}
+
+/**
+ * @typedef {'missing_profile' | 'invited' | 'inactive' | 'invalid_role'} CmsAccessDeniedReason
+ * @typedef {{ ok: true, role: CmsRole } | { ok: false, reason: CmsAccessDeniedReason }} CmsAccessResult
+ */
+
+/**
+ * Single access decision for a CMS profile, shared by browser gates and server
+ * routes. Access requires an existing profile, status `active`, and a valid role.
+ *
+ * @param {{ role?: unknown, status?: unknown } | null | undefined} profile
+ * @returns {CmsAccessResult}
+ */
+export function resolveCmsAccess(profile) {
+  if (!profile || typeof profile !== 'object') return { ok: false, reason: 'missing_profile' }
+  if (profile.status === 'invited') return { ok: false, reason: 'invited' }
+  if (profile.status !== 'active') return { ok: false, reason: 'inactive' }
+  const role = normalizeCmsRole(profile.role)
+  if (!role) return { ok: false, reason: 'invalid_role' }
+  return { ok: true, role }
+}
+
+/**
+ * @param {unknown} role
  * @param {CmsModuleId} moduleId
  * @returns {boolean}
  */
 export function canAccessModule(role, moduleId) {
   const normalized = normalizeCmsRole(role)
-  return CMS_ROLE_MODULES[normalized]?.includes(moduleId) ?? false
+  if (!normalized) return false
+  return CMS_ROLE_MODULES[normalized].includes(moduleId)
 }
 
 /**
@@ -104,8 +139,9 @@ export function canManageContent(role) {
  * @returns {boolean}
  */
 export function canAccessPath(role, pathname) {
-  const modules = CMS_ROLE_MODULES[normalizeCmsRole(role)] ?? []
-  return modules.some((moduleId) => {
+  const normalized = normalizeCmsRole(role)
+  if (!normalized) return false
+  return CMS_ROLE_MODULES[normalized].some((moduleId) => {
     const config = CMS_MODULE_ROUTES[moduleId]
     if (!config) return false
     return pathname === config.path || pathname.startsWith(`${config.path}/`)
@@ -118,8 +154,10 @@ export function canAccessPath(role, pathname) {
  * @returns {boolean}
  */
 export function canPerformAdminAction(role, action) {
+  const normalized = normalizeCmsRole(role)
+  if (!normalized) return false
   const allowed = CMS_ADMIN_ACTIONS[action] ?? []
-  return allowed.includes(normalizeCmsRole(role))
+  return allowed.includes(normalized)
 }
 
 /**
@@ -135,7 +173,8 @@ export function canManageGlobalSeo(role) {
  * @returns {CmsModuleId[]}
  */
 export function getModulesForRole(role) {
-  return [...(CMS_ROLE_MODULES[normalizeCmsRole(role)] ?? [])]
+  const normalized = normalizeCmsRole(role)
+  return normalized ? [...CMS_ROLE_MODULES[normalized]] : []
 }
 
 /** Route metadata keyed by module id (mirrors adminNav). */

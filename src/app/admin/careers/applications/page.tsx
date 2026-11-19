@@ -7,7 +7,7 @@ import AdminApplicationsClient from './AdminApplicationsClient'
 export default function AdminApplicationsPage() {
   return (
     <NextProtectedGate module="careers">
-      <NextAdminShell pageTitle="Job Applications">
+      <NextAdminShell pageTitle="Applicants">
         <AdminApplicationsClient />
       </NextAdminShell>
     </NextProtectedGate>

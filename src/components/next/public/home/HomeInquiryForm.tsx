@@ -13,7 +13,7 @@ import {
   isInquiryEmailJsSuccess,
   resolveInquiryEmailConfig,
 } from '@/lib/inquiryEmailConfig'
-import { createPublicLead } from '@/lib/next/createPublicLead'
+import { submitInquiry } from '@/lib/inquiryClientFlow'
 
 type HomeInquiryFormProps = {
   serviceOptions?: string[]
@@ -64,37 +64,58 @@ function validate(values: typeof initial) {
   return errors
 }
 
-async function verifyTurnstileWithServer(token: string) {
-  let response: Response
-  try {
-    response = await fetch('/api/turnstile/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    })
-  } catch {
-    throw new Error(
-      'Unable to reach the verification server. Check that Next is running and TURNSTILE_SECRET_KEY is configured.'
+/** Exactly one customer confirmation via the inquiry template. No business notification. */
+async function sendCustomerConfirmation(values: typeof initial): Promise<boolean> {
+  if (!INQUIRY_EMAIL.configured) {
+    console.error(
+      '[HomeInquiryForm] EmailJS customer confirmation skipped — missing',
+      INQUIRY_EMAIL.missing.join(', ')
     )
+    return false
   }
 
-  let result: { success?: boolean } = {}
+  const templateParams = buildInquiryEmailJsTemplateParams({
+    fullName: values.fullName,
+    email: values.email,
+    company: values.company,
+    phone: values.phone,
+    service: values.service,
+    message: values.message,
+  })
+
   try {
-    result = await response.json()
-  } catch {
-    throw new Error('Invalid response from verification server.')
+    const result = await emailjs.send(
+      INQUIRY_EMAIL.serviceId,
+      INQUIRY_EMAIL.templateId,
+      templateParams,
+      { publicKey: INQUIRY_EMAIL.publicKey }
+    )
+    if (!isInquiryEmailJsSuccess(result)) {
+      console.error('[HomeInquiryForm] EmailJS customer confirmation rejected', {
+        serviceId: INQUIRY_EMAIL.serviceId,
+        templateId: INQUIRY_EMAIL.templateId,
+        status: result?.status ?? null,
+        text: String(result?.text || '').slice(0, 240),
+      })
+      return false
+    }
+    return true
+  } catch (emailErr) {
+    const details = formatInquiryEmailJsFailure(emailErr)
+    console.error('[HomeInquiryForm] EmailJS customer confirmation failed', {
+      serviceId: INQUIRY_EMAIL.serviceId,
+      templateId: INQUIRY_EMAIL.templateId,
+      status: details.status,
+      text: details.text,
+    })
+    return false
   }
-
-  if (!response.ok || !result.success) {
-    throw new Error('Security verification failed. Please try again.')
-  }
-
-  return result
 }
 
 /**
- * Phase 19 — Next public inquiry form (Vite InquiryForm parity).
- * Flow: validate → Turnstile verify → anon lead insert → EmailJS → success.
+ * Public inquiry form.
+ * Flow: validate → POST /api/inquiry/submit (server Turnstile verify + lead insert)
+ * → customer confirmation email only after the server confirms the save.
  */
 export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps) {
   const options =
@@ -140,84 +161,25 @@ export default function HomeInquiryForm({ serviceOptions }: HomeInquiryFormProps
     setStatus('submitting')
     setSubmitError('')
 
-    try {
-      if (TURNSTILE_SITE_KEY) {
-        await verifyTurnstileWithServer(turnstileToken)
-      }
+    const submitted = { ...values }
+    const result = await submitInquiry({
+      values: submitted,
+      turnstileToken,
+      sendConfirmation: () => sendCustomerConfirmation(submitted),
+    })
 
-      // Persist first — CMS Leads is the system of record for the team.
-      try {
-        await createPublicLead({
-          full_name: values.fullName,
-          email: values.email,
-          company: values.company,
-          phone: values.phone,
-          service_interest: values.service,
-          message: values.message,
-          source: 'contact_form',
-          metadata: {
-            submitted_at: new Date().toISOString(),
-          },
-        })
-      } catch (leadErr) {
-        console.error('[HomeInquiryForm] lead creation failed', leadErr)
-        throw new Error(
-          'Unable to save your inquiry right now. Please try again in a moment.'
-        )
-      }
+    // Turnstile tokens are single-use; always request a fresh one.
+    resetTurnstile()
 
-      // Exactly one customer confirmation (non-blocking). No business notification.
-      if (INQUIRY_EMAIL.configured) {
-        const templateParams = buildInquiryEmailJsTemplateParams({
-          fullName: values.fullName,
-          email: values.email,
-          company: values.company,
-          phone: values.phone,
-          service: values.service,
-          message: values.message,
-          turnstileToken,
-        })
-        try {
-          const result = await emailjs.send(
-            INQUIRY_EMAIL.serviceId,
-            INQUIRY_EMAIL.templateId,
-            templateParams,
-            { publicKey: INQUIRY_EMAIL.publicKey }
-          )
-          if (!isInquiryEmailJsSuccess(result)) {
-            console.error('[HomeInquiryForm] EmailJS customer confirmation rejected', {
-              serviceId: INQUIRY_EMAIL.serviceId,
-              templateId: INQUIRY_EMAIL.templateId,
-              status: result?.status ?? null,
-              text: String(result?.text || '').slice(0, 240),
-            })
-          }
-        } catch (emailErr) {
-          const details = formatInquiryEmailJsFailure(emailErr)
-          console.error('[HomeInquiryForm] EmailJS customer confirmation failed', {
-            serviceId: INQUIRY_EMAIL.serviceId,
-            templateId: INQUIRY_EMAIL.templateId,
-            status: details.status,
-            text: details.text,
-          })
-        }
-      } else {
-        console.error(
-          '[HomeInquiryForm] EmailJS customer confirmation skipped — missing',
-          INQUIRY_EMAIL.missing.join(', ')
-        )
-      }
-
-      setStatus('success')
-      setValues(initial)
-      resetTurnstile()
-    } catch (err) {
+    if (!result.ok) {
       setStatus('idle')
-      setSubmitError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.'
-      )
-      resetTurnstile()
+      if (result.fieldErrors) setErrors(result.fieldErrors)
+      setSubmitError(result.error)
+      return
     }
+
+    setStatus('success')
+    setValues(initial)
   }
 
   if (status === 'success') {

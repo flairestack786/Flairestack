@@ -6,6 +6,12 @@
 export const CAREERS_EMAIL_FROM = 'careers@flairestack.com'
 export const EMAILJS_SEND_URL = 'https://api.emailjs.com/api/v1.0/email/send'
 
+/** Hiring-team inbox that receives one notification per submitted application. */
+export const CAREERS_NOTIFICATION_EMAIL = 'careers@flairestack.com'
+
+/** EmailJS REST API allows 1 request/second per account; space consecutive sends. */
+export const EMAILJS_MIN_SEND_INTERVAL_MS = 1100
+
 /**
  * @param {string} text
  * @param {number} [max]

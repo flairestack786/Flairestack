@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { getNavSectionsForRole } from '@/data/adminNav'
+import { findActiveNavItemId, getNavSectionsForRole } from '@/data/adminNav'
 import { useNextAuth } from '@/lib/next/NextAuthProvider'
 
 type NextAdminSidebarProps = {
@@ -20,6 +20,7 @@ export default function NextAdminSidebar({
   const { canAccess, cmsRole } = useNextAuth()
   const pathname = usePathname() ?? ''
   const sections = getNavSectionsForRole(cmsRole, canAccess)
+  const activeId = findActiveNavItemId(pathname)
 
   return (
     <aside className="admin-sidebar" aria-label="Admin navigation">
@@ -48,7 +49,7 @@ export default function NextAdminSidebar({
                   (item): item is NonNullable<(typeof section.items)[number]> => Boolean(item)
                 )
                 .map(({ id, label, path, icon: Icon }) => {
-                const isActive = pathname === path || pathname.startsWith(`${path}/`)
+                const isActive = id === activeId
                 return (
                   <li key={id}>
                     <Link

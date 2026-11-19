@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { canManageContent, normalizeCmsRole } from '@/lib/cmsPermissions'
+import { canManageContent, resolveCmsAccess } from '@/lib/cmsPermissions'
 
 export const runtime = 'nodejs'
 
@@ -41,11 +41,13 @@ export async function POST(request: Request) {
       .eq('id', userData.user.id)
       .maybeSingle()
 
-    if (profileError || !profile || profile.status !== 'active') {
+    if (profileError) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (!canManageContent(normalizeCmsRole(String(profile.role ?? '')))) {
+    // Missing profile, inactive status or unknown role → 403; never a role fallback.
+    const access = resolveCmsAccess(profile)
+    if (!access.ok || !canManageContent(access.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

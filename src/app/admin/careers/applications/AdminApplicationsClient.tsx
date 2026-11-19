@@ -2,13 +2,27 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { AlertCircle, Briefcase, Loader2, RefreshCw, Users } from 'lucide-react'
-import { useToast } from '@/components/common/ToastProvider'
 import {
-  JOB_APPLICATION_STATUSES,
-  labelJobApplicationStatus,
-} from '@/lib/jobApplicationValidation'
-import { listJobApplications, type JobApplicationRow } from '@/lib/next/jobApplicationsBrowser'
+  AlertCircle,
+  Briefcase,
+  Inbox,
+  Loader2,
+  RefreshCw,
+  Search,
+  UserCheck,
+  Users,
+} from 'lucide-react'
+import AdminSelect from '@/components/admin/AdminSelect'
+import {
+  JOB_OVERVIEW_SORTS,
+  JOB_STATUS_LABELS,
+  EMPLOYMENT_TYPE_LABELS,
+  filterJobSummaries,
+  labelEmploymentType,
+  sortJobSummaries,
+  type JobSummary,
+} from '@/lib/applicantsCms'
+import { listJobSummaries } from '@/lib/next/jobApplicationsBrowser'
 
 function formatDate(value: unknown) {
   if (!value) return '—'
@@ -23,28 +37,35 @@ function formatDate(value: unknown) {
   })
 }
 
-function jobTitle(row: JobApplicationRow) {
-  return row.job_postings?.title || 'Unknown role'
-}
+const TYPE_OPTIONS = [
+  { value: 'all', label: 'All types' },
+  ...Object.entries(EMPLOYMENT_TYPE_LABELS).map(([value, label]) => ({ value, label })),
+]
+
+const JOB_STATUS_OPTIONS = [
+  { value: 'all', label: 'All postings' },
+  ...Object.entries(JOB_STATUS_LABELS).map(([value, label]) => ({ value, label })),
+]
+
+const SORT_OPTIONS = JOB_OVERVIEW_SORTS.map(({ value, label }) => ({ value, label }))
 
 export default function AdminApplicationsClient() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [loadError, setLoadError] = useState('')
-  const [rows, setRows] = useState<JobApplicationRow[]>([])
+  const [jobs, setJobs] = useState<JobSummary[]>([])
   const [query, setQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | string>('all')
-  const [jobFilter, setJobFilter] = useState('all')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [jobStatusFilter, setJobStatusFilter] = useState('all')
+  const [sort, setSort] = useState('recent')
 
   const load = useCallback(async () => {
     setStatus('loading')
     setLoadError('')
     try {
-      setRows(await listJobApplications())
+      setJobs(await listJobSummaries())
       setStatus('ready')
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load applications.')
+      setLoadError(err instanceof Error ? err.message : 'Failed to load applicants.')
       setStatus('error')
     }
   }, [])
@@ -53,48 +74,32 @@ export default function AdminApplicationsClient() {
     void load()
   }, [load])
 
-  const jobOptions = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const row of rows) {
-      const job = row.job_postings
-      if (job?.id) map.set(String(job.id), String(job.title || 'Untitled role'))
-      else if (row.job_posting_id) map.set(String(row.job_posting_id), jobTitle(row))
-    }
-    return [...map.entries()]
-  }, [rows])
+  const summary = useMemo(
+    () => ({
+      jobs: jobs.length,
+      total: jobs.reduce((n, job) => n + job.totalApplicants, 0),
+      fresh: jobs.reduce((n, job) => n + job.newApplicants, 0),
+      withApplicants: jobs.filter((job) => job.totalApplicants > 0).length,
+    }),
+    [jobs]
+  )
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    const fromMs = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null
-    const toMs = dateTo ? new Date(`${dateTo}T23:59:59.999`).getTime() : null
-    return rows.filter((row) => {
-      if (statusFilter !== 'all' && row.application_status !== statusFilter) return false
-      if (jobFilter !== 'all' && String(row.job_posting_id) !== jobFilter) return false
-      if (fromMs != null || toMs != null) {
-        const createdMs = row.created_at ? new Date(String(row.created_at)).getTime() : NaN
-        if (Number.isNaN(createdMs)) return false
-        if (fromMs != null && createdMs < fromMs) return false
-        if (toMs != null && createdMs > toMs) return false
-      }
-      if (!q) return true
-      const haystack = [
-        row.first_name,
-        row.last_name,
-        row.email,
-        row.phone,
-        jobTitle(row),
-      ]
-        .map((v) => String(v ?? '').toLowerCase())
-        .join(' ')
-      return haystack.includes(q)
-    })
-  }, [dateFrom, dateTo, jobFilter, query, rows, statusFilter])
+  const visible = useMemo(
+    () =>
+      sortJobSummaries(
+        filterJobSummaries(jobs, { query, employmentType: typeFilter, jobStatus: jobStatusFilter }),
+        sort
+      ),
+    [jobs, query, typeFilter, jobStatusFilter, sort]
+  )
+
+  const hasActiveFilters = query.trim() !== '' || typeFilter !== 'all' || jobStatusFilter !== 'all'
 
   if (status === 'loading') {
     return (
       <div className="admin-settings-state" role="status">
         <Loader2 size={24} strokeWidth={1.75} className="admin-settings-spinner" aria-hidden />
-        <span>Loading applications…</span>
+        <span>Loading applicants…</span>
       </div>
     )
   }
@@ -113,15 +118,15 @@ export default function AdminApplicationsClient() {
   }
 
   return (
-    <div className="admin-page admin-services-page">
+    <div className="admin-page admin-services-page admin-leads-page">
       <header className="admin-page-header">
         <span className="admin-page-icon" aria-hidden>
-          <Users size={22} strokeWidth={1.75} />
+          <UserCheck size={22} strokeWidth={1.75} />
         </span>
         <div>
-          <h1 className="admin-page-title">Job Applications</h1>
+          <h1 className="admin-page-title">Applicants</h1>
           <p className="admin-page-desc">
-            Confidential applicant submissions. Administrators only.
+            Applications grouped by job posting. Confidential — administrators only.
           </p>
         </div>
         <div className="admin-page-header-actions">
@@ -136,110 +141,180 @@ export default function AdminApplicationsClient() {
         </div>
       </header>
 
-      <div className="admin-services-toolbar">
-        <input
-          className="admin-settings-input"
-          placeholder="Search name or email…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <select
-          className="admin-settings-input"
-          value={jobFilter}
-          onChange={(e) => setJobFilter(e.target.value)}
-        >
-          <option value="all">All positions</option>
-          {jobOptions.map(([id, title]) => (
-            <option key={id} value={id}>
-              {title}
-            </option>
-          ))}
-        </select>
-        <select
-          className="admin-settings-input"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="all">All statuses</option>
-          {JOB_APPLICATION_STATUSES.map((value) => (
-            <option key={value} value={value}>
-              {labelJobApplicationStatus(value)}
-            </option>
-          ))}
-        </select>
-        <label className="admin-settings-field" style={{ margin: 0 }}>
-          <span className="sr-only">From date</span>
+      <div className="admin-leads-summary">
+        <article className="admin-leads-summary-card">
+          <span className="admin-leads-summary-icon admin-leads-summary-icon--total" aria-hidden>
+            <Briefcase size={18} strokeWidth={1.75} />
+          </span>
+          <div>
+            <p className="admin-leads-summary-label">Job postings</p>
+            <p className="admin-leads-summary-value">{summary.jobs}</p>
+          </div>
+        </article>
+        <article className="admin-leads-summary-card">
+          <span className="admin-leads-summary-icon admin-leads-summary-icon--contacted" aria-hidden>
+            <Users size={18} strokeWidth={1.75} />
+          </span>
+          <div>
+            <p className="admin-leads-summary-label">Total applicants</p>
+            <p className="admin-leads-summary-value">{summary.total}</p>
+          </div>
+        </article>
+        <article className="admin-leads-summary-card">
+          <span className="admin-leads-summary-icon admin-leads-summary-icon--new" aria-hidden>
+            <Inbox size={18} strokeWidth={1.75} />
+          </span>
+          <div>
+            <p className="admin-leads-summary-label">New applicants</p>
+            <p className="admin-leads-summary-value">{summary.fresh}</p>
+          </div>
+        </article>
+        <article className="admin-leads-summary-card">
+          <span className="admin-leads-summary-icon admin-leads-summary-icon--won" aria-hidden>
+            <UserCheck size={18} strokeWidth={1.75} />
+          </span>
+          <div>
+            <p className="admin-leads-summary-label">Jobs with applicants</p>
+            <p className="admin-leads-summary-value">{summary.withApplicants}</p>
+          </div>
+        </article>
+      </div>
+
+      <div className="admin-leads-toolbar admin-applicants-toolbar">
+        <label className="admin-leads-search">
+          <Search size={16} strokeWidth={1.75} aria-hidden />
+          <span className="sr-only">Search job titles</span>
           <input
-            type="date"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by job title…"
             className="admin-settings-input"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            aria-label="Filter from date"
           />
         </label>
-        <label className="admin-settings-field" style={{ margin: 0 }}>
-          <span className="sr-only">To date</span>
-          <input
-            type="date"
-            className="admin-settings-input"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            aria-label="Filter to date"
+        <div className="admin-leads-filter">
+          <AdminSelect
+            id="applicants-type-filter"
+            aria-label="Filter by employment type"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            options={TYPE_OPTIONS}
+            placeholder="All types"
           />
-        </label>
+        </div>
+        <div className="admin-leads-filter">
+          <AdminSelect
+            id="applicants-job-status-filter"
+            aria-label="Filter by posting status"
+            value={jobStatusFilter}
+            onChange={setJobStatusFilter}
+            options={JOB_STATUS_OPTIONS}
+            placeholder="All postings"
+          />
+        </div>
+        <div className="admin-leads-filter">
+          <AdminSelect
+            id="applicants-sort"
+            aria-label="Sort jobs"
+            value={sort}
+            onChange={setSort}
+            options={SORT_OPTIONS}
+            placeholder="Sort"
+          />
+        </div>
       </div>
 
       <div className="admin-services-table-wrap">
-        <table className="admin-services-table">
-          <thead>
-            <tr>
-              <th scope="col">Applicant</th>
-              <th scope="col">Position</th>
-              <th scope="col">Status</th>
-              <th scope="col">Email</th>
-              <th scope="col">Submitted</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
+        {jobs.length === 0 ? (
+          <div className="admin-page-placeholder admin-leads-empty">
+            <Briefcase size={28} strokeWidth={1.5} aria-hidden />
+            <p>No job postings yet.</p>
+            <p className="admin-leads-empty-hint">
+              Create a posting under Careers; applicants will be grouped under it here.
+            </p>
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="admin-page-placeholder admin-leads-empty">
+            <Search size={28} strokeWidth={1.5} aria-hidden />
+            <p>No job postings match your filters.</p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="admin-settings-retry"
+                onClick={() => {
+                  setQuery('')
+                  setTypeFilter('all')
+                  setJobStatusFilter('all')
+                }}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <table className="admin-services-table admin-leads-table">
+            <thead>
               <tr>
-                <td colSpan={6}>
-                  <div className="admin-page-placeholder">No applications match these filters.</div>
-                </td>
+                <th scope="col">Job Title</th>
+                <th scope="col">Employment Type</th>
+                <th scope="col">Location</th>
+                <th scope="col">Total Applicants</th>
+                <th scope="col">New Applicants</th>
+                <th scope="col">Last Application</th>
+                <th scope="col">Actions</th>
               </tr>
-            ) : (
-              filtered.map((row) => (
-                <tr key={row.id}>
+            </thead>
+            <tbody>
+              {visible.map((job) => (
+                <tr key={job.id}>
                   <td>
                     <Link
-                      href={`/admin/careers/applications/${row.id}`}
+                      href={`/admin/careers/applications/jobs/${job.id}`}
                       className="admin-services-table-link"
                     >
-                      {row.first_name} {row.last_name}
+                      {job.title}
                     </Link>
-                    <div className="admin-page-desc">{row.email}</div>
+                    {job.jobStatus && job.jobStatus !== 'published' ? (
+                      <div className="admin-leads-person-email">
+                        {JOB_STATUS_LABELS[job.jobStatus as keyof typeof JOB_STATUS_LABELS] ??
+                          job.jobStatus}
+                      </div>
+                    ) : null}
                   </td>
-                  <td>{jobTitle(row)}</td>
-                  <td>{labelJobApplicationStatus(String(row.application_status))}</td>
-                  <td title={String(row.confirmation_email_error || '')}>
-                    {String(row.confirmation_email_status || 'pending')}
+                  <td>{labelEmploymentType(job.employmentType)}</td>
+                  <td>{job.location || '—'}</td>
+                  <td>{job.totalApplicants}</td>
+                  <td>
+                    {job.newApplicants > 0 ? (
+                      <span className="admin-leads-badge admin-leads-badge--status-new">
+                        {job.newApplicants}
+                      </span>
+                    ) : (
+                      0
+                    )}
                   </td>
-                  <td>{formatDate(row.created_at)}</td>
+                  <td>{job.lastApplicationAt ? formatDate(job.lastApplicationAt) : '—'}</td>
                   <td>
                     <Link
-                      href={`/admin/careers/applications/${row.id}`}
+                      href={`/admin/careers/applications/jobs/${job.id}`}
                       className="admin-services-action-btn"
+                      aria-label={`View applicants for ${job.title}`}
                     >
-                      Open
+                      View Applicants
                     </Link>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
+
+      {visible.length > 0 && (
+        <p className="admin-leads-count" aria-live="polite">
+          Showing {visible.length} of {jobs.length} job posting{jobs.length === 1 ? '' : 's'}
+        </p>
+      )}
     </div>
   )
 }

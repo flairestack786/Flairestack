@@ -1,5 +1,6 @@
 import { ensureAdminClient, getSiteUrl } from './supabaseAdmin.mjs'
 import { isLastAdminGuardError } from '../middleware/requireAdministrator.mjs'
+import { normalizeCmsRole } from '../../src/lib/cmsPermissions.js'
 
 /**
  * @param {string} email
@@ -41,15 +42,7 @@ async function assertNotLastAdministrator(admin, userId) {
   }
 }
 
-/**
- * @param {string} role
- * @returns {'administrator' | 'editor' | 'sales'}
- */
-function normalizeInviteRole(role) {
-  if (role === 'editor') return 'editor'
-  if (role === 'sales') return 'sales'
-  return 'administrator'
-}
+const INVALID_ROLE_MESSAGE = 'A valid role is required: administrator, editor or sales.'
 
 /**
  * @typedef {{ id: string, email?: string, full_name?: string | null, role?: string, status?: string }} AdminProfile
@@ -62,14 +55,18 @@ function normalizeInviteRole(role) {
  */
 export async function handleInviteUser(ctx) {
   try {
-    const admin = ensureAdminClient()
     const email = normalizeEmail(ctx.body?.email)
     const fullName = String(ctx.body?.full_name ?? ctx.body?.fullName ?? '').trim()
-    const role = normalizeInviteRole(/** @type {string} */ (ctx.body?.role))
+    const role = normalizeCmsRole(ctx.body?.role)
 
     if (!email) {
       return { status: 400, body: { error: 'Invite email is required.' } }
     }
+    if (!role) {
+      return { status: 400, body: { error: INVALID_ROLE_MESSAGE } }
+    }
+
+    const admin = ensureAdminClient()
 
     const { data: existingProfile } = await admin
       .from('profiles')
@@ -118,8 +115,12 @@ export async function handleInviteUser(ctx) {
         },
       })
 
-      // Ensure CMS access is gated until password setup + acceptUserInvite.
-      await admin.from('profiles').update({ status: 'invited' }).eq('id', inviteData.user.id)
+      // Ensure CMS access is gated until password setup + acceptUserInvite, and record
+      // the administrator-chosen role (the auth trigger no longer trusts user metadata).
+      await admin
+        .from('profiles')
+        .update({ status: 'invited', role })
+        .eq('id', inviteData.user.id)
     }
 
     const nowIso = new Date().toISOString()
@@ -328,9 +329,14 @@ export async function handleEnableUser(ctx) {
  */
 export async function handleUpdateUserRole(ctx) {
   try {
-    const admin = ensureAdminClient()
     const userId = ctx.params.userId
-    const role = normalizeInviteRole(/** @type {string} */ (ctx.body?.role))
+    const role = normalizeCmsRole(ctx.body?.role)
+
+    if (!role) {
+      return { status: 400, body: { error: INVALID_ROLE_MESSAGE } }
+    }
+
+    const admin = ensureAdminClient()
 
     if (userId === ctx.adminProfile.id) {
       return {
@@ -405,13 +411,30 @@ export async function handleResetPassword(ctx) {
 
 /**
  * Ensure the invitee's profile is Active after invitation acceptance.
+ *
+ * `inviteRole` is passed ONLY when a pending invite is accepted for the first time:
+ * the administrator-chosen role on the invitation is then the trusted source. The
+ * idempotent "already accepted" paths omit it so a later role change made by an
+ * administrator (e.g. a demotion) is never reverted by re-calling this endpoint.
+ *
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
  * @param {string} userId
+ * @param {unknown} [inviteRole]
  */
-async function activateAcceptedInviteProfile(admin, userId) {
+async function activateAcceptedInviteProfile(admin, userId, inviteRole) {
+  /** @type {Record<string, string>} */
+  const update = { status: 'active' }
+  if (inviteRole !== undefined) {
+    const role = normalizeCmsRole(inviteRole)
+    if (!role) {
+      throw new Error('Invitation has no valid role. Ask an administrator to send a new invite.')
+    }
+    update.role = role
+  }
+
   const { error } = await admin
     .from('profiles')
-    .update({ status: 'active' })
+    .update(update)
     .eq('id', userId)
     .neq('status', 'disabled')
 
@@ -563,7 +586,7 @@ export async function handleAcceptInvite(ctx) {
       }
     }
 
-    await activateAcceptedInviteProfile(admin, userId)
+    await activateAcceptedInviteProfile(admin, userId, updated.role)
     return { status: 200, body: { invite: updated } }
   } catch (err) {
     return { status: 500, body: { error: err?.message ?? 'Failed to accept invite.' } }

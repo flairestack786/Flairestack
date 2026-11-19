@@ -37,8 +37,9 @@ test('inquiry form has no Turnstile bypass', () => {
     'utf8'
   )
   assert.doesNotMatch(form, /debugInquiry|DEBUG_INQUIRY_BYPASS/)
-  assert.match(form, /if \(TURNSTILE_SITE_KEY && !turnstileToken\)/)
-  assert.match(form, /if \(TURNSTILE_SITE_KEY\) \{\s*await verifyTurnstileWithServer\(turnstileToken\)/)
+  assert.match(form, /submitInquiry\(\{\s*values: submitted,\s*turnstileToken,/)
+  const route = readFileSync(join(ROOT, 'src/app/api/inquiry/submit/route.ts'), 'utf8')
+  assert.match(route, /verifyTurnstile: verifyTurnstileToken/)
 })
 
 test('temporary diagnostic endpoint and probe script are removed', () => {

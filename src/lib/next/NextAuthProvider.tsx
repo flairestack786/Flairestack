@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
-import { canAccessModule, normalizeCmsRole } from '@/lib/cmsPermissions'
+import { canAccessModule, normalizeCmsRole, resolveCmsAccess } from '@/lib/cmsPermissions'
 import { getSupabaseBrowser } from '@/lib/next/supabaseBrowser'
 
 type CmsRole = 'administrator' | 'editor' | 'sales'
@@ -28,9 +28,15 @@ type NextAuthContextValue = {
   session: Session | null
   user: User | null
   profile: CmsProfile | null
-  /** Null when profile is missing — never defaults to administrator. */
+  /** Null when the profile is missing or its role is not a valid CMS role. */
   cmsRole: CmsRole | null
+  /** Active profile AND a valid role. */
   isActiveCmsUser: boolean
+  /**
+   * Signed in, profile loaded, but the account may not use the CMS (no profile,
+   * inactive, or invalid role). Invitees and profile-load failures are excluded.
+   */
+  accessDenied: boolean
   isAdministrator: boolean
   isPasswordRecovery: boolean
   loading: boolean
@@ -42,15 +48,9 @@ type NextAuthContextValue = {
   signOut: () => Promise<void>
 }
 
+/** Valid role or null; unknown / missing / malformed roles never map to a real role. */
 function resolveCmsRoleFromProfile(profile: CmsProfile | null): CmsRole | null {
-  if (!profile) return null
-  const role = profile.role
-  if (role === 'administrator' || role === 'editor' || role === 'sales') {
-    return role
-  }
-  if (role == null || role === '') return null
-  // Known non-empty but unexpected values: normalize without inventing a role for null profiles.
-  return normalizeCmsRole(String(role))
+  return profile ? normalizeCmsRole(profile.role) : null
 }
 
 const NextAuthContext = createContext<NextAuthContextValue | null>(null)
@@ -120,6 +120,7 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<CmsProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(true)
+  const [profileLoadFailed, setProfileLoadFailed] = useState(false)
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false)
   const [configured, setConfigured] = useState(true)
   const [configError, setConfigError] = useState('')
@@ -139,8 +140,10 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
     try {
       const row = await fetchCurrentProfile()
       setProfile(row)
+      setProfileLoadFailed(false)
     } catch {
       setProfile(null)
+      setProfileLoadFailed(true)
     } finally {
       setProfileLoading(false)
     }
@@ -198,34 +201,46 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
     if (!configured) return
     if (!user?.id) {
       setProfile(null)
+      setProfileLoadFailed(false)
       setProfileLoading(false)
       return
     }
     refreshProfile()
   }, [user?.id, refreshProfile, configured])
 
-  const signIn = async (email: string, password: string) => {
-    clearPasswordRecovery()
-    const supabase = getSupabaseBrowser()
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    })
-    if (error) throw error
-    return data
-  }
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      clearPasswordRecovery()
+      const supabase = getSupabaseBrowser()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      })
+      if (error) throw error
+      return data
+    },
+    [clearPasswordRecovery]
+  )
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     const supabase = getSupabaseBrowser()
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     clearPasswordRecovery()
     setProfile(null)
-  }
+  }, [clearPasswordRecovery])
 
+  const access = resolveCmsAccess(profile)
   const cmsRole = resolveCmsRoleFromProfile(profile)
-  const isActiveCmsUser = profile?.status === 'active'
-  const isAdministrator = cmsRole === 'administrator' && isActiveCmsUser
+  const isActiveCmsUser = access.ok
+  const isAdministrator = access.ok && access.role === 'administrator'
+  const accessDenied =
+    Boolean(session) &&
+    !loading &&
+    !profileLoading &&
+    !profileLoadFailed &&
+    !access.ok &&
+    access.reason !== 'invited'
 
   const value = useMemo<NextAuthContextValue>(
     () => ({
@@ -234,6 +249,7 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
       profile,
       cmsRole,
       isActiveCmsUser,
+      accessDenied,
       isAdministrator,
       isPasswordRecovery,
       loading,
@@ -241,7 +257,7 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       clearPasswordRecovery,
       canAccess: (moduleId) =>
-        cmsRole != null && canAccessModule(cmsRole, moduleId as never),
+        isActiveCmsUser && cmsRole != null && canAccessModule(cmsRole, moduleId as never),
       signIn,
       signOut,
     }),
@@ -251,12 +267,15 @@ export function NextAuthProvider({ children }: { children: ReactNode }) {
       profile,
       cmsRole,
       isActiveCmsUser,
+      accessDenied,
       isAdministrator,
       isPasswordRecovery,
       loading,
       profileLoading,
       refreshProfile,
       clearPasswordRecovery,
+      signIn,
+      signOut,
     ]
   )
 

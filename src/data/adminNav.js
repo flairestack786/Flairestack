@@ -11,6 +11,7 @@ import {
   Search,
   Settings,
   Users,
+  UserCheck,
 } from 'lucide-react'
 
 /**
@@ -26,6 +27,15 @@ export const adminNavItems = [
   { id: 'testimonials', module: 'testimonials', label: 'Testimonials', path: '/admin/testimonials', icon: MessageSquareQuote },
   { id: 'blogs', module: 'blogs', label: 'Blogs', path: '/admin/blogs', icon: Newspaper },
   { id: 'careers', module: 'careers', label: 'Careers', path: '/admin/careers', icon: Briefcase },
+  // Same RBAC module as Careers: administrator-only. Path prefix /admin/careers already
+  // gates it, so Editor and Sales cannot reach it.
+  {
+    id: 'applicants',
+    module: 'careers',
+    label: 'Applicants',
+    path: '/admin/careers/applications',
+    icon: UserCheck,
+  },
   { id: 'media', module: 'media', label: 'Media Library', path: '/admin/media', icon: Image },
   { id: 'leads', module: 'leads', label: 'Leads', path: '/admin/leads', icon: Inbox },
   { id: 'users', module: 'users', label: 'Users', path: '/admin/users', icon: Users },
@@ -59,6 +69,7 @@ export const adminNavSections = [
     items: [
       adminNavItems.find((item) => item.id === 'leads'),
       adminNavItems.find((item) => item.id === 'careers'),
+      adminNavItems.find((item) => item.id === 'applicants'),
     ].filter(Boolean),
   },
   {
@@ -70,6 +81,24 @@ export const adminNavSections = [
     ].filter(Boolean),
   },
 ]
+
+/**
+ * Active nav item = the one whose path is the longest prefix of the pathname, so
+ * nested items (/admin/careers/applications) win over their parent (/admin/careers).
+ * @param {string | null | undefined} pathname
+ * @param {{ id: string, path: string }[]} [items]
+ * @returns {string | null}
+ */
+export function findActiveNavItemId(pathname, items = adminNavItems) {
+  const path = String(pathname ?? '')
+  let best = null
+  for (const item of items) {
+    if (path === item.path || path.startsWith(`${item.path}/`)) {
+      if (!best || item.path.length > best.path.length) best = item
+    }
+  }
+  return best ? best.id : null
+}
 
 /**
  * @param {string | null | undefined} role

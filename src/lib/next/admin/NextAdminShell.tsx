@@ -8,7 +8,7 @@ import NextAdminTopNav from '@/lib/next/admin/NextAdminTopNav'
 import { useAdminTheme } from '@/lib/next/admin/useAdminTheme'
 import { ToastProvider } from '@/components/common/ToastProvider'
 import { MediaUrlContext } from '@/components/admin/MediaUrlContext'
-import { adminNavItems } from '@/data/adminNav'
+import { adminNavItems, findActiveNavItemId } from '@/data/adminNav'
 import { getPublicUrl } from '@/lib/next/mediaBrowser'
 import '@/admin-dashboard.css'
 
@@ -32,9 +32,7 @@ export default function NextAdminShell({ children, pageTitle }: NextAdminShellPr
   const path = pathname ?? ''
   const resolvedTitle =
     pageTitle ??
-    adminNavItems.find(
-      (item) => path === item.path || path.startsWith(`${item.path}/`)
-    )?.label ??
+    adminNavItems.find((item) => item.id === findActiveNavItemId(path))?.label ??
     'Admin'
 
   useEffect(() => {

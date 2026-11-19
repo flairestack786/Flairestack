@@ -106,7 +106,7 @@ function formatCmsRole(role: string) {
  * Migrated CMS Dashboard — mirrors Vite DashboardPage UI and metrics.
  */
 export default function AdminDashboardClient() {
-  const { user, profile, canAccess } = useNextAuth()
+  const { user, profile, cmsRole, canAccess } = useNextAuth()
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [loadError, setLoadError] = useState('')
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null)
@@ -118,15 +118,15 @@ export default function AdminDashboardClient() {
     setLoadError('')
 
     try {
-      const role = String(profile?.role ?? 'administrator')
-      const data = await fetchDashboardSnapshot(getDashboardLoadOptions(role))
+      // Only a validated role selects data slices; an unknown role loads nothing privileged.
+      const data = await fetchDashboardSnapshot(getDashboardLoadOptions(cmsRole))
       setSnapshot(data)
       setStatus('ready')
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Failed to load dashboard.')
       setStatus('error')
     }
-  }, [profile?.role])
+  }, [cmsRole])
 
   useEffect(() => {
     loadDashboard()
@@ -207,7 +207,7 @@ export default function AdminDashboardClient() {
     String(user?.user_metadata?.full_name ?? '').trim() ||
     String(user?.email ?? 'there')
 
-  const roleLabel = profile?.role ? formatCmsRole(String(profile.role)) : 'Administrator'
+  const roleLabel = cmsRole ? formatCmsRole(cmsRole) : '—'
 
   const lastLogin = profile?.last_sign_in_at ?? user?.last_sign_in_at ?? null
 

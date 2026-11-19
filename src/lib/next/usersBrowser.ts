@@ -2,6 +2,7 @@
 
 import { getSupabaseBrowser } from '@/lib/next/supabaseBrowser'
 import * as nextAdminApi from '@/lib/next/adminApi'
+import { normalizeCmsRole } from '@/lib/cmsPermissions'
 import {
   CMS_ROLE_OPTIONS,
   CMS_USER_MANAGEABLE_STATUS_OPTIONS,
@@ -193,11 +194,13 @@ export async function createUserInvite(input: {
 } = {}) {
   const email = asTrimmedString(input.email)
   const full_name = asTrimmedString(input.full_name ?? input.fullName)
-  const role =
-    input.role === 'editor' ? 'editor' : input.role === 'sales' ? 'sales' : 'administrator'
+  const role = normalizeCmsRole(input.role)
 
   if (!email) {
     throw new Error('Invite email is required.')
+  }
+  if (!role) {
+    throw new Error('Select a valid role for this invite.')
   }
 
   const result = await nextAdminApi.sendUserInvite({
