@@ -9,7 +9,13 @@ import {
 } from '@/lib/applicantsQueries'
 import type { JobSummary } from '@/lib/applicantsCms'
 import { isUuid } from '@/lib/hiringNotificationEmail'
-import { runResumeAction, type ResumeLink } from '@/lib/resumeClient'
+import {
+  RESUME_FETCH_TIMEOUT_MS,
+  ResumeAccessError,
+  resumeError,
+  runResumeAction,
+  type ResumeLink,
+} from '@/lib/resumeClient'
 
 export type JobApplicationRow = {
   id: string
@@ -192,25 +198,26 @@ export async function openResume(
         const tab = window.open('', '_blank')
         if (!tab) return null
         tab.opener = null
-        try {
-          tab.document.title = 'Opening resume…'
-          tab.document.body.style.cssText =
-            'margin:0;display:grid;place-items:center;min-height:100vh;background:#0a0a0a;color:rgba(255,255,255,.7);font:500 14px system-ui,sans-serif'
-          tab.document.body.textContent = 'Opening resume…'
-        } catch {
-          // Cosmetic only.
-        }
+        renderResumePlaceholder(tab)
         return {
+          // Only ever called with a same-origin blob: URL (see resumeClient.js).
           navigate: (url: string) => tab.location.replace(url),
           close: () => tab.close(),
         }
       },
       requestLink: (requested) => requestResumeLink(applicationId, requested),
-      fetchFile: (url) =>
-        fetch(url, { cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' }),
+      fetchFile: (url, signal) =>
+        fetch(url, {
+          cache: 'no-store',
+          credentials: 'omit',
+          referrerPolicy: 'no-referrer',
+          signal,
+        }),
       createObjectUrl: (blob) => URL.createObjectURL(blob),
       revokeObjectUrl: (url) => URL.revokeObjectURL(url),
       saveFile(href, filename) {
+        // Last line of defence: only a same-origin blob: URL may ever back a download link.
+        if (!href.startsWith('blob:')) throw resumeError('failed')
         const anchor = document.createElement('a')
         anchor.href = href
         anchor.download = filename
@@ -234,32 +241,90 @@ async function requestResumeLink(
   applicationId: string,
   mode: 'view' | 'download'
 ): Promise<ResumeLink> {
-  if (!isUuid(applicationId)) throw new Error('Invalid application id.')
+  if (!isUuid(applicationId)) throw new ResumeAccessError('Invalid application id.', { kind: 'failed' })
 
   const supabase = getSupabaseBrowser()
   const { data: sessionData } = await supabase.auth.getSession()
   const token = sessionData.session?.access_token
-  if (!token) throw new Error('You must be signed in as an administrator.')
+  if (!token) {
+    throw new ResumeAccessError('You must be signed in as an administrator.', {
+      kind: 'unauthorized',
+    })
+  }
 
-  let response: Response
+  // Same hard limit as the file fetch, so a stalled request can't leave the buttons busy.
+  const controller = new AbortController()
+  let timedOut = false
+  const timer = window.setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, RESUME_FETCH_TIMEOUT_MS)
+
   try {
-    response = await fetch(
-      `/api/admin/careers/applications/${encodeURIComponent(applicationId)}/resume?mode=${mode}`,
-      { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }
-    )
-  } catch {
-    throw new Error('Unable to reach the server. Check your connection and try again.')
-  }
+    let response: Response
+    try {
+      response = await fetch(
+        `/api/admin/careers/applications/${encodeURIComponent(applicationId)}/resume?mode=${mode}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store',
+          signal: controller.signal,
+        }
+      )
+    } catch {
+      throw resumeError(timedOut ? 'timeout' : 'network')
+    }
 
-  const payload = (await response.json().catch(() => ({}))) as Partial<ResumeLink> & {
-    error?: string
+    let payload: Partial<ResumeLink> & { error?: string }
+    try {
+      payload = (await response.json()) as typeof payload
+    } catch {
+      if (timedOut) throw resumeError('timeout')
+      payload = {}
+    }
+
+    if (response.status === 401 || response.status === 403) throw resumeError('unauthorized')
+    if (response.status === 404) throw resumeError('not_found')
+    if (!response.ok || !payload.url) throw resumeError('failed')
+    return toResumeLink(payload as ResumeLink & { url: string })
+  } finally {
+    window.clearTimeout(timer)
   }
-  if (response.status === 401 || response.status === 403) {
-    throw new Error('You are not authorized to access applicant resumes.')
+}
+
+/** Dark, on-brand placeholder shown in the View tab while the PDF is being fetched. */
+function renderResumePlaceholder(tab: Window) {
+  try {
+    const doc = tab.document
+    doc.title = 'Opening resume…'
+    const style = doc.createElement('style')
+    style.textContent =
+      'html,body{margin:0;height:100%;background:#0a0a0a;color:rgba(255,255,255,.72);' +
+      'font:500 14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}' +
+      'main{min-height:100%;display:grid;place-content:center;justify-items:center;gap:.9rem;padding:2rem;text-align:center}' +
+      '.s{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.14);' +
+      'border-top-color:#ff7a00;animation:r .85s linear infinite}' +
+      'h1{margin:0;font-size:1rem;font-weight:600;color:#fff}p{margin:0;font-size:.8125rem;color:rgba(255,255,255,.55)}' +
+      '@keyframes r{to{transform:rotate(360deg)}}' +
+      '@media (prefers-reduced-motion:reduce){.s{animation-duration:3s}}'
+    const main = doc.createElement('main')
+    main.setAttribute('role', 'status')
+    main.setAttribute('aria-live', 'polite')
+    const spinner = doc.createElement('div')
+    spinner.className = 's'
+    const heading = doc.createElement('h1')
+    heading.textContent = 'Opening resume…'
+    const hint = doc.createElement('p')
+    hint.textContent = 'The document will appear here in a moment.'
+    main.append(spinner, heading, hint)
+    doc.head.append(style)
+    doc.body.replaceChildren(main)
+  } catch {
+    // Cosmetic only; the flow works with a blank tab.
   }
-  if (!response.ok || !payload.url) {
-    throw new Error(payload.error || 'Unable to create a resume link. Please try again.')
-  }
+}
+
+function toResumeLink(payload: ResumeLink & { url: string }): ResumeLink {
   return {
     url: payload.url,
     filename: payload.filename || 'resume',

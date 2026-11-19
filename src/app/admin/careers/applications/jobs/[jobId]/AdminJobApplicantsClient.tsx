@@ -17,7 +17,8 @@ import {
   UserCheck,
 } from 'lucide-react'
 import AdminSelect from '@/components/admin/AdminSelect'
-import { useToast } from '@/components/common/ToastProvider'
+import ResumeFailureNotice from '@/components/admin/ResumeFailureNotice'
+import { useResumeActions } from '@/components/admin/useResumeActions'
 import {
   APPLICANT_SORTS,
   JOB_STATUS_LABELS,
@@ -32,7 +33,6 @@ import { JOB_APPLICATION_STATUSES, labelJobApplicationStatus } from '@/lib/jobAp
 import {
   getJobSummary,
   listJobApplicants,
-  openResume,
   type JobApplicantsPage,
 } from '@/lib/next/jobApplicationsBrowser'
 
@@ -58,18 +58,19 @@ const SORT_OPTIONS = APPLICANT_SORTS.map(({ value, label }) => ({ value, label }
 export default function AdminJobApplicantsClient() {
   const params = useParams()
   const jobId = typeof params?.jobId === 'string' ? params.jobId : ''
-  const toast = useToast() as {
-    success: (m: string) => void
-    error: (m: string) => void
-    info: (m: string) => void
-  }
 
   const [state, setState] = useState<'loading' | 'ready' | 'error' | 'missing'>('loading')
   const [loadError, setLoadError] = useState('')
   const [job, setJob] = useState<JobSummary | null>(null)
   const [result, setResult] = useState<JobApplicantsPage | null>(null)
   const [refreshing, setRefreshing] = useState(false)
-  const [busyResume, setBusyResume] = useState('')
+  const {
+    busy: busyResume,
+    failure: resumeFailure,
+    run: runResume,
+    retry: retryResume,
+    dismiss: dismissResume,
+  } = useResumeActions()
 
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -131,27 +132,13 @@ export default function AdminJobApplicantsClient() {
     void load()
   }, [load])
 
-  const handleResume = async (
+  // Straight from the click: the View tab must be opened before any await (popup blockers).
+  const handleResume = (
     applicationId: string,
     mode: 'view' | 'download',
-    mimeType?: string | null
-  ) => {
-    if (busyResume) return
-    setBusyResume(`${applicationId}:${mode}`)
-    try {
-      // Must be called synchronously from the click so the View tab isn't popup-blocked.
-      const result = await openResume(applicationId, mode, { mimeType })
-      if (result.previewUnavailable) {
-        toast.info(
-          'Word documents can’t be previewed in the browser, so the original file was downloaded.'
-        )
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Unable to open the resume.')
-    } finally {
-      setBusyResume('')
-    }
-  }
+    mimeType: string | null,
+    label: string
+  ) => runResume({ applicationId, mode, mimeType, label })
 
   if (state === 'loading') {
     return (
@@ -287,6 +274,15 @@ export default function AdminJobApplicantsClient() {
         </div>
       </div>
 
+      {resumeFailure ? (
+        <ResumeFailureNotice
+          failure={resumeFailure}
+          busy={Boolean(busyResume)}
+          onRetry={retryResume}
+          onDismiss={dismissResume}
+        />
+      ) : null}
+
       <div className="admin-services-table-wrap">
         {result.total === 0 ? (
           <div className="admin-page-placeholder admin-leads-empty">
@@ -359,10 +355,11 @@ export default function AdminJobApplicantsClient() {
                             type="button"
                             className="admin-services-action-btn"
                             onClick={() =>
-                              void handleResume(
+                              handleResume(
                                 row.id,
                                 'view',
-                                resumeMimeFromFilename(row.resume_original_filename)
+                                resumeMimeFromFilename(row.resume_original_filename),
+                                name
                               )
                             }
                             disabled={Boolean(busyResume)}
@@ -375,10 +372,11 @@ export default function AdminJobApplicantsClient() {
                             type="button"
                             className="admin-services-action-btn"
                             onClick={() =>
-                              void handleResume(
+                              handleResume(
                                 row.id,
                                 'download',
-                                resumeMimeFromFilename(row.resume_original_filename)
+                                resumeMimeFromFilename(row.resume_original_filename),
+                                name
                               )
                             }
                             disabled={Boolean(busyResume)}

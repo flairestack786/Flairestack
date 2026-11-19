@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { AlertCircle, ArrowLeft, Download, Eye, Loader2, RefreshCw, Users } from 'lucide-react'
 import AdminSelect from '@/components/admin/AdminSelect'
+import ResumeFailureNotice from '@/components/admin/ResumeFailureNotice'
+import { useResumeActions } from '@/components/admin/useResumeActions'
 import { useToast } from '@/components/common/ToastProvider'
 import {
   applicantBadgeClass,
@@ -20,7 +22,6 @@ import { resumeMimeFromFilename } from '@/lib/resumeAccess'
 import {
   getHiringNotificationStatus,
   getJobApplication,
-  openResume,
   updateJobApplication,
   type JobApplicationRow,
 } from '@/lib/next/jobApplicationsBrowser'
@@ -54,12 +55,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function AdminApplicationDetailClient() {
   const params = useParams()
   const applicationId = typeof params?.applicationId === 'string' ? params.applicationId : ''
-  const toast = useToast() as {
-    success: (m: string) => void
-    error: (m: string) => void
-    info: (m: string) => void
-  }
-  const { success, error, info } = toast
+  const toast = useToast() as { success: (m: string) => void; error: (m: string) => void }
+  const { success, error } = toast
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [loadError, setLoadError] = useState('')
@@ -68,7 +65,13 @@ export default function AdminApplicationDetailClient() {
   const [notes, setNotes] = useState('')
   const [appStatus, setAppStatus] = useState('new')
   const [saving, setSaving] = useState(false)
-  const [busyResume, setBusyResume] = useState<'' | 'view' | 'download'>('')
+  const {
+    busy: busyResume,
+    failure: resumeFailure,
+    run: runResume,
+    retry: retryResume,
+    dismiss: dismissResume,
+  } = useResumeActions()
 
   const load = useCallback(async () => {
     if (!applicationId) return
@@ -111,22 +114,14 @@ export default function AdminApplicationDetailClient() {
     }
   }
 
-  const handleResume = async (mode: 'view' | 'download') => {
-    if (!applicationId || busyResume) return
-    setBusyResume(mode)
-    try {
-      // Must be called synchronously from the click so the View tab isn't popup-blocked.
-      const result = await openResume(applicationId, mode, {
-        mimeType: resumeMimeFromFilename(row?.resume_original_filename),
-      })
-      if (result.previewUnavailable) {
-        info('Word documents can’t be previewed in the browser, so the original file was downloaded.')
-      }
-    } catch (err) {
-      error(err instanceof Error ? err.message : 'Unable to open the resume.')
-    } finally {
-      setBusyResume('')
-    }
+  // Straight from the click: the View tab must be opened before any await (popup blockers).
+  const handleResume = (mode: 'view' | 'download') => {
+    if (!applicationId) return
+    runResume({
+      applicationId,
+      mode,
+      mimeType: resumeMimeFromFilename(row?.resume_original_filename),
+    })
   }
 
   if (status === 'loading') {
@@ -275,25 +270,33 @@ export default function AdminApplicationDetailClient() {
                 <button
                   type="button"
                   className="admin-services-action-btn"
-                  onClick={() => void handleResume('view')}
+                  onClick={() => handleResume('view')}
                   disabled={Boolean(busyResume)}
                 >
                   <Eye size={15} strokeWidth={1.75} aria-hidden />
-                  {busyResume === 'view' ? 'Preparing…' : 'View resume'}
+                  {busyResume === `${applicationId}:view` ? 'Preparing…' : 'View resume'}
                 </button>
                 <button
                   type="button"
                   className="admin-services-action-btn"
-                  onClick={() => void handleResume('download')}
+                  onClick={() => handleResume('download')}
                   disabled={Boolean(busyResume)}
                 >
                   <Download size={15} strokeWidth={1.75} aria-hidden />
-                  {busyResume === 'download' ? 'Preparing…' : 'Download resume'}
+                  {busyResume === `${applicationId}:download` ? 'Preparing…' : 'Download resume'}
                 </button>
               </div>
+              {resumeFailure ? (
+                <ResumeFailureNotice
+                  failure={resumeFailure}
+                  busy={Boolean(busyResume)}
+                  onRetry={retryResume}
+                  onDismiss={dismissResume}
+                />
+              ) : null}
               <p className="admin-page-desc">
-                Private file. Links are generated on demand for signed-in administrators and
-                expire after 60 seconds.
+                Private file. Each open uses a fresh, short-lived secure link for signed-in
+                administrators.
               </p>
             </>
           ) : (

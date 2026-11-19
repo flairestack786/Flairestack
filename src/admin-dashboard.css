@@ -5115,6 +5115,51 @@ html[data-admin-theme='light'] .admin-select-menu::-webkit-scrollbar-thumb {
   margin: 0.35rem 0;
 }
 
+.admin-applicants-resume-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.9rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  background: rgba(248, 113, 113, 0.06);
+  color: #fca5a5;
+  font-size: 0.875rem;
+}
+
+.admin-applicants-resume-error > svg {
+  flex-shrink: 0;
+}
+
+.admin-applicants-resume-error-text {
+  flex: 1 1 14rem;
+  min-width: 0;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.admin-applicants-resume-error-text strong {
+  color: #fecaca;
+  font-weight: 600;
+}
+
+.admin-applicants-resume-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-applicants-resume-error .admin-settings-retry {
+  margin-top: 0;
+}
+
+.admin-applicants-resume-error .admin-settings-retry:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .admin-applicants-pagination {
   display: flex;
   flex-wrap: wrap;
