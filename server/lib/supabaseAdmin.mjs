@@ -1,5 +1,6 @@
 import '../loadEnv.mjs'
 import { createClient } from '@supabase/supabase-js'
+import { noStoreFetch } from './noStoreFetch.mjs'
 
 const supabaseUrl =
   process.env.SUPABASE_URL ||
@@ -21,6 +22,7 @@ export const supabaseAdmin =
           autoRefreshToken: false,
           persistSession: false,
         },
+        global: { fetch: noStoreFetch },
       })
     : null
 

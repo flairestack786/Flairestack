@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { noStoreFetch } from '../lib/noStoreFetch.mjs'
 import { supabaseAdmin } from '../lib/supabaseAdmin.mjs'
 
 /**
@@ -40,6 +41,7 @@ export async function authenticateBearerUser(authorizationHeader) {
 
   const authClient = createClient(supabaseUrl, anonKey, {
     auth: { autoRefreshToken: false, persistSession: false },
+    global: { fetch: noStoreFetch },
   })
 
   const {

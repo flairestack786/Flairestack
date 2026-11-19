@@ -11,6 +11,9 @@ import { getSupabaseServiceRole } from '@/lib/next/supabaseServiceRole'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+// `force-dynamic` alone does not stop Next.js caching fetches in a GET-only handler: the
+// Storage signing POST and the administrator checks would be replayed from the Data Cache.
+export const fetchCache = 'force-no-store'
 
 type RouteContext = {
   params: Promise<{ applicationId: string }> | { applicationId: string }
