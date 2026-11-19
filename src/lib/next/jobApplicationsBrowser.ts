@@ -9,6 +9,7 @@ import {
 } from '@/lib/applicantsQueries'
 import type { JobSummary } from '@/lib/applicantsCms'
 import { isUuid } from '@/lib/hiringNotificationEmail'
+import { runResumeAction, type ResumeLink } from '@/lib/resumeClient'
 
 export type JobApplicationRow = {
   id: string
@@ -177,65 +178,93 @@ export async function updateJobApplication(
 }
 
 /**
- * View or download a resume. The signed URL is minted server-side after admin
- * authorization and lives 60 seconds; it is never stored or rendered into the page.
- * For "view" the tab is opened synchronously (inside the click) so popup blockers
- * allow it, then pointed at the URL once it arrives.
+ * View or download a resume (see `resumeClient.js` for the full flow).
+ * Call directly from a click handler: the "view" tab must be opened before any await.
  */
-export async function openResume(applicationId: string, mode: 'view' | 'download'): Promise<void> {
-  const tab = mode === 'view' ? window.open('', '_blank') : null
-  if (tab) tab.opener = null
-  try {
-    const { url, inline } = await createResumeDownloadUrl(applicationId, mode)
-    if (mode === 'view' && tab) {
-      tab.location.href = url
-      // DOCX can't render in a tab: the URL is a download, so the blank tab is spare.
-      if (!inline) window.setTimeout(() => tab.close(), 1500)
-      return
-    }
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.rel = 'noopener noreferrer'
-    anchor.style.display = 'none'
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-  } catch (err) {
-    tab?.close()
-    throw err
-  }
+export async function openResume(
+  applicationId: string,
+  mode: 'view' | 'download',
+  options: { mimeType?: string | null } = {}
+): Promise<{ action: 'viewed' | 'downloaded'; previewUnavailable: boolean }> {
+  return runResumeAction(
+    {
+      openTab() {
+        const tab = window.open('', '_blank')
+        if (!tab) return null
+        tab.opener = null
+        try {
+          tab.document.title = 'Opening resume…'
+          tab.document.body.style.cssText =
+            'margin:0;display:grid;place-items:center;min-height:100vh;background:#0a0a0a;color:rgba(255,255,255,.7);font:500 14px system-ui,sans-serif'
+          tab.document.body.textContent = 'Opening resume…'
+        } catch {
+          // Cosmetic only.
+        }
+        return {
+          navigate: (url: string) => tab.location.replace(url),
+          close: () => tab.close(),
+        }
+      },
+      requestLink: (requested) => requestResumeLink(applicationId, requested),
+      fetchFile: (url) =>
+        fetch(url, { cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' }),
+      createObjectUrl: (blob) => URL.createObjectURL(blob),
+      revokeObjectUrl: (url) => URL.revokeObjectURL(url),
+      saveFile(href, filename) {
+        const anchor = document.createElement('a')
+        anchor.href = href
+        anchor.download = filename
+        anchor.rel = 'noopener noreferrer'
+        anchor.style.display = 'none'
+        document.body.appendChild(anchor)
+        anchor.click()
+        anchor.remove()
+      },
+      schedule: (fn, ms) => void window.setTimeout(fn, ms),
+    },
+    { mode, mimeType: options.mimeType }
+  )
 }
 
 /**
- * Mint a 60-second signed URL through the administrator-only API route.
- * `view` opens PDFs inline (DOCX is always a download); `download` forces a download.
+ * Mint a fresh short-lived signed link (never cached or stored) through the administrator-only API route.
+ * `view` → inline link for PDFs; `download` → attachment link with the original filename.
  */
-export async function createResumeDownloadUrl(
+async function requestResumeLink(
   applicationId: string,
-  mode: 'view' | 'download' = 'download'
-): Promise<{ url: string; filename: string; inline: boolean }> {
+  mode: 'view' | 'download'
+): Promise<ResumeLink> {
+  if (!isUuid(applicationId)) throw new Error('Invalid application id.')
+
   const supabase = getSupabaseBrowser()
   const { data: sessionData } = await supabase.auth.getSession()
   const token = sessionData.session?.access_token
   if (!token) throw new Error('You must be signed in as an administrator.')
 
-  const disposition = mode === 'view' ? 'inline' : 'attachment'
-  const response = await fetch(
-    `/api/admin/careers/applications/${encodeURIComponent(applicationId)}/resume?disposition=${disposition}`,
-    { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }
-  )
-  const payload = (await response.json().catch(() => ({}))) as {
-    url?: string
-    filename?: string
-    inline?: boolean
+  let response: Response
+  try {
+    response = await fetch(
+      `/api/admin/careers/applications/${encodeURIComponent(applicationId)}/resume?mode=${mode}`,
+      { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }
+    )
+  } catch {
+    throw new Error('Unable to reach the server. Check your connection and try again.')
+  }
+
+  const payload = (await response.json().catch(() => ({}))) as Partial<ResumeLink> & {
     error?: string
   }
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('You are not authorized to access applicant resumes.')
+  }
   if (!response.ok || !payload.url) {
-    throw new Error(payload.error || 'Unable to create resume download link.')
+    throw new Error(payload.error || 'Unable to create a resume link. Please try again.')
   }
   return {
     url: payload.url,
     filename: payload.filename || 'resume',
+    mimeType: payload.mimeType || 'application/octet-stream',
     inline: Boolean(payload.inline),
+    previewable: Boolean(payload.previewable),
   }
 }

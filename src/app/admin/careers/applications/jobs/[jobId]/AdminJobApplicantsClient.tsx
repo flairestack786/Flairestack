@@ -27,6 +27,7 @@ import {
   type JobSummary,
 } from '@/lib/applicantsCms'
 import { isUuid } from '@/lib/hiringNotificationEmail'
+import { resumeMimeFromFilename } from '@/lib/resumeAccess'
 import { JOB_APPLICATION_STATUSES, labelJobApplicationStatus } from '@/lib/jobApplicationValidation'
 import {
   getJobSummary,
@@ -57,7 +58,11 @@ const SORT_OPTIONS = APPLICANT_SORTS.map(({ value, label }) => ({ value, label }
 export default function AdminJobApplicantsClient() {
   const params = useParams()
   const jobId = typeof params?.jobId === 'string' ? params.jobId : ''
-  const toast = useToast() as { success: (m: string) => void; error: (m: string) => void }
+  const toast = useToast() as {
+    success: (m: string) => void
+    error: (m: string) => void
+    info: (m: string) => void
+  }
 
   const [state, setState] = useState<'loading' | 'ready' | 'error' | 'missing'>('loading')
   const [loadError, setLoadError] = useState('')
@@ -126,11 +131,21 @@ export default function AdminJobApplicantsClient() {
     void load()
   }, [load])
 
-  const handleResume = async (applicationId: string, mode: 'view' | 'download') => {
+  const handleResume = async (
+    applicationId: string,
+    mode: 'view' | 'download',
+    mimeType?: string | null
+  ) => {
     if (busyResume) return
     setBusyResume(`${applicationId}:${mode}`)
     try {
-      await openResume(applicationId, mode)
+      // Must be called synchronously from the click so the View tab isn't popup-blocked.
+      const result = await openResume(applicationId, mode, { mimeType })
+      if (result.previewUnavailable) {
+        toast.info(
+          'Word documents can’t be previewed in the browser, so the original file was downloaded.'
+        )
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Unable to open the resume.')
     } finally {
@@ -343,7 +358,13 @@ export default function AdminJobApplicantsClient() {
                           <button
                             type="button"
                             className="admin-services-action-btn"
-                            onClick={() => void handleResume(row.id, 'view')}
+                            onClick={() =>
+                              void handleResume(
+                                row.id,
+                                'view',
+                                resumeMimeFromFilename(row.resume_original_filename)
+                              )
+                            }
                             disabled={Boolean(busyResume)}
                             aria-label={`View resume for ${name}`}
                           >
@@ -353,7 +374,13 @@ export default function AdminJobApplicantsClient() {
                           <button
                             type="button"
                             className="admin-services-action-btn"
-                            onClick={() => void handleResume(row.id, 'download')}
+                            onClick={() =>
+                              void handleResume(
+                                row.id,
+                                'download',
+                                resumeMimeFromFilename(row.resume_original_filename)
+                              )
+                            }
                             disabled={Boolean(busyResume)}
                             aria-label={`Download resume for ${name}`}
                           >

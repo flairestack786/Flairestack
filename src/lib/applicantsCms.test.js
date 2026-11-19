@@ -231,7 +231,8 @@ test('resume route never exposes a public URL, never caches, and returns generic
   const route = source('../app/api/admin/careers/applications/[applicationId]/resume/route.ts')
   assert.match(route, /createSignedUrl\(/)
   assert.doesNotMatch(route, /getPublicUrl/)
-  assert.match(route, /SIGNED_URL_TTL_SECONDS = 60/)
+  // The 60-second lifetime is defined once in resumeAccess.js (see resumeAccess.test.js).
+  assert.match(route, /RESUME_SIGNED_URL_TTL_SECONDS/)
   assert.match(route, /no-store/)
   // No raw database/storage error text is sent to the client.
   assert.doesNotMatch(route, /error: (error|signError)\.message/)

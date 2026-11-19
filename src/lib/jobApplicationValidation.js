@@ -99,7 +99,9 @@ export function validateResumeIdentity(filename, mimeType) {
     return { ok: false, error: 'Resume file type is not supported.' }
   }
 
-  return { ok: true, mime: mime || expectedMime, ext }
+  // Always the type implied by the (validated) extension — never a generic
+  // application/octet-stream — so the stored object is served with the right type.
+  return { ok: true, mime: expectedMime, ext }
 }
 
 /**

@@ -16,6 +16,7 @@ import {
   JOB_APPLICATION_STATUSES,
   labelJobApplicationStatus,
 } from '@/lib/jobApplicationValidation'
+import { resumeMimeFromFilename } from '@/lib/resumeAccess'
 import {
   getHiringNotificationStatus,
   getJobApplication,
@@ -53,8 +54,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function AdminApplicationDetailClient() {
   const params = useParams()
   const applicationId = typeof params?.applicationId === 'string' ? params.applicationId : ''
-  const toast = useToast() as { success: (m: string) => void; error: (m: string) => void }
-  const { success, error } = toast
+  const toast = useToast() as {
+    success: (m: string) => void
+    error: (m: string) => void
+    info: (m: string) => void
+  }
+  const { success, error, info } = toast
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [loadError, setLoadError] = useState('')
@@ -110,7 +115,13 @@ export default function AdminApplicationDetailClient() {
     if (!applicationId || busyResume) return
     setBusyResume(mode)
     try {
-      await openResume(applicationId, mode)
+      // Must be called synchronously from the click so the View tab isn't popup-blocked.
+      const result = await openResume(applicationId, mode, {
+        mimeType: resumeMimeFromFilename(row?.resume_original_filename),
+      })
+      if (result.previewUnavailable) {
+        info('Word documents can’t be previewed in the browser, so the original file was downloaded.')
+      }
     } catch (err) {
       error(err instanceof Error ? err.message : 'Unable to open the resume.')
     } finally {
@@ -254,7 +265,10 @@ export default function AdminApplicationDetailClient() {
           {hasResume ? (
             <>
               <p className="admin-page-desc">
-                {String(row.resume_original_filename)} · {resumeTypeLabel(row.resume_mime_type)}
+                {String(row.resume_original_filename)} ·{' '}
+                {resumeTypeLabel(
+                  resumeMimeFromFilename(row.resume_original_filename) ?? row.resume_mime_type
+                )}
                 {sizeLabel ? ` · ${sizeLabel}` : ''}
               </p>
               <div className="admin-applicants-resume-actions">
